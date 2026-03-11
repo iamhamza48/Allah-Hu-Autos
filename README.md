@@ -1,73 +1,157 @@
-# Welcome to your Lovable project
+# Allah-Hu-Autos 🚗
 
-## Project info
+**"We Take Pride in Your Ride"**
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+A complete production-ready e-commerce platform for Pakistani automotive accessories, built with React + Vite + TypeScript + Supabase.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- **Frontend:** React 18, Vite, TypeScript, Tailwind CSS
+- **State:** Zustand (persistent cart)
+- **Backend:** Supabase (Auth, Database, Storage)
+- **UI:** shadcn/ui, Lucide Icons, Framer Motion
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+---
 
-Changes made via Lovable will be committed automatically to this repo.
+## Setup Instructions
 
-**Use your preferred IDE**
+### 1. Create a Supabase Project
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+1. Go to [supabase.com](https://supabase.com) and create a new project
+2. Note your **Project URL** and **Anon Key** from Settings → API
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 2. Set Environment Variables
 
-Follow these steps:
+Create a `.env.local` file in the project root:
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
-**Edit a file directly in GitHub**
+### 3. Run SQL Scripts
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+In Supabase Dashboard → SQL Editor, run these scripts **in order**:
 
-**Use GitHub Codespaces**
+1. **`supabase/schema.sql`** — Creates all 17 tables, triggers, and storage bucket
+2. **`supabase/policies.sql`** — Sets up Row Level Security on all tables
+3. **`supabase/seed.sql`** — Inserts 43 categories, 150+ products, vehicles, branches
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### 4. Create Admin User
 
-## What technologies are used for this project?
+1. Go to Supabase Dashboard → Authentication → Users
+2. Create a user (e.g., `admin@allahhuautos.pk` / `admin123456`)
+3. In SQL Editor, run:
 
-This project is built with:
+```sql
+-- Replace USER_ID with the actual user ID from the auth.users table
+INSERT INTO user_roles (user_id, role)
+VALUES ('USER_ID_HERE', 'admin')
+ON CONFLICT (user_id, role) DO NOTHING;
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### 5. Install & Run
 
-## How can I deploy this project?
+```bash
+pnpm install
+pnpm dev
+```
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+The app will be running at `http://localhost:8080`
 
-## Can I connect a custom domain to my Lovable project?
+---
 
-Yes, you can!
+## Default Credentials
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+After setup, create your admin account manually (step 4 above).
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+| Role    | Access                          |
+|---------|----------------------------------|
+| User    | Storefront, cart, checkout, account |
+| Admin   | Full admin panel at `/admin`     |
+
+---
+
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── layout/          # Header, Footer, Layout, AdminLayout, AccountLayout
+│   ├── ui/              # shadcn/ui components
+│   ├── ProductCard.tsx   # Product card component
+│   ├── CategoryCard.tsx  # Category card component
+│   ├── VehicleSelector.tsx # Make → Model → Year selector
+│   ├── ProtectedRoute.tsx
+│   └── AdminRoute.tsx
+├── hooks/
+│   └── use-auth.ts      # Authentication hook
+├── lib/
+│   ├── supabase.ts      # Supabase client
+│   ├── format.ts        # PKR formatter, placeholders
+│   └── utils.ts         # cn() utility
+├── pages/
+│   ├── Index.tsx         # Homepage
+│   ├── Categories.tsx    # All categories
+│   ├── CategoryDetail.tsx
+│   ├── Products.tsx      # All products with filters
+│   ├── ProductDetail.tsx # Product page with variants, compatibility
+│   ├── Search.tsx
+│   ├── Cart.tsx
+│   ├── Checkout.tsx
+│   ├── Booking.tsx
+│   ├── Login.tsx
+│   ├── Register.tsx
+│   ├── account/          # Customer account pages
+│   └── admin/            # Admin panel pages
+├── stores/
+│   └── cart.ts           # Zustand cart store
+├── types/
+│   └── database.ts       # TypeScript types
+└── App.tsx               # Router setup
+
+supabase/
+├── schema.sql            # Database schema (17 tables)
+├── policies.sql          # RLS policies
+└── seed.sql              # Seed data (43 categories, 150+ products)
+```
+
+---
+
+## Features
+
+### Storefront
+- 🏠 Homepage with hero, featured categories/products
+- 📂 43 product categories with browsing
+- 🛍️ Product pages with variants, images, reviews
+- 🔍 Full-text search
+- 🚗 Vehicle compatibility checker (Make → Model → Year)
+- 🛒 Persistent cart (Zustand + localStorage)
+- 💳 Real checkout with Supabase orders
+- 📅 Installation booking system
+
+### Customer Account
+- 📋 Order history
+- 📅 Booking management
+- 🚗 Vehicle management
+- 📍 Address book
+
+### Admin Panel
+- 📊 Dashboard with stats
+- 📦 Product CRUD
+- 📂 Category management
+- 🛒 Order management
+- 📅 Booking management
+- 📦 Inventory management
+- 👥 Customer list
+- ⭐ Review moderation
+- 🚗 Vehicle management
+- ⚙️ Branch settings
+
+---
+
+## Pricing
+
+All prices are in Pakistani Rupees (PKR), ranging from Rs 500 to Rs 120,000.
