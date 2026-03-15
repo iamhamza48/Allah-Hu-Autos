@@ -24,37 +24,40 @@ export function useAuth() {
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .single();
-    setRole((data?.role as AppRole) || 'user');
+      .eq('role', 'admin')
+      .maybeSingle();
+    setRole(data ? 'admin' : 'user');
   }, []);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-            fetchRole(session.user.id);
-          }, 0);
-        } else {
-          setProfile(null);
-          setRole('user');
-        }
-        setLoading(false);
-      }
-    );
-
+    // Get initial session first
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
-        fetchRole(session.user.id);
+        Promise.all([
+          fetchProfile(session.user.id),
+          fetchRole(session.user.id),
+        ]).finally(() => setLoading(false));
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
+
+    // Listen for auth changes after initial load
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          fetchProfile(session.user.id);
+          fetchRole(session.user.id);
+        } else {
+          setProfile(null);
+          setRole('user');
+        }
+      }
+    );
 
     return () => subscription.unsubscribe();
   }, [fetchProfile, fetchRole]);

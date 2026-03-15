@@ -2,13 +2,14 @@ import { Link, Outlet, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Package, FolderTree, ShoppingBag, Calendar,
-  Warehouse, Users, Star, Car, Settings,
+  Warehouse, Users, Star, Car, Settings, ImagePlus,
 } from 'lucide-react';
 
 const links = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { to: '/admin/products', label: 'Products', icon: Package },
   { to: '/admin/categories', label: 'Categories', icon: FolderTree },
+  { to: '/admin/images', label: 'Image Uploader', icon: ImagePlus },
   { to: '/admin/orders', label: 'Orders', icon: ShoppingBag },
   { to: '/admin/bookings', label: 'Bookings', icon: Calendar },
   { to: '/admin/inventory', label: 'Inventory', icon: Warehouse },

@@ -39,6 +39,7 @@ import AdminCustomers from "./pages/admin/Customers";
 import AdminReviews from "./pages/admin/Reviews";
 import AdminVehicles from "./pages/admin/Vehicles";
 import AdminSettings from "./pages/admin/Settings";
+import AdminImageUploader from "./pages/admin/ImageUploader";
 
 const queryClient = new QueryClient();
 
@@ -83,6 +84,7 @@ const App = () => (
               <Route path="reviews" element={<AdminReviews />} />
               <Route path="vehicles" element={<AdminVehicles />} />
               <Route path="settings" element={<AdminSettings />} />
+              <Route path="images" element={<AdminImageUploader />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
