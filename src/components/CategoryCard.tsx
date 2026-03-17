@@ -1,31 +1,38 @@
 import { Link } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
+import { getCategoryImage } from '@/lib/categoryImages';
 import type { Category } from '@/types/database';
-import { motion } from 'framer-motion';
 
 interface CategoryCardProps {
-  category: Category;
+  category: Category & { image_url?: string };
   index?: number;
 }
 
-const CategoryCard = ({ category, index = 0 }: CategoryCardProps) => {
+const CategoryCard = ({ category }: CategoryCardProps) => {
+  const img = (category as any).image_url || getCategoryImage(category.slug);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.05 }}
-    >
-      <Link to={`/category/${category.slug}`}>
-        <Card className="group text-center hover:shadow-lg hover:border-primary/30 transition-all duration-300">
-          <CardContent className="p-6">
-            <div className="text-3xl mb-3">{category.icon}</div>
-            <h3 className="text-sm font-semibold group-hover:text-primary transition-colors">
-              {category.name}
-            </h3>
-          </CardContent>
-        </Card>
-      </Link>
-    </motion.div>
+    <Link to={`/category/${category.slug}`}>
+      <div className="group relative overflow-hidden rounded-xl cursor-pointer">
+        <div className="aspect-[4/3] overflow-hidden bg-secondary">
+          <img
+            src={img}
+            alt={category.name}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            loading="lazy"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1493238792000-8113da705763?w=400&q=80&fit=crop';
+            }}
+          />
+        </div>
+        {/* dark gradient overlay with text on top of image */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-2">
+          <p className="text-white text-xs font-semibold text-center leading-tight line-clamp-2 drop-shadow">
+            {category.name}
+          </p>
+        </div>
+      </div>
+    </Link>
   );
 };
 
