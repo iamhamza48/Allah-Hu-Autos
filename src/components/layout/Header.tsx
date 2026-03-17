@@ -50,7 +50,7 @@ const Header = () => {
             <Phone className="h-3 w-3 text-primary" />
             +92 300 1234567
           </a>
-          <span className="hidden sm:block font-medium text-black">
+          <span className="hidden sm:block font-medium text-white">
             🚗 We Take Pride in Your Ride
           </span>
           <div className="flex items-center gap-1.5">
