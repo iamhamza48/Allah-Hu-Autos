@@ -29,7 +29,7 @@ const BranchCard = ({ branch }: { branch: typeof BRANCHES[0] }) => {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-xl border border-zinc-800 overflow-hidden bg-zinc-900/60">
+    <div className="w-full rounded-xl border border-zinc-800 overflow-hidden bg-zinc-900/60">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-zinc-800/60 transition-colors text-left"
@@ -72,8 +72,8 @@ const BranchCard = ({ branch }: { branch: typeof BRANCHES[0] }) => {
 
 const Footer = () => {
   return (
-    <footer className="bg-[#0a0a0a] text-zinc-400 border-t border-zinc-800/60 font-sans">
-      <div className="container py-16 lg:py-20">
+    <footer className="w-full bg-[#0a0a0a] text-zinc-400 border-t border-zinc-800/60 font-sans overflow-hidden">
+      <div className="container px-4 md:px-6 py-16 lg:py-20 mx-auto">
         <div className="grid grid-cols-12 gap-10 lg:gap-8 items-start">
 
           {/* Brand Section */}
@@ -107,7 +107,7 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Quick Links - pt-2 matches the Brand Title offset */}
+          {/* Quick Links */}
           <div className="col-span-6 md:col-span-3 lg:col-span-2 pt-2">
             <h4 className="font-bold text-white text-base mb-6">Quick Links</h4>
             <ul className="space-y-3">
@@ -122,7 +122,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Account - pt-2 matches the Brand Title offset */}
+          {/* Account */}
           <div className="col-span-6 md:col-span-3 lg:col-span-2 pt-2">
             <h4 className="font-bold text-white text-base mb-6">Account</h4>
             <ul className="space-y-3">
@@ -137,13 +137,13 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Our Locations - pt-2 matches the Brand Title offset */}
+          {/* Our Locations */}
           <div className="col-span-12 md:col-span-6 lg:col-span-4 pt-2">
             <div className="mb-6">
               <h4 className="font-bold text-white text-base mb-1">Our Branches</h4>
               <p className="text-xs text-zinc-500">Click a branch to view location and hours</p>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-3 w-full">
               {BRANCHES.map(branch => (
                 <BranchCard key={branch.id} branch={branch} />
               ))}
@@ -155,7 +155,7 @@ const Footer = () => {
 
       {/* Bottom bar */}
       <div className="border-t border-zinc-800/60 bg-[#111111]">
-        <div className="container flex flex-col sm:flex-row min-h-[60px] py-4 items-center justify-between gap-3 text-xs text-zinc-500 font-medium">
+        <div className="container px-4 md:px-6 mx-auto flex flex-col sm:flex-row min-h-[60px] py-4 items-center justify-between gap-3 text-xs text-zinc-500 font-medium">
           <p>© {new Date().getFullYear()} Allah-Hu-Autos. All rights reserved.</p>
           <p className="flex items-center gap-1.5">
             Made with <span className="text-orange-500 animate-pulse">♥</span> in Pakistan
