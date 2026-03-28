@@ -38,12 +38,17 @@ const ProductDetail = () => {
       if (data?.variants?.[0]) setSelectedVariant(data.variants[0]);
 
       if (data) {
-        const { data: revs } = await supabase
+        const { data: revs, error } = await supabase
           .from('reviews')
-          .select('*, profile:profiles(*)')
+          .select('*, profiles(*)') // <--- REMOVED the "profile:" alias
           .eq('product_id', data.id)
           .eq('is_approved', true)
           .order('created_at', { ascending: false });
+          
+        if (error) {
+          console.error("Supabase Error:", error.message);
+        }
+
         setReviews(revs || []);
       }
       setLoading(false);
