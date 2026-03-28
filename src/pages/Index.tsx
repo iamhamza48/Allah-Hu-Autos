@@ -21,7 +21,7 @@ const Index = () => {
     const fetchData = async () => {
       const [productsRes, categoriesRes, newRes] = await Promise.all([
         supabase.from('products').select('*, category:categories(*), images:product_images(*)').eq('featured', true).limit(10),
-        supabase.from('categories').select('*').eq('featured', true).limit(12),
+        supabase.from('categories').select('*').eq('featured', true).is('parent_id', null).limit(6),
         supabase.from('products').select('*, category:categories(*), images:product_images(*)').order('created_at', { ascending: false }).limit(10),
       ]);
       setFeaturedProducts(productsRes.data || []);
@@ -35,45 +35,56 @@ const Index = () => {
   return (
     <div>
       {/* Hero */}
-      <section className="relative bg-zinc-800 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-zinc-900/90 via-zinc-800/70 to-zinc-700/30 z-0" />
+      <section className="relative bg-zinc-900 overflow-hidden">
+        {/* Slightly darkened the gradient for better text contrast */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/80 to-black/30 z-0" />
         <div
-          className="absolute inset-0 opacity-60 z-0 bg-cover bg-center"
+          className="absolute inset-0 opacity-40 z-0 bg-cover bg-center"
           style={{ backgroundImage: "url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1600&q=80&fit=crop')" }}
         />
-        <div className="container relative z-10 py-12 lg:py-20">
-          <div className="max-w-xl">
-            <Badge className="mb-2 bg-primary/20 text-primary border-primary/30 text-xs">
-              🚗 Pakistan's #1 Auto Accessories
+        
+        {/* Increased vertical padding for a taller, grander hero */}
+        <div className="container relative z-10 py-16 lg:py-28">
+          <div className="max-w-2xl">
+            <Badge className="mb-4 bg-primary/20 text-primary border-primary/30 text-sm px-3 py-1">
+              Best at what we do
             </Badge>
-            <h1 className="text-3xl sm:text-4xl font-black mb-2 leading-tight">
-              We Take Pride in{' '}
-              <span className="text-primary">Your Ride</span>
+            
+            {/* Massively scaled up the font size (text-4xl to 6xl) and added tracking-tight */}
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-4 leading-[1.1] tracking-tight">
+              We Take Pride in <span className="text-primary">Your Ride</span>
             </h1>
-            <p className="text-sm text-white/70 mb-4 max-w-md">
-              Premium automotive accessories for every car on Pakistani roads — LED lights, body kits, mats, audio & more.
+            
+            {/* Bumped text size to base/lg and improved line height */}
+            <p className="text-base sm:text-lg text-white/80 mb-8 max-w-lg leading-relaxed">
+              Premium automotive accessories for every car on Pakistani roads  LED lights, body kits, mats, audio & more.
             </p>
-            <div className="flex flex-wrap gap-2 mb-6">
+            
+            {/* Made buttons larger (removed size="sm" and h-8) for better touch targets */}
+            <div className="flex flex-wrap items-center gap-3 mb-10">
               <Link to="/products">
-                <Button size="sm" className="gap-1.5 h-8">Shop Now <ArrowRight className="h-3.5 w-3.5" /></Button>
+                <Button size="lg" className="gap-2 font-bold">
+                  Shop Now <ArrowRight className="h-4 w-4" />
+                </Button>
               </Link>
               <Link to="/categories">
-                <Button size="sm" variant="outline" className="border-white/30 !text-white hover:bg-white/10 hover:!text-white bg-transparent h-8">
+                <Button size="lg" variant="outline" className="border-white/30 !text-white hover:bg-white/10 hover:!text-white bg-transparent font-medium">
                   Browse Categories
                 </Button>
               </Link>
               <Link to="/booking">
-                <Button size="sm" variant="outline" className="border-white/30 !text-white hover:bg-white/10 hover:!text-white bg-transparent h-8">
+                <Button size="lg" variant="outline" className="border-white/30 !text-white hover:bg-white/10 hover:!text-white bg-transparent font-medium">
                   Book Installation
                 </Button>
               </Link>
             </div>
-            {/* Quick stats */}
-            <div className="flex gap-4">
-              {[['500+', 'Products'], ['50+', 'Brands'], ['4', 'Branches']].map(([num, label]) => (
+            
+            {/* Made the stats numbers huge and the labels more professional */}
+            <div className="flex gap-8 sm:gap-12 border-t border-white/10 pt-6">
+              {[['500+', 'Products'], ['50+', 'Brands'], ['2', 'Branches']].map(([num, label]) => (
                 <div key={label}>
-                  <p className="text-base font-black text-primary">{num}</p>
-                  <p className="text-[10px] text-white/50">{label}</p>
+                  <p className="text-2xl sm:text-3xl font-black text-primary mb-1">{num}</p>
+                  <p className="text-xs sm:text-sm text-white/60 font-medium uppercase tracking-wider">{label}</p>
                 </div>
               ))}
             </div>
@@ -81,49 +92,25 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Trust bar */}
-      <div className="border-b bg-card">
-        <div className="container">
-          <div className="grid grid-cols-2 sm:grid-cols-4 divide-x">
-            {[
-              { icon: Shield, label: 'Genuine Products' },
-              { icon: Truck, label: 'Nationwide Delivery' },
-              { icon: Wrench, label: 'Expert Installation' },
-              { icon: Star, label: '5-Star Rated' },
-            ].map(({ icon: Icon, label }) => (
-              <div key={label} className="flex items-center gap-2 px-3 py-2">
-                <Icon className="h-3.5 w-3.5 text-primary shrink-0" />
-                <span className="text-xs font-medium">{label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* Vehicle Finder */}
-      <section className="border-b bg-secondary/40">
-        <div className="container py-3">
-          <div className="flex items-center gap-3 mb-2">
-            <Zap className="h-4 w-4 text-primary" />
-            <h2 className="text-sm font-bold">Find Accessories for Your Vehicle</h2>
+      <section className="border-y bg-muted/30 py-12 lg:py-16">
+        <div className="container">
+          <div className="max-w-2xl mx-auto text-center mb-8">
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3">
+              Shop by Your Car
+            </h2>
+            <p className="text-muted-foreground">
+              Select your vehicle's make, model, and year to see accessories guaranteed to fit your ride.
+            </p>
           </div>
-          <div className="max-w-2xl">
+          
+          <div className="max-w-4xl mx-auto bg-card p-4 sm:p-6 rounded-2xl shadow-sm border border-border/50">
             <VehicleSelector />
           </div>
         </div>
       </section>
 
-      {/* Compatible Brands ticker */}
-      <div className="border-b bg-card overflow-hidden">
-        <div className="container py-2">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            <span className="text-[10px] text-muted-foreground font-medium shrink-0">COMPATIBLE WITH:</span>
-            {BRANDS.map(b => (
-              <span key={b} className="text-[11px] font-semibold px-2 py-0.5 rounded bg-secondary shrink-0">{b}</span>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* Featured Categories */}
       <section className="container py-4">

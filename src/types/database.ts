@@ -3,31 +3,34 @@ export interface Profile {
   full_name: string | null;
   phone: string | null;
   avatar_url: string | null;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface Category {
   id: string;
   name: string;
   slug: string;
-  icon: string;
-  featured: boolean;
-  created_at: string;
+  icon: string | null;
+  featured: boolean | null;
+  image_url: string | null;
+  parent_id: string | null;
+  sort_order: number | null;
+  created_at: string | null;
 }
 
 export interface Product {
   id: string;
   name: string;
   slug: string;
-  description: string;
-  category_id: string;
+  description: string | null;
+  category_id: string | null;
   base_price: number;
   compare_price: number | null;
-  installable: boolean;
-  featured: boolean;
-  created_at: string;
-  updated_at: string;
+  installable: boolean | null;
+  featured: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
   category?: Category;
   variants?: ProductVariant[];
   images?: ProductImage[];
@@ -37,20 +40,20 @@ export interface ProductVariant {
   id: string;
   product_id: string;
   name: string;
-  sku: string;
+  sku: string | null;
   price: number;
   compare_price: number | null;
-  attributes: Record<string, string>;
-  created_at: string;
+  attributes: Record<string, string> | null;
+  created_at: string | null;
 }
 
 export interface ProductImage {
   id: string;
   product_id: string;
   url: string;
-  alt: string;
-  sort_order: number;
-  created_at: string;
+  alt: string | null;
+  sort_order: number | null;
+  created_at: string | null;
 }
 
 export interface ProductCompatibility {
@@ -84,19 +87,19 @@ export interface Vehicle {
 export interface Branch {
   id: string;
   name: string;
-  address: string;
-  city: string;
-  phone: string;
-  is_active: boolean;
-  created_at: string;
+  address: string | null;
+  city: string | null;
+  phone: string | null;
+  is_active: boolean | null;
+  created_at: string | null;
 }
 
 export interface Inventory {
   id: string;
   variant_id: string;
   branch_id: string;
-  quantity: number;
-  updated_at: string;
+  quantity: number | null;
+  updated_at: string | null;
   variant?: ProductVariant;
   branch?: Branch;
 }
@@ -104,14 +107,14 @@ export interface Inventory {
 export interface Order {
   id: string;
   user_id: string;
-  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  total: number;
-  shipping_address: string;
-  shipping_city: string;
-  shipping_phone: string;
+  status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | null;
+  total: number | null;
+  shipping_address: string | null;
+  shipping_city: string | null;
+  shipping_phone: string | null;
   notes: string | null;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
   items?: OrderItem[];
   profile?: Profile;
 }
@@ -119,10 +122,10 @@ export interface Order {
 export interface OrderItem {
   id: string;
   order_id: string;
-  product_id: string;
-  variant_id: string;
-  quantity: number;
-  price: number;
+  product_id: string | null;
+  variant_id: string | null;
+  quantity: number | null;
+  price: number | null;
   install_type: 'self' | 'professional' | null;
   product?: Product;
   variant?: ProductVariant;
@@ -131,14 +134,14 @@ export interface OrderItem {
 export interface Booking {
   id: string;
   user_id: string;
-  branch_id: string;
+  branch_id: string | null;
   product_id: string | null;
   vehicle_id: string | null;
   booking_date: string;
   booking_time: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | null;
   notes: string | null;
-  created_at: string;
+  created_at: string | null;
   branch?: Branch;
   product?: Product;
   vehicle?: Vehicle;
@@ -150,9 +153,9 @@ export interface Review {
   user_id: string;
   product_id: string;
   rating: number;
-  comment: string;
-  is_approved: boolean;
-  created_at: string;
+  comment: string | null;
+  is_approved: boolean | null;
+  created_at: string | null;
   profile?: Profile;
   product?: Product;
 }
@@ -160,12 +163,12 @@ export interface Review {
 export interface Address {
   id: string;
   user_id: string;
-  label: string;
-  address_line: string;
-  city: string;
-  phone: string;
-  is_default: boolean;
-  created_at: string;
+  label: string | null;
+  address_line: string | null;
+  city: string | null;
+  phone: string | null;
+  is_default: boolean | null;
+  created_at: string | null;
 }
 
 export interface UserVehicle {

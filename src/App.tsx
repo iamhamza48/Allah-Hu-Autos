@@ -21,6 +21,8 @@ import Checkout from "./pages/Checkout";
 import Booking from "./pages/Booking";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import VehicleProducts from "./pages/VehicleProducts";
+import Wishlist from "./pages/Wishlist";
 import NotFound from "./pages/NotFound";
 
 import AccountDashboard from "./pages/account/Dashboard";
@@ -39,7 +41,7 @@ import AdminCustomers from "./pages/admin/Customers";
 import AdminReviews from "./pages/admin/Reviews";
 import AdminVehicles from "./pages/admin/Vehicles";
 import AdminSettings from "./pages/admin/Settings";
-import AdminImageUploader from "./pages/admin/ImageUploader";
+import AdminImageUploader from "./pages/admin/Imageuploader";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +62,8 @@ const App = () => (
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
             <Route path="/booking" element={<Booking />} />
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/vehicles/:vehicleId/products" element={<VehicleProducts />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 

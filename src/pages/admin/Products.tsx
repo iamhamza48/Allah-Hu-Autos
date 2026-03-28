@@ -11,9 +11,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatPKR } from '@/lib/format';
-import type { Product, Category, ProductImage } from '@/types/database';
+import type { Product, Category, ProductImage, Vehicle } from '@/types/database';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Upload, X, ImagePlus, Loader2, Search, ArrowUpDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, Upload, X, ImagePlus, Loader2, Search, ArrowUpDown, Car } from 'lucide-react';
 
 const BUCKET = 'product-images';
 type SortKey = 'name' | 'price' | 'created_at';
@@ -22,6 +22,7 @@ type SortDir = 'asc' | 'desc';
 const AdminProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState('all');
@@ -30,11 +31,15 @@ const AdminProducts = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [activeTab, setActiveTab] = useState('details');
+  
   const [form, setForm] = useState({
     name: '', slug: '', description: '', category_id: '',
     base_price: 0, compare_price: 0, installable: false, featured: false,
   });
+  
   const [images, setImages] = useState<ProductImage[]>([]);
+  const [compatibleVehicles, setCompatibleVehicles] = useState<string[]>([]);
+  
   const [imgLoading, setImgLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imgPreview, setImgPreview] = useState<string | null>(null);
@@ -44,17 +49,35 @@ const AdminProducts = () => {
   const fileRef = useRef<HTMLInputElement>(null);
 
   const fetchProducts = async () => {
-    const { data } = await supabase
-      .from('products')
-      .select('*, category:categories(*), images:product_images(*)')
-      .order('created_at', { ascending: false });
-    setProducts(data || []);
-    setLoading(false);
+    try {
+      const { data } = await supabase
+        .from('products')
+        .select('*, category:categories(*), images:product_images(*)')
+        .order('created_at', { ascending: false });
+      setProducts(data || []);
+    } catch (e: any) {
+      toast.error('Failed to load products: ' + e.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchProducts();
     supabase.from('categories').select('*').order('name').then(({ data }) => setCategories(data || []));
+    supabase.from('vehicle_makes').select('*, models:vehicle_models(*, vehicles(*))').order('name').then(({ data }) => {
+      // Flatten into a list of vehicles with make/model names attached
+      const flat: any[] = [];
+      (data || []).forEach((make: any) => {
+        (make.models || []).forEach((model: any) => {
+          (model.vehicles || []).forEach((v: any) => {
+            flat.push({ id: v.id, year: v.year, make: make.name, model: model.name, makeId: make.id, modelId: model.id });
+          });
+        });
+      });
+      flat.sort((a, b) => a.make.localeCompare(b.make) || a.model.localeCompare(b.model) || b.year - a.year);
+      setVehicles(flat);
+    });
   }, []);
 
   const displayed = useMemo(() => {
@@ -87,36 +110,71 @@ const AdminProducts = () => {
 
   const fetchImages = async (productId: string) => {
     setImgLoading(true);
-    const { data } = await supabase.from('product_images').select('*').eq('product_id', productId).order('sort_order');
-    setImages(data || []);
-    setImgLoading(false);
+    try {
+      const { data } = await supabase.from('product_images').select('*').eq('product_id', productId).order('sort_order');
+      setImages(data || []);
+    } catch (e: any) {
+      toast.error('Failed to load images: ' + e.message);
+    } finally {
+      setImgLoading(false);
+    }
+  };
+
+  const fetchCompatibilities = async (productId: string) => {
+    const { data } = await supabase.from('product_compatibility').select('vehicle_id').eq('product_id', productId);
+    setCompatibleVehicles(data?.map(d => d.vehicle_id) || []);
   };
 
   const openCreate = () => {
     setEditing(null); setActiveTab('details');
     setForm({ name: '', slug: '', description: '', category_id: '', base_price: 0, compare_price: 0, installable: false, featured: false });
-    setImages([]); setDialogOpen(true);
+    setImages([]); 
+    setCompatibleVehicles([]);
+    setDialogOpen(true);
   };
 
   const openEdit = (p: Product) => {
     setEditing(p); setActiveTab('details');
     setForm({ name: p.name, slug: p.slug, description: p.description, category_id: p.category_id, base_price: p.base_price, compare_price: p.compare_price || 0, installable: p.installable, featured: p.featured });
-    setImages([]); fetchImages(p.id); setDialogOpen(true);
+    setImages([]); 
+    fetchImages(p.id); 
+    fetchCompatibilities(p.id);
+    setDialogOpen(true);
   };
 
   const handleSave = async () => {
     const slug = form.slug || form.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     const data = { ...form, slug, compare_price: form.compare_price || null };
+    let savedProductId = editing?.id;
+
     if (editing) {
       const { error } = await supabase.from('products').update(data).eq('id', editing.id);
       if (error) { toast.error('Failed to update: ' + error.message); return; }
       toast.success('Product updated');
     } else {
-      const { error } = await supabase.from('products').insert(data);
+      const { data: newProd, error } = await supabase.from('products').insert(data).select().single();
       if (error) { toast.error('Failed to create: ' + error.message); return; }
+      savedProductId = newProd.id;
       toast.success('Product created');
     }
-    setDialogOpen(false); fetchProducts();
+
+    // Sync vehicle compatibility
+    if (savedProductId) {
+      try {
+        await supabase.from('product_compatibility').delete().eq('product_id', savedProductId);
+        if (compatibleVehicles.length > 0) {
+          const compatData = compatibleVehicles.map(vid => ({ product_id: savedProductId, vehicle_id: vid }));
+          const { error: compatError } = await supabase.from('product_compatibility').insert(compatData);
+          if (compatError) throw compatError;
+        }
+      } catch (e: any) {
+        toast.error('Failed to save compatibility: ' + e.message);
+        return;
+      }
+    }
+
+    setDialogOpen(false); 
+    fetchProducts();
   };
 
   const handleDelete = async (id: string) => {
@@ -154,8 +212,12 @@ const AdminProducts = () => {
 
   const deleteImage = async (img: ProductImage) => {
     if (!confirm('Delete this image?')) return;
-    await supabase.from('product_images').delete().eq('id', img.id);
-    toast.success('Image deleted'); if (editing) fetchImages(editing.id);
+    try {
+      await supabase.from('product_images').delete().eq('id', img.id);
+      toast.success('Image deleted'); if (editing) fetchImages(editing.id);
+    } catch (e: any) {
+      toast.error('Failed to delete image: ' + e.message);
+    }
   };
 
   return (
@@ -196,8 +258,10 @@ const AdminProducts = () => {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="w-full">
               <TabsTrigger value="details" className="flex-1">Details</TabsTrigger>
+              <TabsTrigger value="compatibility" className="flex-1">Compatibility {compatibleVehicles.length > 0 && `(${compatibleVehicles.length})`}</TabsTrigger>
               <TabsTrigger value="images" className="flex-1" disabled={!editing}>Images {images.length > 0 && `(${images.length})`}</TabsTrigger>
             </TabsList>
+            
             <TabsContent value="details" className="space-y-4 pt-2">
               <div><Label>Name</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="mt-1" /></div>
               <div><Label>Slug</Label><Input value={form.slug} onChange={e => setForm({ ...form, slug: e.target.value })} placeholder="auto-generated from name" className="mt-1" /></div>
@@ -219,6 +283,16 @@ const AdminProducts = () => {
               </div>
               <Button onClick={handleSave} className="w-full">Save Product</Button>
             </TabsContent>
+
+            <TabsContent value="compatibility" className="space-y-4 pt-2">
+              <CompatibilityTab
+                vehicles={vehicles}
+                compatibleVehicles={compatibleVehicles}
+                setCompatibleVehicles={setCompatibleVehicles}
+                onSave={handleSave}
+              />
+            </TabsContent>
+
             <TabsContent value="images" className="space-y-4 pt-2">
               <Card className="p-4 space-y-3">
                 <p className="text-sm font-semibold">Upload new image</p>
@@ -324,6 +398,128 @@ const AdminProducts = () => {
           </Table>
         </Card>
       )}
+    </div>
+  );
+};
+
+// ─── Cascading compatibility tab ──────────────────────────────────────────────
+interface CompatibilityTabProps {
+  vehicles: any[];
+  compatibleVehicles: string[];
+  setCompatibleVehicles: (ids: string[]) => void;
+  onSave: () => void;
+}
+
+const CompatibilityTab = ({ vehicles, compatibleVehicles, setCompatibleVehicles, onSave }: CompatibilityTabProps) => {
+  const [filterMake, setFilterMake] = useState('');
+  const [filterModel, setFilterModel] = useState('');
+
+  const makes = Array.from(new Set(vehicles.map(v => v.make))).sort();
+  const models = Array.from(
+    new Set(vehicles.filter(v => !filterMake || v.make === filterMake).map(v => v.model))
+  ).sort();
+  const filtered = vehicles.filter(v =>
+    (!filterMake || v.make === filterMake) &&
+    (!filterModel || v.model === filterModel)
+  );
+
+  const allFilteredIds = filtered.map(v => v.id);
+  const allChecked = allFilteredIds.length > 0 && allFilteredIds.every(id => compatibleVehicles.includes(id));
+
+  const toggleAll = () => {
+    if (allChecked) {
+      setCompatibleVehicles(compatibleVehicles.filter(id => !allFilteredIds.includes(id)));
+    } else {
+      const merged = Array.from(new Set([...compatibleVehicles, ...allFilteredIds]));
+      setCompatibleVehicles(merged);
+    }
+  };
+
+  const toggle = (id: string, checked: boolean) => {
+    if (checked) setCompatibleVehicles([...compatibleVehicles, id]);
+    else setCompatibleVehicles(compatibleVehicles.filter(i => i !== id));
+  };
+
+  return (
+    <div className="rounded-lg border p-4 space-y-4">
+      <div className="flex items-center gap-2">
+        <Car className="h-5 w-5 text-primary" />
+        <h3 className="font-semibold">Compatible Vehicles</h3>
+        {compatibleVehicles.length > 0 && (
+          <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+            {compatibleVehicles.length} selected
+          </span>
+        )}
+      </div>
+
+      {/* Cascading dropdowns */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label className="text-xs mb-1 block">Filter by Make</Label>
+          <Select value={filterMake} onValueChange={v => { setFilterMake(v === '__all__' ? '' : v); setFilterModel(''); }}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Makes" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All Makes</SelectItem>
+              {makes.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs mb-1 block">Filter by Model</Label>
+          <Select value={filterModel} onValueChange={v => setFilterModel(v === '__all__' ? '' : v)} disabled={!filterMake}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Models" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All Models</SelectItem>
+              {models.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Select all for current filter */}
+      {filtered.length > 1 && (
+        <div
+          className="flex items-center gap-3 px-3 py-2 bg-secondary/60 rounded-md border cursor-pointer hover:bg-secondary transition-colors"
+          onClick={toggleAll}
+        >
+          <Switch checked={allChecked} onCheckedChange={toggleAll} />
+          <Label className="cursor-pointer text-sm font-medium">
+            Select all {filterMake || filterModel ? 'filtered' : ''} ({filtered.length} vehicles)
+          </Label>
+        </div>
+      )}
+
+      {/* Vehicle list */}
+      <div className="max-h-[260px] overflow-y-auto space-y-1 border rounded-md p-2 bg-secondary/20">
+        {filtered.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-6">No vehicles match the filter.</p>
+        ) : (
+          filtered.map(v => (
+            <div
+              key={v.id}
+              className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer ${
+                compatibleVehicles.includes(v.id) ? 'bg-primary/10 border border-primary/20' : 'hover:bg-secondary'
+              }`}
+              onClick={() => toggle(v.id, !compatibleVehicles.includes(v.id))}
+            >
+              <Switch
+                checked={compatibleVehicles.includes(v.id)}
+                onCheckedChange={checked => toggle(v.id, checked)}
+              />
+              <span className="text-sm flex-1">
+                <span className="font-medium">{v.make} {v.model}</span>
+                <span className="text-muted-foreground ml-2 text-xs">
+                  {v.year}
+                </span>
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+
+      <Button onClick={onSave} className="w-full">
+        Save Compatibility
+      </Button>
     </div>
   );
 };

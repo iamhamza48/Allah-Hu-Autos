@@ -8,55 +8,56 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import type { Category } from '@/types/database';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Search, ArrowUpDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, ChevronRight, Folder, FolderOpen } from 'lucide-react';
 
-type SortKey = 'name' | 'created_at';
-type SortDir = 'asc' | 'desc';
+interface CategoryRow {
+  id: string; name: string; slug: string; icon: string;
+  featured: boolean; parent_id: string | null; sort_order?: number; created_at: string;
+}
 
 const AdminCategories = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<CategoryRow[]>([]);
   const [search, setSearch] = useState('');
-  const [filterFeatured, setFilterFeatured] = useState('all');
-  const [sortKey, setSortKey] = useState<SortKey>('name');
-  const [sortDir, setSortDir] = useState<SortDir>('asc');
+  const [filterType, setFilterType] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<Category | null>(null);
-  const [form, setForm] = useState({ name: '', slug: '', icon: '', featured: false });
+  const [editing, setEditing] = useState<CategoryRow | null>(null);
+  const [hasParentIdCol, setHasParentIdCol] = useState(false);
+  const [form, setForm] = useState({ name:'', slug:'', icon:'', featured:false, parent_id:null as string|null, sort_order:0 });
 
   const fetchCats = async () => {
-    const { data } = await supabase.from('categories').select('*').order('name');
+    const { data, error } = await supabase.from('categories').select('*').order('sort_order').order('name');
+    if (error) { toast.error('Failed to load: ' + error.message); return; }
     setCategories(data || []);
+    setHasParentIdCol(data ? 'parent_id' in (data[0] ?? {}) : false);
   };
+
   useEffect(() => { fetchCats(); }, []);
+
+  const topLevel = useMemo(() => categories.filter(c => !c.parent_id), [categories]);
 
   const displayed = useMemo(() => {
     let list = [...categories];
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(c => c.name.toLowerCase().includes(q) || c.slug.toLowerCase().includes(q));
-    }
-    if (filterFeatured === 'featured') list = list.filter(c => c.featured);
-    if (filterFeatured === 'not-featured') list = list.filter(c => !c.featured);
-    list.sort((a, b) => {
-      const av = sortKey === 'name' ? a.name : a.created_at;
-      const bv = sortKey === 'name' ? b.name : b.created_at;
-      if (av < bv) return sortDir === 'asc' ? -1 : 1;
-      if (av > bv) return sortDir === 'asc' ? 1 : -1;
-      return 0;
-    });
+    if (search.trim()) { const q = search.toLowerCase(); list = list.filter(c => c.name.toLowerCase().includes(q) || c.slug.includes(q)); }
+    if (filterType === 'parent') list = list.filter(c => !c.parent_id);
+    if (filterType === 'sub') list = list.filter(c => !!c.parent_id);
+    if (filterType === 'featured') list = list.filter(c => c.featured);
     return list;
-  }, [categories, search, filterFeatured, sortKey, sortDir]);
+  }, [categories, search, filterType]);
 
   const handleSave = async () => {
-    const slug = form.slug || form.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    if (!form.name.trim()) { toast.error('Name is required'); return; }
+    const slug = form.slug || form.name.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');
+    const payload: any = { name:form.name, slug, icon:form.icon, featured:form.featured, sort_order:form.sort_order };
+    if (hasParentIdCol) payload.parent_id = form.parent_id || null;
+
     if (editing) {
-      const { error } = await supabase.from('categories').update({ ...form, slug }).eq('id', editing.id);
+      const { error } = await supabase.from('categories').update(payload).eq('id', editing.id);
       if (error) { toast.error('Failed: ' + error.message); return; }
       toast.success('Category updated');
     } else {
-      const { error } = await supabase.from('categories').insert({ ...form, slug });
+      const { error } = await supabase.from('categories').insert(payload);
       if (error) { toast.error('Failed: ' + error.message); return; }
       toast.success('Category created');
     }
@@ -64,28 +65,40 @@ const AdminCategories = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this category?')) return;
+    const hasChildren = categories.some(c => c.parent_id === id);
+    const msg = hasChildren ? 'This has subcategories. They will become unlinked. Delete anyway?' : 'Delete this category?';
+    if (!confirm(msg)) return;
     await supabase.from('categories').delete().eq('id', id);
     toast.success('Deleted'); fetchCats();
   };
 
-  const openCreate = () => { setEditing(null); setForm({ name: '', slug: '', icon: '', featured: false }); setDialogOpen(true); };
-  const openEdit = (c: Category) => { setEditing(c); setForm({ name: c.name, slug: c.slug, icon: c.icon, featured: c.featured }); setDialogOpen(true); };
-
-  const toggleSort = (key: SortKey) => {
-    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-    else { setSortKey(key); setSortDir('asc'); }
+  const openCreate = (parentId?: string) => {
+    setEditing(null);
+    setForm({ name:'', slug:'', icon:'', featured:false, parent_id:parentId||null, sort_order:0 });
+    setDialogOpen(true);
   };
 
-  const SortIcon = ({ k }: { k: SortKey }) => (
-    <ArrowUpDown className={`h-3 w-3 ml-1 inline ${sortKey === k ? 'text-primary' : 'text-muted-foreground'}`} />
-  );
+  const openEdit = (c: CategoryRow) => {
+    setEditing(c);
+    setForm({ name:c.name, slug:c.slug, icon:c.icon, featured:c.featured, parent_id:c.parent_id, sort_order:c.sort_order||0 });
+    setDialogOpen(true);
+  };
+
+  const parentRows = displayed.filter(c => !c.parent_id);
+  const subRows = displayed.filter(c => !!c.parent_id);
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">Categories ({displayed.length}{displayed.length !== categories.length ? ` of ${categories.length}` : ''})</h2>
-        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-1" /> Add</Button>
+        <div>
+          <h2 className="text-xl font-bold">Categories ({displayed.length}{displayed.length !== categories.length ? ` of ${categories.length}` : ''})</h2>
+          {!hasParentIdCol && (
+            <p className="text-xs text-amber-500 mt-0.5">
+              ⚠️ Run <code className="bg-muted px-1 rounded text-xs">migration_add_parent_id.sql</code> in Supabase to enable subcategories &amp; mega-menu grouping.
+            </p>
+          )}
+        </div>
+        <Button onClick={() => openCreate()}><Plus className="h-4 w-4 mr-1" /> Add Category</Button>
       </div>
 
       <div className="flex flex-wrap gap-3 mb-4">
@@ -93,21 +106,13 @@ const AdminCategories = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search categories..." className="pl-9" />
         </div>
-        <Select value={filterFeatured} onValueChange={setFilterFeatured}>
+        <Select value={filterType} onValueChange={setFilterType}>
           <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All categories</SelectItem>
+            <SelectItem value="parent">Main only</SelectItem>
+            <SelectItem value="sub">Subcategories only</SelectItem>
             <SelectItem value="featured">Featured only</SelectItem>
-            <SelectItem value="not-featured">Not featured</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={`${sortKey}-${sortDir}`} onValueChange={v => { const [k, d] = v.split('-'); setSortKey(k as SortKey); setSortDir(d as SortDir); }}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="name-asc">Name A–Z</SelectItem>
-            <SelectItem value="name-desc">Name Z–A</SelectItem>
-            <SelectItem value="created_at-desc">Newest first</SelectItem>
-            <SelectItem value="created_at-asc">Oldest first</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -116,44 +121,98 @@ const AdminCategories = () => {
         <DialogContent>
           <DialogHeader><DialogTitle>{editing ? 'Edit' : 'Add'} Category</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div><Label>Name</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="mt-1" /></div>
-            <div><Label>Slug</Label><Input value={form.slug} onChange={e => setForm({ ...form, slug: e.target.value })} placeholder="auto-generated" className="mt-1" /></div>
-            <div><Label>Icon (emoji)</Label><Input value={form.icon} onChange={e => setForm({ ...form, icon: e.target.value })} className="mt-1" /></div>
-            <div className="flex items-center gap-2"><Switch checked={form.featured} onCheckedChange={v => setForm({ ...form, featured: v })} /><Label>Featured on homepage</Label></div>
+            <div><Label>Name *</Label><Input value={form.name} onChange={e => setForm({...form,name:e.target.value})} className="mt-1" placeholder="e.g. LED Lighting" /></div>
+            <div><Label>Slug</Label><Input value={form.slug} onChange={e => setForm({...form,slug:e.target.value})} placeholder="auto-generated" className="mt-1" /></div>
+            <div><Label>Icon (emoji)</Label><Input value={form.icon} onChange={e => setForm({...form,icon:e.target.value})} className="mt-1" placeholder="💡" /></div>
+            <div><Label>Sort Order</Label><Input type="number" value={form.sort_order} onChange={e => setForm({...form,sort_order:parseInt(e.target.value)||0})} className="mt-1" /></div>
+            {hasParentIdCol && (
+              <div>
+                <Label>Parent Category</Label>
+                <Select value={form.parent_id || '__none__'} onValueChange={v => setForm({...form, parent_id: v === '__none__' ? null : v})}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="None (main category)" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__none__"><span className="flex items-center gap-2"><Folder className="h-4 w-4" /> None — main category</span></SelectItem>
+                    {topLevel.filter(c => c.id !== editing?.id).map(c => (
+                      <SelectItem key={c.id} value={c.id}><span className="flex items-center gap-2"><FolderOpen className="h-4 w-4 text-orange-500" />{c.icon} {c.name}</span></SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground mt-1">Subcategories appear in the nav mega-menu under their parent.</p>
+              </div>
+            )}
+            <div className="flex items-center gap-2"><Switch checked={form.featured} onCheckedChange={v => setForm({...form,featured:v})} /><Label>Featured on homepage</Label></div>
             <Button onClick={handleSave} className="w-full">Save</Button>
           </div>
         </DialogContent>
       </Dialog>
 
       {displayed.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground border rounded-lg border-dashed">
-          <p className="font-medium">No categories found</p>
-        </div>
+        <div className="text-center py-16 text-muted-foreground border rounded-lg border-dashed"><p className="font-medium">No categories found</p></div>
       ) : (
         <Card>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-14">Icon</TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('name')}>Name <SortIcon k="name" /></TableHead>
+                <TableHead className="w-12">Icon</TableHead>
+                <TableHead>Name</TableHead>
                 <TableHead>Slug</TableHead>
-                <TableHead>Featured</TableHead>
+                {hasParentIdCol && <TableHead>Type</TableHead>}
+                <TableHead className="w-16">Order</TableHead>
+                <TableHead className="w-20">Featured</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {displayed.map(c => (
-                <TableRow key={c.id}>
-                  <TableCell className="text-xl">{c.icon}</TableCell>
-                  <TableCell className="font-medium">{c.name}</TableCell>
-                  <TableCell className="text-muted-foreground text-xs font-mono">{c.slug}</TableCell>
-                  <TableCell>{c.featured ? '⭐' : '—'}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {hasParentIdCol ? (
+                parentRows.map(parent => {
+                  const subs = subRows.filter(s => s.parent_id === parent.id);
+                  return (
+                    <>
+                      <TableRow key={parent.id} className="bg-muted/30 font-medium">
+                        <TableCell className="text-xl">{parent.icon}</TableCell>
+                        <TableCell className="font-semibold">{parent.name}</TableCell>
+                        <TableCell className="text-muted-foreground text-xs font-mono">{parent.slug}</TableCell>
+                        <TableCell><Badge variant="outline" className="text-xs">Main</Badge></TableCell>
+                        <TableCell className="text-muted-foreground text-xs">{parent.sort_order}</TableCell>
+                        <TableCell>{parent.featured ? '⭐' : '—'}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" className="text-xs h-7 px-2 mr-1 text-muted-foreground" onClick={() => openCreate(parent.id)}><Plus className="h-3 w-3 mr-1" />Sub</Button>
+                          <Button variant="ghost" size="icon" onClick={() => openEdit(parent)}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(parent.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </TableCell>
+                      </TableRow>
+                      {subs.map(sub => (
+                        <TableRow key={sub.id}>
+                          <TableCell className="text-lg pl-8">{sub.icon}</TableCell>
+                          <TableCell className="pl-8"><span className="flex items-center gap-1.5 text-muted-foreground"><ChevronRight className="h-3 w-3 shrink-0" />{sub.name}</span></TableCell>
+                          <TableCell className="text-muted-foreground text-xs font-mono">{sub.slug}</TableCell>
+                          <TableCell><Badge variant="secondary" className="text-xs">Sub</Badge></TableCell>
+                          <TableCell className="text-muted-foreground text-xs">{sub.sort_order}</TableCell>
+                          <TableCell>{sub.featured ? '⭐' : '—'}</TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="icon" onClick={() => openEdit(sub)}><Pencil className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(sub.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </>
+                  );
+                })
+              ) : (
+                displayed.map(c => (
+                  <TableRow key={c.id}>
+                    <TableCell className="text-xl">{c.icon}</TableCell>
+                    <TableCell className="font-medium">{c.name}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs font-mono">{c.slug}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">{c.sort_order ?? 0}</TableCell>
+                    <TableCell>{c.featured ? '⭐' : '—'}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="icon" onClick={() => openEdit(c)}><Pencil className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(c.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </Card>
