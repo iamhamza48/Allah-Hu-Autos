@@ -1,121 +1,266 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import VehicleSelector from '@/components/VehicleSelector';
 import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
-import type { Branch, Vehicle } from '@/types/database';
-import { Calendar, Clock } from 'lucide-react';
+import {
+  Calendar, Clock, MapPin, ChevronRight,
+  CheckCircle2, Loader2, ArrowLeft, X, Phone
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+
+const SPECIALIST_SERVICES = [
+  "4x4 Face lifts", "PPF", "DETAILING", "WRAPPING", "Anti UV tints", 
+  "Sports kits", "Sports Exhaust", "Seat Covers", "Mats", "Polishes", 
+  "Sun visors", "Air Press", "Fog Lamps", "Anti-heat Tints"
+];
+
+const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+
+const fmt12 = (t: string) => {
+  const [h, m] = t.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  return `${h % 12 || 12}:${m.toString().padStart(2, '0')} ${ampm}`;
+};
 
 const Booking = () => {
-  const { user } = useAuth();
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [selectedBranch, setSelectedBranch] = useState('');
-  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  
+  const [branches, setBranches] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [selectedServices, setSelectedServices] = useState<string[]>([]);
+  const [branchId, setBranchId] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
+  const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
+
+  const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    supabase.from('branches').select('*').eq('is_active', true).then(({ data }) => {
+    const fetchData = async () => {
+      const { data } = await supabase.from('branches').select('*').eq('is_active', true);
       setBranches(data || []);
-    });
-  }, []);
+      setLoading(false);
+    };
+    fetchData();
+    if (user?.user_metadata?.phone) setPhone(user.user_metadata.phone);
+  }, [user]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) { toast.error('Please login first'); return; }
-    if (!selectedBranch || !date || !time) { toast.error('Please fill all required fields'); return; }
-
-    setSubmitting(true);
-    const { error } = await supabase.from('bookings').insert({
-      user_id: user.id,
-      branch_id: selectedBranch,
-      vehicle_id: selectedVehicle?.id || null,
-      booking_date: date,
-      booking_time: time,
-      notes,
-      status: 'pending',
-    });
-
-    if (error) {
-      toast.error('Failed to create booking');
-    } else {
-      toast.success('Booking created successfully!');
-      setDate('');
-      setTime('');
-      setNotes('');
-    }
-    setSubmitting(false);
+  const toggleService = (service: string) => {
+    setSelectedServices(prev => 
+      prev.includes(service) 
+        ? prev.filter(s => s !== service) 
+        : [...prev, service]
+    );
   };
 
-  const timeSlots = [
-    '10:00 AM', '11:00 AM', '12:00 PM', '01:00 PM',
-    '02:00 PM', '03:00 PM', '04:00 PM', '05:00 PM',
-    '06:00 PM', '07:00 PM', '08:00 PM',
-  ];
+  const handleSubmit = async () => {
+    if (!user) return;
+    if (!phone) {
+      toast.error("Phone number is required for confirmation");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const fullNotes = `CONTACT: ${phone}\nSERVICES: ${selectedServices.join(', ')}\n\nUSER NOTES: ${notes}`.trim();
+      const { error } = await supabase.from('bookings').insert({
+        user_id: user.id,
+        branch_id: branchId,
+        notes: fullNotes,
+        booking_date: date,
+        booking_time: time,
+        status: 'pending',
+      });
+      if (error) throw error;
+      setStep(3);
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading || authLoading) return (
+    <div className="flex h-[80vh] items-center justify-center">
+      <Loader2 className="h-10 w-10 animate-spin text-orange-500" />
+    </div>
+  );
+
+  if (step === 3) return (
+    <div className="min-h-[90vh] flex items-center justify-center px-4 bg-zinc-50/50">
+      <Card className="w-full max-w-lg border-none shadow-2xl rounded-[3rem] p-12 text-center bg-white">
+        <div className="mb-8 inline-flex h-24 w-24 items-center justify-center rounded-full bg-green-50 text-green-600">
+          <CheckCircle2 className="h-14 w-14" />
+        </div>
+        <h2 className="text-4xl font-black text-zinc-900 tracking-tighter mb-4 uppercase">Success!</h2>
+        <p className="text-zinc-600 font-bold mb-10 leading-relaxed uppercase text-xs tracking-widest">
+          We will call you at <span className="text-orange-600 font-black">{phone}</span> <br/> 
+          to confirm your slot and details.
+        </p>
+        <Button className="w-full h-16 rounded-2xl font-black text-lg uppercase tracking-widest" onClick={() => navigate('/')}>Return to Shop</Button>
+      </Card>
+    </div>
+  );
 
   return (
-    <div className="container py-8 max-w-2xl">
-      <h1 className="text-3xl font-bold mb-2">Book Installation</h1>
-      <p className="text-muted-foreground mb-8">Schedule a professional installation at one of our branches</p>
+    <div className="min-h-screen bg-zinc-50/50 pt-10 pb-24 px-4">
+      <div className="max-w-2xl mx-auto">
+        
+        <div className="flex items-center justify-between mb-12">
+          <button onClick={() => step > 1 ? setStep(step - 1) : navigate(-1)} className="p-3 hover:bg-white rounded-full transition-all text-zinc-900 shadow-sm border border-zinc-200 bg-white">
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <div className="flex gap-1.5">
+            <div className={`h-1.5 w-8 rounded-full transition-all ${step >= 1 ? 'bg-orange-500' : 'bg-zinc-300'}`} />
+            <div className={`h-1.5 w-8 rounded-full transition-all ${step >= 2 ? 'bg-orange-500' : 'bg-zinc-300'}`} />
+          </div>
+        </div>
 
-      <form onSubmit={handleSubmit}>
-        <Card>
-          <CardHeader><CardTitle>Booking Details</CardTitle></CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <Label>Branch *</Label>
-              <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-                <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
-                <SelectContent>
-                  {branches.map((b) => (
-                    <SelectItem key={b.id} value={b.id}>{b.name} — {b.city}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        {step === 1 ? (
+          <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <header className="space-y-2">
+              <h1 className="text-6xl font-black text-zinc-900 tracking-tighter leading-[0.9] uppercase">
+                Pick your <br/><span className="text-orange-600">Upgrades</span>
+              </h1>
+              <p className="text-zinc-500 font-bold text-xs uppercase tracking-[0.3em]">Select services & location</p>
+            </header>
+
+            <div className="grid grid-cols-2 gap-3">
+              {SPECIALIST_SERVICES.map((service) => {
+                const isSelected = selectedServices.includes(service);
+                return (
+                  <button
+                    key={service}
+                    onClick={() => toggleService(service)}
+                    className={`relative flex items-center justify-between px-6 py-5 rounded-2xl border-2 transition-all duration-300 text-left ${
+                      isSelected 
+                        ? 'border-orange-500 bg-orange-500 text-white shadow-xl shadow-orange-500/20 scale-[0.98]' 
+                        : 'border-zinc-300 bg-white text-zinc-900 hover:border-zinc-500 shadow-sm'
+                    }`}
+                  >
+                    <span className="text-[11px] font-black uppercase tracking-wider">{service}</span>
+                    {isSelected && <X className="h-3 w-3 text-white/60" />}
+                  </button>
+                );
+              })}
             </div>
 
-            <div>
-              <Label>Your Vehicle (optional)</Label>
-              <VehicleSelector onSelect={setSelectedVehicle} />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="flex items-center gap-1"><Calendar className="h-3 w-3" /> Date *</Label>
-                <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} min={new Date().toISOString().split('T')[0]} required />
+            <div className="space-y-4 pt-4">
+              <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 ml-1">Location Selection</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {branches.map((b) => (
+                  <button
+                    key={b.id}
+                    onClick={() => setBranchId(b.id)}
+                    className={`w-full flex items-center justify-between p-6 rounded-2xl border-2 transition-all ${
+                      branchId === b.id ? 'border-zinc-900 bg-zinc-900 text-white shadow-2xl' : 'border-zinc-300 bg-white text-zinc-900 hover:bg-white shadow-sm'
+                    }`}
+                  >
+                    <div className="text-left">
+                      <p className="font-black text-lg uppercase leading-none">{b.name}</p>
+                      <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${branchId === b.id ? 'text-orange-400' : 'text-zinc-500'}`}>{b.city}</p>
+                    </div>
+                  </button>
+                ))}
               </div>
-              <div>
-                <Label className="flex items-center gap-1"><Clock className="h-3 w-3" /> Time *</Label>
-                <Select value={time} onValueChange={setTime}>
-                  <SelectTrigger><SelectValue placeholder="Select time" /></SelectTrigger>
-                  <SelectContent>
-                    {timeSlots.map((t) => (
-                      <SelectItem key={t} value={t}>{t}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
 
-            <div>
-              <Label>Notes (optional)</Label>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Any special requirements..." />
-            </div>
-
-            <Button type="submit" className="w-full" size="lg" disabled={submitting}>
-              {submitting ? 'Booking...' : 'Confirm Booking'}
+            <Button 
+              className="w-full h-20 rounded-3xl font-black text-xl uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/20 active:scale-95 transition-all"
+              disabled={selectedServices.length === 0 || !branchId}
+              onClick={() => setStep(2)}
+            >
+              Continue <ChevronRight className="ml-2 h-6 w-6" />
             </Button>
-          </CardContent>
-        </Card>
-      </form>
+          </div>
+        ) : (
+          <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
+             <header className="space-y-2">
+              <h1 className="text-6xl font-black text-zinc-900 tracking-tighter leading-[0.9] uppercase">
+                Contact <br/><span className="text-orange-600">Details</span>
+              </h1>
+              <p className="text-zinc-500 font-bold text-xs uppercase tracking-[0.3em]">We will call you to confirm</p>
+            </header>
+
+            <div className="flex flex-wrap gap-2">
+              {selectedServices.map(s => (
+                <Badge key={s} className="bg-orange-100 text-orange-600 border-none px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-wider">
+                  {s}
+                </Badge>
+              ))}
+            </div>
+
+            <div className="space-y-2">
+                {/* DARKER LABEL */}
+                <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-1">Contact Number (For Confirmation Call)</Label>
+                <div className="relative group">
+                  <Phone className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-600 transition-colors group-focus-within:text-orange-500" />
+                  <input 
+                    type="tel" 
+                    placeholder="03XX XXXXXXX"
+                    
+                    className="w-full h-16 pl-14 pr-6 rounded-2xl bg-white border-2 border-zinc-300 font-black uppercase text-sm outline-none focus:border-orange-500 transition-all shadow-sm text-zinc-900 placeholder:text-zinc-400"
+                    value={phone} 
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                  />
+                </div>
+                <p className="text-[9px] font-black text-zinc-500 uppercase tracking-tight ml-1">Our manager will reach out to this number to finalize the time slot.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-1">Arrival Date</Label>
+                <input 
+                  type="date" 
+                  min={new Date().toISOString().split('T')[0]} 
+                  className="w-full h-16 px-6 rounded-2xl bg-white border-2 border-zinc-300 font-black uppercase text-sm outline-none focus:border-orange-500 transition-all shadow-sm text-zinc-900"
+                  value={date} 
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-1">Arrival Time</Label>
+                <select 
+                  className="w-full h-16 px-6 rounded-2xl bg-white border-2 border-zinc-300 font-black uppercase text-sm outline-none appearance-none focus:border-orange-500 transition-all shadow-sm text-zinc-900"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                >
+                  <option value="" className="font-black">Time Slot</option>
+                  {TIME_SLOTS.map(t => <option key={t} value={t} className="font-black uppercase">{fmt12(t)}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+               <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-1">Vehicle Info & Special Requests</Label>
+               <Textarea 
+                placeholder="E.G. LAND CRUISER 300, 2024, BLACK..."
+                className="bg-white border-2 border-zinc-300 rounded-[2rem] p-8 focus:ring-0 resize-none font-black text-sm uppercase placeholder:text-zinc-400 h-40 transition-all focus:border-orange-500 shadow-sm text-zinc-900"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+               />
+            </div>
+
+            <Button 
+              className="w-full h-20 rounded-3xl font-black text-xl uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/30 active:scale-95 transition-all"
+              disabled={submitting || !date || !time || !phone}
+              onClick={handleSubmit}
+            >
+              {submitting ? <Loader2 className="h-6 w-6 animate-spin" /> : 'Confirm Booking'}
+            </Button>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 };

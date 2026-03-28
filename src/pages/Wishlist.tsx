@@ -24,27 +24,24 @@ const Wishlist = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20">
-            <Heart className="h-5 w-5 text-red-500" fill="currentColor" />
-          </div>
           <div>
-            <h1 className="text-2xl font-black text-white">My Wishlist</h1>
-            <p className="text-sm text-zinc-500">{items.length} {items.length === 1 ? 'item' : 'items'} saved</p>
+            <h1 className="text font-black text-white">My Wishlist</h1>
+            <p className="text-lg text-zinc-900">{items.length} {items.length === 1 ? 'item' : 'items'} saved</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {items.length > 0 && (
             <button
               onClick={clear}
-              className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-500/10 border border-transparent hover:border-red-500/20"
+              className="flex items-center gap-1.5 text-sm text-zinc-700 hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-500/10 border border-transparent hover:border-red-500/20"
             >
               <Trash2 className="h-3.5 w-3.5" />
               Clear all
             </button>
           )}
           <Link
-            to="/products"
-            className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-white transition-colors"
+            to="/categories"
+            className="flex items-center gap-1.5 text-sm text-zinc-700 hover:text-zinc-200 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             Continue shopping
@@ -63,7 +60,7 @@ const Wishlist = () => {
             Save products you love by clicking the heart icon on any product.
           </p>
           <Link
-            to="/products"
+            to="/categories"
             className="flex items-center gap-2 px-6 py-3 rounded-xl bg-orange-500 hover:bg-orange-400 text-white font-semibold text-sm shadow-lg shadow-orange-500/25 transition-all"
           >
             Browse Products

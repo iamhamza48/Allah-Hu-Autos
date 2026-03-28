@@ -1,9 +1,23 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { User, Session } from '@supabase/supabase-js';
 import type { Profile, AppRole } from '@/types/database';
 
-export function useAuth() {
+interface AuthContextValue {
+  user: User | null;
+  session: Session | null;
+  profile: Profile | null;
+  role: AppRole;
+  loading: boolean;
+  isAdmin: boolean;
+  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<any>;
+  signIn: (email: string, password: string) => Promise<any>;
+  signOut: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -30,7 +44,6 @@ export function useAuth() {
   }, []);
 
   useEffect(() => {
-    // Get initial session first
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -44,7 +57,6 @@ export function useAuth() {
       }
     });
 
-    // Listen for auth changes after initial load
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -62,24 +74,31 @@ export function useAuth() {
     return () => subscription.unsubscribe();
   }, [fetchProfile, fetchRole]);
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, phone?: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: fullName, phone: phone ?? '' },
         emailRedirectTo: window.location.origin,
       },
     });
+
+    // Persist phone + name to profiles table immediately
+    if (!error && data.user) {
+      await supabase.from('profiles').upsert({
+        id: data.user.id,
+        full_name: fullName,
+        phone: phone ?? null,
+        updated_at: new Date().toISOString(),
+      });
+    }
+
     return { data, error };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { data, error };
+    return supabase.auth.signInWithPassword({ email, password });
   };
 
   const signOut = async () => {
@@ -90,15 +109,17 @@ export function useAuth() {
     setRole('user');
   };
 
-  return {
-    user,
-    session,
-    profile,
-    role,
-    loading,
-    isAdmin: role === 'admin',
-    signUp,
-    signIn,
-    signOut,
-  };
+  return (
+    <AuthContext.Provider
+      value={{ user, session, profile, role, loading, isAdmin: role === 'admin', signUp, signIn, signOut }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+export function useAuth(): AuthContextValue {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
+  return ctx;
 }

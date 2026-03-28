@@ -45,14 +45,16 @@ const Index = () => {
         
         {/* Increased vertical padding for a taller, grander hero */}
         <div className="container relative z-10 py-16 lg:py-28">
-          <div className="max-w-2xl">
+          {/* CHANGED THIS LINE: max-w-2xl is now max-w-4xl */}
+          <div className="max-w-4xl">
             <Badge className="mb-4 bg-primary/20 text-primary border-primary/30 text-sm px-3 py-1">
               Best at what we do
             </Badge>
             
             {/* Massively scaled up the font size (text-4xl to 6xl) and added tracking-tight */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-4 leading-[1.1] tracking-tight">
-              We Take Pride in <span className="text-primary">Your Ride</span>
+              {/* CHANGED THIS LINE: Added whitespace-nowrap to the span */}
+              We Take Pride in <span className="text-primary whitespace-nowrap">Your Ride</span>
             </h1>
             
             {/* Bumped text size to base/lg and improved line height */}
@@ -94,114 +96,193 @@ const Index = () => {
 
 
       {/* Vehicle Finder */}
-      <section className="border-y bg-muted/30 py-12 lg:py-16">
-        <div className="container">
-          <div className="max-w-2xl mx-auto text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3">
+      <section className="relative bg-primary/[1] border-y border-primary/10 py-12 lg:py-16 overflow-hidden">
+        {/* A very soft, subtle radial glow in the background */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w h-full bg-gradient-to-b from-primary/[1] to-transparent pointer-events-none" />
+        
+        <div className="container relative z-10">
+          {/* Centered Text Layout */}
+          <div className="max-w mx-auto text-center mb-8">
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3 text-white 
+              [text-shadow:_-2px_-2px_0_#000,_2px_-2px_0_#000,_-2px_2px_0_#000,_2px_px_0_#000]">
               Shop by Your Car
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-zinc-900">
               Select your vehicle's make, model, and year to see accessories guaranteed to fit your ride.
             </p>
           </div>
           
-          <div className="max-w-4xl mx-auto bg-card p-4 sm:p-6 rounded-2xl shadow-sm border border-border/50">
+          {/* Crisp white floating card to hold the dropdowns */}
+          <div className="max-w-4xl mx-auto bg-white p-4 sm:p-6 md:px-8 rounded-3xl shadow-xl shadow-primary/5 border border-primary/10">
             <VehicleSelector />
           </div>
         </div>
       </section>
 
-
-      {/* Featured Categories */}
-      <section className="container py-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-bold">Shop by Category</h2>
-          <Link to="/categories">
-            <Button variant="ghost" size="sm" className="gap-1 h-6 text-xs px-2">
-              All Categories <ArrowRight className="h-3 w-3" />
-            </Button>
-          </Link>
-        </div>
-        {loading ? (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-            {Array.from({ length: 12 }).map((_, i) => <div key={i} className="aspect-[4/3] rounded-lg bg-secondary animate-pulse" />)}
+{/* Featured Categories */}
+      <section className="bg-white py-12 lg:py-16">
+        <div className="container">
+          {/* Centered Header Layout */}
+          <div className="max-w-2xl mx-auto text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3 text-zinc-900">
+              Shop by Category
+            </h2>
+            <p className="text-zinc-500 text-sm sm:text-base">
+              Find exactly what you need for your vehicle from our premium selection of accessories.
+            </p>
           </div>
-        ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
-            {featuredCategories.map((cat, i) => <CategoryCard key={cat.id} category={cat} index={i} />)}
-          </div>
-        )}
-      </section>
-
-      {/* Featured Products */}
-      <section className="bg-secondary/40 border-y">
-        <div className="container py-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Tag className="h-4 w-4 text-primary" />
-              <h2 className="text-sm font-bold">Featured Products</h2>
+          
+          {loading ? (
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-1rem)] md:w-[220px] lg:w-[240px] aspect-[4/3] rounded-xl bg-zinc-100 animate-pulse" />
+              ))}
             </div>
-            <Link to="/products">
-              <Button variant="ghost" size="sm" className="gap-1 h-6 text-xs px-2">
-                View All <ArrowRight className="h-3 w-3" />
+          ) : (
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+              {featuredCategories.map((cat, i) => (
+                <div key={cat.id} className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-1rem)] md:w-[220px] lg:w-[240px]">
+                  <CategoryCard category={cat} index={i} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Centered View All Button */}
+          <div className="mt-10 flex justify-center">
+            <Link to="/categories">
+              <Button className="gap-2 rounded-full px-8 shadow-md shadow-primary/20 font-bold">
+                Explore All Categories <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* Featured Products */}
+      {/* Added a very subtle primary (orange) tint to the background to add color without being dark */}
+      <section className="bg-primary/[0.03] border-y border-primary/10 py-12 lg:py-16">
+        <div className="container">
+          {/* Centered Header Layout */}
+          <div className="max-w-2xl mx-auto text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3 text-zinc-900">
+              Featured Products
+            </h2>
+            <p className="text-zinc-500 text-sm sm:text-base">
+              Handpicked, top-rated accessories guaranteed to upgrade your ride.
+            </p>
+          </div>
+
           {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-              {Array.from({ length: 10 }).map((_, i) => <div key={i} className="aspect-[4/3] rounded-lg bg-card animate-pulse" />)}
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-1rem)] md:w-[220px] lg:w-[220px] aspect-[4/3] rounded-xl bg-white animate-pulse shadow-sm" />
+              ))}
             </div>
           ) : featuredProducts.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p className="text-sm">No featured products yet.</p>
-              <p className="text-xs mt-1">Mark products as featured in the admin panel.</p>
+            <div className="text-center py-12 bg-white rounded-2xl border border-zinc-100 shadow-sm max-w-2xl mx-auto">
+              <p className="text-lg font-medium text-zinc-900">No featured products yet.</p>
+              <p className="text-sm text-zinc-500 mt-1">Mark products as featured in the admin panel.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-              {featuredProducts.map(p => <ProductCard key={p.id} product={p} />)}
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+              {featuredProducts.map(p => (
+                <div key={p.id} className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-1rem)] md:w-[220px] lg:w-[220px]">
+                  <ProductCard product={p} />
+                </div>
+              ))}
             </div>
           )}
+
+          {/* Centered View All Button */}
+          <div className="mt-10 flex justify-center">
+            <Link to="/categories">
+              <Button className="gap-2 rounded-full px-8 shadow-md shadow-primary/20 font-bold">
+                Shop All Products <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
+
 
       {/* New Arrivals */}
-      <section className="container py-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Zap className="h-4 w-4 text-primary" />
-            <h2 className="text-sm font-bold">New Arrivals</h2>
+      <section className="bg-white py-12 lg:py-16">
+        <div className="container">
+          {/* Centered Header Layout */}
+          <div className="max-w-2xl mx-auto text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3 text-zinc-900">
+              New Arrivals
+            </h2>
+            <p className="text-zinc-500 text-sm sm:text-base">
+              Discover the latest premium accessories added to our collection.
+            </p>
           </div>
-          <Link to="/products">
-            <Button variant="ghost" size="sm" className="gap-1 h-6 text-xs px-2">
-              View All <ArrowRight className="h-3 w-3" />
-            </Button>
-          </Link>
+
+          {loading ? (
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-1rem)] md:w-[220px] lg:w-[220px] aspect-[4/3] rounded-xl bg-zinc-100 animate-pulse shadow-sm" />
+              ))}
+            </div>
+          ) : newArrivals.length === 0 ? (
+            <div className="text-center py-12 bg-zinc-50 rounded-2xl border border-zinc-100 max-w-2xl mx-auto">
+              <p className="text-lg font-medium text-zinc-900">No new arrivals right now.</p>
+              <p className="text-sm text-zinc-500 mt-1">Check back soon for the latest gear.</p>
+            </div>
+          ) : (
+            <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
+              {newArrivals.map(p => (
+                <div key={p.id} className="w-[calc(50%-0.5rem)] sm:w-[calc(33.333%-1rem)] md:w-[220px] lg:w-[220px]">
+                  <ProductCard product={p} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Centered View All Button */}
+          <div className="mt-10 flex justify-center">
+            <Link to="/categories">
+              <Button className="gap-2 rounded-full px-8 shadow-md shadow-primary/20 font-bold">
+                Explore More <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
-        {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-            {Array.from({ length: 10 }).map((_, i) => <div key={i} className="aspect-[4/3] rounded-lg bg-secondary animate-pulse" />)}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-            {newArrivals.map(p => <ProductCard key={p.id} product={p} />)}
-          </div>
-        )}
       </section>
 
-      {/* CTA banner */}
-      <section className="border-y bg-primary/5">
-        <div className="container py-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div>
-              <h3 className="text-sm font-bold">Need help choosing the right accessories?</h3>
-              <p className="text-xs text-muted-foreground">Our experts are available Mon–Sat, 10AM–9PM</p>
-            </div>
-            <div className="flex gap-2 shrink-0">
-              <a href="tel:+923001234567">
-                <Button size="sm" className="h-7 text-xs gap-1.5">📞 Call Us</Button>
+      {/* High-End Dark CTA Banner */}
+      {/* CHANGE: Background changed from dark (#111111) to a light orange tint (primary/10) */}
+      <section className="relative bg-primary/10 py-16 lg:py-24 overflow-hidden border-t border-border/10">
+        
+        {/* Optional: You might want to remove this dark gradient background for the light version */}
+        {/* <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent z-0" /> */}
+        
+        <div className="container relative z-10">
+          <div className="max-w-3xl mx-auto text-center">
+            
+            {/* CHANGE: Headline text color changed from white to zinc-950 for contrast */}
+            <h2 className="text-3xl md:text-5xl font-black text-zinc-950 tracking-tight mb-4">
+              Need help choosing the <br className="hidden sm:block" />
+              <span className="text-primary">right accessories?</span>
+            </h2>
+            
+            {/* CHANGE: Description text color changed from zinc-400 to zinc-600 for contrast */}
+            <p className="text-zinc-600 text-base sm:text-lg mb-10 max-w-xl mx-auto font-medium">
+              Our auto experts are available Monday–Saturday, 10AM–9PM to help you find the perfect fit for your ride.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a href="tel:03337778606" className="w-full sm:w-auto">
+                <Button size="lg" className="w-full sm:w-auto rounded-full px-8 gap-2 font-bold text-base shadow-lg shadow-primary/20">
+                  📞 Call 0333 7778606
+                </Button>
               </a>
-              <Link to="/booking">
-                <Button size="sm" variant="outline" className="h-7 text-xs">Book Installation</Button>
+              <Link to="/booking" className="w-full sm:w-auto">
+                {/* CHANGE: 'Book Installation' button border and text color updated for the light background */}
+                <Button size="lg" variant="outline" className="w-full sm:w-auto rounded-full px-8 gap-2 border-zinc-200 text-zinc-900 hover:bg-zinc-50 font-medium text-base">
+                  Book Installation
+                </Button>
               </Link>
             </div>
           </div>
