@@ -11,18 +11,305 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatPKR } from '@/lib/format';
-import type { Product, Category, ProductImage, Vehicle } from '@/types/database';
+import type { Product, Category, ProductImage } from '@/types/database';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Upload, X, ImagePlus, Loader2, Search, ArrowUpDown, Car } from 'lucide-react';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { Plus, Pencil, Trash2, Upload, X, ImagePlus, Loader2, Search, ArrowUpDown, Car, Package } from 'lucide-react';
 
 const BUCKET = 'product-images';
 type SortKey = 'name' | 'price' | 'created_at';
 type SortDir = 'asc' | 'desc';
 
+// ─── Quick Stock Dialog ───────────────────────────────────────────────────────
+interface QuickStockDialogProps {
+  product: Product | null;
+  open: boolean;
+  onClose: () => void;
+}
+
+const QuickStockDialog = ({ product, open, onClose }: QuickStockDialogProps) => {
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [variantId, setVariantId] = useState<string | null>(null);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (open && product) {
+      loadData();
+    } else {
+      setBranches([]);
+      setVariantId(null);
+      setQuantities({});
+    }
+  }, [open, product]);
+
+  const loadData = async () => {
+    if (!product) return;
+    setLoading(true);
+    try {
+      // 1. Get existing variant or create a Default one
+      const { data: vars } = await supabase
+        .from('product_variants')
+        .select('id')
+        .eq('product_id', product.id)
+        .order('created_at')
+        .limit(1);
+
+      let vid: string;
+      if (vars && vars.length > 0) {
+        vid = vars[0].id;
+      } else {
+        const { data: newVar, error } = await supabase
+          .from('product_variants')
+          .insert({ product_id: product.id, name: 'Default', price: product.base_price })
+          .select('id')
+          .single();
+        if (error) throw error;
+        vid = newVar.id;
+      }
+      setVariantId(vid);
+
+      // 2. Get active branches or create a Main Branch
+      const { data: existingBrs } = await supabase
+        .from('branches')
+        .select('*')
+        .eq('is_active', true)
+        .order('name');
+
+      let brs = existingBrs || [];
+      if (brs.length === 0) {
+        const { data: newBr, error } = await supabase
+          .from('branches')
+          .insert({ name: 'Main Branch', is_active: true })
+          .select()
+          .single();
+        if (error) throw error;
+        brs = [newBr];
+        toast.info('Created a "Main Branch" — rename it in Settings if needed.');
+      }
+      setBranches(brs);
+
+      // 3. Load current stock for this variant
+      const { data: invData } = await supabase
+        .from('inventory')
+        .select('*')
+        .eq('variant_id', vid);
+
+      const qtys: Record<string, number> = {};
+      brs.forEach((b: any) => { qtys[b.id] = 0; });
+      (invData || []).forEach((inv: any) => { qtys[inv.branch_id] = inv.quantity ?? 0; });
+      setQuantities(qtys);
+    } catch (e: any) {
+      toast.error('Failed to load stock: ' + e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!variantId) return;
+    setSaving(true);
+    try {
+      const upsertData = Object.entries(quantities).map(([branchId, quantity]) => ({
+        variant_id: variantId,
+        branch_id: branchId,
+        quantity,
+      }));
+      const { error } = await supabase
+        .from('inventory')
+        .upsert(upsertData, { onConflict: 'variant_id,branch_id' });
+      if (error) throw error;
+      toast.success('Stock saved!');
+      onClose();
+    } catch (e: any) {
+      toast.error('Failed to save: ' + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Package className="h-4 w-4 text-primary" />
+            Set Stock
+          </DialogTitle>
+          {product && <p className="text-sm text-zinc-500 font-normal">{product.name}</p>}
+        </DialogHeader>
+
+        {loading ? (
+          <div className="flex items-center justify-center h-32">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-zinc-400">Loading…</span>
+          </div>
+        ) : (
+          <div className="space-y-4 pt-1">
+            {branches.length === 1 ? (
+              <div>
+                <Label className="text-xs text-zinc-500 uppercase tracking-wide">{branches[0].name}</Label>
+                <div className="flex items-center gap-2 mt-2">
+                  <Input
+                    type="number"
+                    min={0}
+                    value={quantities[branches[0].id] ?? 0}
+                    onChange={e => setQuantities({ ...quantities, [branches[0].id]: Math.max(0, +e.target.value) })}
+                    className="text-2xl font-bold h-12"
+                    autoFocus
+                    onKeyDown={e => { if (e.key === 'Enter') handleSave(); }}
+                  />
+                  <span className="text-sm text-zinc-400 whitespace-nowrap">units</span>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <p className="text-xs text-zinc-400 uppercase tracking-wide font-medium">Stock per branch</p>
+                {branches.map((branch: any) => (
+                  <div key={branch.id} className="flex items-center gap-3">
+                    <span className="text-sm text-zinc-700 flex-1 truncate">{branch.name}</span>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={quantities[branch.id] ?? 0}
+                      onChange={e => setQuantities({ ...quantities, [branch.id]: Math.max(0, +e.target.value) })}
+                      className="h-9 w-24 text-sm font-semibold text-right tabular-nums"
+                    />
+                    <span className="text-xs text-zinc-400 w-8">units</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <Button className="w-full h-10" onClick={handleSave} disabled={saving}>
+              {saving
+                ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving…</>
+                : 'Save Stock'}
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// ─── Compatibility Tab ────────────────────────────────────────────────────────
+interface FlatVehicle {
+  id: string;
+  year: number;
+  make: string;
+  model: string;
+}
+
+interface CompatibilityTabProps {
+  vehicles: FlatVehicle[];
+  compatibleVehicles: string[];
+  setCompatibleVehicles: (ids: string[]) => void;
+  onSave: () => void;
+}
+
+const CompatibilityTab = ({ vehicles, compatibleVehicles, setCompatibleVehicles, onSave }: CompatibilityTabProps) => {
+  const [filterMake, setFilterMake] = useState('');
+  const [filterModel, setFilterModel] = useState('');
+
+  const makes = Array.from(new Set(vehicles.map(v => v.make))).sort();
+  const models = Array.from(
+    new Set(vehicles.filter(v => !filterMake || v.make === filterMake).map(v => v.model))
+  ).sort();
+  const filtered = vehicles.filter(v =>
+    (!filterMake || v.make === filterMake) &&
+    (!filterModel || v.model === filterModel)
+  );
+
+  const allFilteredIds = filtered.map(v => v.id);
+  const allChecked = allFilteredIds.length > 0 && allFilteredIds.every(id => compatibleVehicles.includes(id));
+
+  const toggleAll = () => {
+    if (allChecked) {
+      setCompatibleVehicles(compatibleVehicles.filter(id => !allFilteredIds.includes(id)));
+    } else {
+      const merged = Array.from(new Set([...compatibleVehicles, ...allFilteredIds]));
+      setCompatibleVehicles(merged);
+    }
+  };
+
+  const toggle = (id: string, checked: boolean) => {
+    if (checked) setCompatibleVehicles([...compatibleVehicles, id]);
+    else setCompatibleVehicles(compatibleVehicles.filter(i => i !== id));
+  };
+
+  return (
+    <div className="rounded-lg border p-4 space-y-4">
+      <div className="flex items-center gap-2">
+        <Car className="h-5 w-5 text-primary" />
+        <h3 className="font-semibold">Compatible Vehicles</h3>
+        {compatibleVehicles.length > 0 && (
+          <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+            {compatibleVehicles.length} selected
+          </span>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label className="text-xs mb-1 block">Filter by Make</Label>
+          <Select value={filterMake} onValueChange={v => { setFilterMake(v === '__all__' ? '' : v); setFilterModel(''); }}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Makes" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All Makes</SelectItem>
+              {makes.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs mb-1 block">Filter by Model</Label>
+          <Select value={filterModel} onValueChange={v => setFilterModel(v === '__all__' ? '' : v)} disabled={!filterMake}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Models" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all__">All Models</SelectItem>
+              {models.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      {filtered.length > 1 && (
+        <div className="flex items-center gap-3 px-3 py-2 bg-secondary/60 rounded-md border cursor-pointer hover:bg-secondary transition-colors" onClick={toggleAll}>
+          <Switch checked={allChecked} onCheckedChange={toggleAll} />
+          <Label className="cursor-pointer text-sm font-medium">
+            Select all {filterMake || filterModel ? 'filtered' : ''} ({filtered.length} vehicles)
+          </Label>
+        </div>
+      )}
+      <div className="max-h-[260px] overflow-y-auto space-y-1 border rounded-md p-2 bg-secondary/20">
+        {filtered.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-6">No vehicles match the filter.</p>
+        ) : (
+          filtered.map(v => (
+            <div
+              key={v.id}
+              className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer ${
+                compatibleVehicles.includes(v.id) ? 'bg-primary/10 border border-primary/20' : 'hover:bg-secondary'
+              }`}
+              onClick={() => toggle(v.id, !compatibleVehicles.includes(v.id))}
+            >
+              <Switch checked={compatibleVehicles.includes(v.id)} onCheckedChange={checked => toggle(v.id, checked)} />
+              <span className="text-sm flex-1">
+                <span className="font-medium">{v.make} {v.model}</span>
+                <span className="text-muted-foreground ml-2 text-xs">{v.year}</span>
+              </span>
+            </div>
+          ))
+        )}
+      </div>
+      <Button onClick={onSave} className="w-full">Save Compatibility</Button>
+    </div>
+  );
+};
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 const AdminProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [vehicles, setVehicles] = useState<FlatVehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterCat, setFilterCat] = useState('all');
@@ -31,15 +318,18 @@ const AdminProducts = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [activeTab, setActiveTab] = useState('details');
-  
+
+  // Quick stock
+  const [stockProduct, setStockProduct] = useState<Product | null>(null);
+  const [quickStockOpen, setQuickStockOpen] = useState(false);
+
   const [form, setForm] = useState({
     name: '', slug: '', description: '', category_id: '',
     base_price: 0, compare_price: 0, installable: false, featured: false,
   });
-  
+
   const [images, setImages] = useState<ProductImage[]>([]);
   const [compatibleVehicles, setCompatibleVehicles] = useState<string[]>([]);
-  
   const [imgLoading, setImgLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [imgPreview, setImgPreview] = useState<string | null>(null);
@@ -66,12 +356,11 @@ const AdminProducts = () => {
     fetchProducts();
     supabase.from('categories').select('*').order('name').then(({ data }) => setCategories(data || []));
     supabase.from('vehicle_makes').select('*, models:vehicle_models(*, vehicles(*))').order('name').then(({ data }) => {
-      // Flatten into a list of vehicles with make/model names attached
       const flat: any[] = [];
       (data || []).forEach((make: any) => {
         (make.models || []).forEach((model: any) => {
           (model.vehicles || []).forEach((v: any) => {
-            flat.push({ id: v.id, year: v.year, make: make.name, model: model.name, makeId: make.id, modelId: model.id });
+            flat.push({ id: v.id, year: v.year, make: make.name, model: model.name });
           });
         });
       });
@@ -128,16 +417,16 @@ const AdminProducts = () => {
   const openCreate = () => {
     setEditing(null); setActiveTab('details');
     setForm({ name: '', slug: '', description: '', category_id: '', base_price: 0, compare_price: 0, installable: false, featured: false });
-    setImages([]); 
+    setImages([]);
     setCompatibleVehicles([]);
     setDialogOpen(true);
   };
 
   const openEdit = (p: Product) => {
     setEditing(p); setActiveTab('details');
-    setForm({ name: p.name, slug: p.slug, description: p.description, category_id: p.category_id, base_price: p.base_price, compare_price: p.compare_price || 0, installable: p.installable, featured: p.featured });
-    setImages([]); 
-    fetchImages(p.id); 
+    setForm({ name: p.name, slug: p.slug, description: p.description ?? '', category_id: p.category_id ?? '', base_price: p.base_price, compare_price: p.compare_price || 0, installable: p.installable ?? false, featured: p.featured ?? false });
+    setImages([]);
+    fetchImages(p.id);
     fetchCompatibilities(p.id);
     setDialogOpen(true);
   };
@@ -158,7 +447,6 @@ const AdminProducts = () => {
       toast.success('Product created');
     }
 
-    // Sync vehicle compatibility
     if (savedProductId) {
       try {
         await supabase.from('product_compatibility').delete().eq('product_id', savedProductId);
@@ -173,7 +461,7 @@ const AdminProducts = () => {
       }
     }
 
-    setDialogOpen(false); 
+    setDialogOpen(false);
     fetchProducts();
   };
 
@@ -222,15 +510,22 @@ const AdminProducts = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold">Products ({displayed.length}{displayed.length !== products.length ? ` of ${products.length}` : ''})</h2>
-        <Button onClick={openCreate}><Plus className="h-4 w-4 mr-1" /> Add Product</Button>
-      </div>
+      <AdminPageHeader
+        title={`Products (${displayed.length}${displayed.length !== products.length ? ` of ${products.length}` : ''})`}
+        subtitle="Manage your product catalog"
+        action={<Button size="sm" className="h-8 text-xs" onClick={openCreate}><Plus className="h-3.5 w-3.5 mr-1.5" /> Add Product</Button>}
+      />
+
+      <QuickStockDialog
+        product={stockProduct}
+        open={quickStockOpen}
+        onClose={() => { setQuickStockOpen(false); setStockProduct(null); }}
+      />
 
       <div className="flex flex-wrap gap-3 mb-4">
         <div className="relative flex-1 min-w-48">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products..." className="pl-9" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search products…" className="pl-9" />
         </div>
         <Select value={filterCat} onValueChange={setFilterCat}>
           <SelectTrigger className="w-48"><SelectValue placeholder="All categories" /></SelectTrigger>
@@ -261,7 +556,7 @@ const AdminProducts = () => {
               <TabsTrigger value="compatibility" className="flex-1">Compatibility {compatibleVehicles.length > 0 && `(${compatibleVehicles.length})`}</TabsTrigger>
               <TabsTrigger value="images" className="flex-1" disabled={!editing}>Images {images.length > 0 && `(${images.length})`}</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="details" className="space-y-4 pt-2">
               <div><Label>Name</Label><Input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="mt-1" /></div>
               <div><Label>Slug</Label><Input value={form.slug} onChange={e => setForm({ ...form, slug: e.target.value })} placeholder="auto-generated from name" className="mt-1" /></div>
@@ -363,18 +658,18 @@ const AdminProducts = () => {
         <Card>
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-zinc-50 hover:bg-zinc-50">
                 <TableHead className="w-14">Image</TableHead>
                 <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('name')}>Name <SortIcon k="name" /></TableHead>
-                <TableHead>Category</TableHead>
+                <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Category</TableHead>
                 <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('price')}>Price <SortIcon k="price" /></TableHead>
-                <TableHead>Featured</TableHead>
+                <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Featured</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {displayed.map(p => (
-                <TableRow key={p.id}>
+                <TableRow className="hover:bg-zinc-50/60" key={p.id}>
                   <TableCell>
                     {p.images?.[0] ? (
                       <img src={p.images[0].url} alt={p.name} className="w-10 h-10 object-cover rounded-md border" />
@@ -389,6 +684,13 @@ const AdminProducts = () => {
                   <TableCell>{formatPKR(p.base_price)}</TableCell>
                   <TableCell>{p.featured ? '⭐' : '—'}</TableCell>
                   <TableCell className="text-right">
+                    <Button
+                      variant="ghost" size="icon"
+                      title="Set stock"
+                      onClick={() => { setStockProduct(p); setQuickStockOpen(true); }}
+                    >
+                      <Package className="h-4 w-4 text-zinc-500" />
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => openEdit(p)}><Pencil className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(p.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                   </TableCell>
@@ -398,128 +700,6 @@ const AdminProducts = () => {
           </Table>
         </Card>
       )}
-    </div>
-  );
-};
-
-// ─── Cascading compatibility tab ──────────────────────────────────────────────
-interface CompatibilityTabProps {
-  vehicles: any[];
-  compatibleVehicles: string[];
-  setCompatibleVehicles: (ids: string[]) => void;
-  onSave: () => void;
-}
-
-const CompatibilityTab = ({ vehicles, compatibleVehicles, setCompatibleVehicles, onSave }: CompatibilityTabProps) => {
-  const [filterMake, setFilterMake] = useState('');
-  const [filterModel, setFilterModel] = useState('');
-
-  const makes = Array.from(new Set(vehicles.map(v => v.make))).sort();
-  const models = Array.from(
-    new Set(vehicles.filter(v => !filterMake || v.make === filterMake).map(v => v.model))
-  ).sort();
-  const filtered = vehicles.filter(v =>
-    (!filterMake || v.make === filterMake) &&
-    (!filterModel || v.model === filterModel)
-  );
-
-  const allFilteredIds = filtered.map(v => v.id);
-  const allChecked = allFilteredIds.length > 0 && allFilteredIds.every(id => compatibleVehicles.includes(id));
-
-  const toggleAll = () => {
-    if (allChecked) {
-      setCompatibleVehicles(compatibleVehicles.filter(id => !allFilteredIds.includes(id)));
-    } else {
-      const merged = Array.from(new Set([...compatibleVehicles, ...allFilteredIds]));
-      setCompatibleVehicles(merged);
-    }
-  };
-
-  const toggle = (id: string, checked: boolean) => {
-    if (checked) setCompatibleVehicles([...compatibleVehicles, id]);
-    else setCompatibleVehicles(compatibleVehicles.filter(i => i !== id));
-  };
-
-  return (
-    <div className="rounded-lg border p-4 space-y-4">
-      <div className="flex items-center gap-2">
-        <Car className="h-5 w-5 text-primary" />
-        <h3 className="font-semibold">Compatible Vehicles</h3>
-        {compatibleVehicles.length > 0 && (
-          <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-            {compatibleVehicles.length} selected
-          </span>
-        )}
-      </div>
-
-      {/* Cascading dropdowns */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <Label className="text-xs mb-1 block">Filter by Make</Label>
-          <Select value={filterMake} onValueChange={v => { setFilterMake(v === '__all__' ? '' : v); setFilterModel(''); }}>
-            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Makes" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">All Makes</SelectItem>
-              {makes.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label className="text-xs mb-1 block">Filter by Model</Label>
-          <Select value={filterModel} onValueChange={v => setFilterModel(v === '__all__' ? '' : v)} disabled={!filterMake}>
-            <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="All Models" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__all__">All Models</SelectItem>
-              {models.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Select all for current filter */}
-      {filtered.length > 1 && (
-        <div
-          className="flex items-center gap-3 px-3 py-2 bg-secondary/60 rounded-md border cursor-pointer hover:bg-secondary transition-colors"
-          onClick={toggleAll}
-        >
-          <Switch checked={allChecked} onCheckedChange={toggleAll} />
-          <Label className="cursor-pointer text-sm font-medium">
-            Select all {filterMake || filterModel ? 'filtered' : ''} ({filtered.length} vehicles)
-          </Label>
-        </div>
-      )}
-
-      {/* Vehicle list */}
-      <div className="max-h-[260px] overflow-y-auto space-y-1 border rounded-md p-2 bg-secondary/20">
-        {filtered.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">No vehicles match the filter.</p>
-        ) : (
-          filtered.map(v => (
-            <div
-              key={v.id}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors cursor-pointer ${
-                compatibleVehicles.includes(v.id) ? 'bg-primary/10 border border-primary/20' : 'hover:bg-secondary'
-              }`}
-              onClick={() => toggle(v.id, !compatibleVehicles.includes(v.id))}
-            >
-              <Switch
-                checked={compatibleVehicles.includes(v.id)}
-                onCheckedChange={checked => toggle(v.id, checked)}
-              />
-              <span className="text-sm flex-1">
-                <span className="font-medium">{v.make} {v.model}</span>
-                <span className="text-muted-foreground ml-2 text-xs">
-                  {v.year}
-                </span>
-              </span>
-            </div>
-          ))
-        )}
-      </div>
-
-      <Button onClick={onSave} className="w-full">
-        Save Compatibility
-      </Button>
     </div>
   );
 };

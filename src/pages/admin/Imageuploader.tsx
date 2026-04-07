@@ -178,7 +178,11 @@ const AdminImageUploader = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold">Image Uploader</h2>
+      <div>
+        <h2 className="text-lg font-semibold text-zinc-900 tracking-tight">Image Uploader</h2>
+        <p className="text-xs text-zinc-500 mt-0.5">Upload and assign product images</p>
+      </div>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: file picker */}

@@ -9,79 +9,171 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { Branch } from '@/types/database';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, MapPin } from 'lucide-react';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+
+const emptyForm = { name: '', address: '', city: '', phone: '', is_active: true };
 
 const AdminSettings = () => {
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Branch | null>(null);
-  const [form, setForm] = useState({ name: '', address: '', city: '', phone: '', is_active: true });
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
 
-  const fetch = async () => {
+  const fetchBranches = async () => {
+    setLoading(true);
     const { data } = await supabase.from('branches').select('*').order('name');
     setBranches(data || []);
+    setLoading(false);
   };
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { fetchBranches(); }, []);
+
+  const openAdd = () => { setEditing(null); setForm(emptyForm); setDialogOpen(true); };
+  const openEdit = (b: Branch) => {
+    setEditing(b);
+    setForm({ name: b.name, address: b.address || '', city: b.city || '', phone: b.phone || '', is_active: b.is_active ?? true });
+    setDialogOpen(true);
+  };
 
   const handleSave = async () => {
+    if (!form.name.trim()) return toast.error('Branch name is required');
+    setSaving(true);
     if (editing) {
-      await supabase.from('branches').update(form).eq('id', editing.id);
-      toast.success('Updated');
+      const { error } = await supabase.from('branches').update(form).eq('id', editing.id);
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      toast.success('Branch updated');
     } else {
-      await supabase.from('branches').insert(form);
-      toast.success('Created');
+      const { error } = await supabase.from('branches').insert(form);
+      if (error) { toast.error(error.message); setSaving(false); return; }
+      toast.success('Branch created');
     }
+    setSaving(false);
     setDialogOpen(false);
-    fetch();
+    fetchBranches();
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete?')) return;
-    await supabase.from('branches').delete().eq('id', id);
-    toast.success('Deleted');
-    fetch();
+    if (!confirm('Delete this branch?')) return;
+    const { error } = await supabase.from('branches').delete().eq('id', id);
+    if (error) return toast.error(error.message);
+    toast.success('Branch deleted');
+    fetchBranches();
   };
 
   return (
     <div>
-      <h2 className="text-xl font-bold mb-6">Branch Management</h2>
-      <Button className="mb-4" onClick={() => { setEditing(null); setForm({ name: '', address: '', city: '', phone: '', is_active: true }); setDialogOpen(true); }}>
-        <Plus className="h-4 w-4 mr-1" /> Add Branch
-      </Button>
+      <AdminPageHeader
+        title="Branch Management"
+        subtitle="Manage your service locations"
+        action={
+          <Button size="sm" className="h-8 text-xs" onClick={openAdd}>
+            <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Branch
+          </Button>
+        }
+      />
+
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{editing ? 'Edit' : 'Add'} Branch</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <div><Label>Name</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-            <div><Label>Address</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>City</Label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
-              <div><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editing ? 'Edit Branch' : 'Add Branch'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-1">
+            <div>
+              <Label className="text-xs font-semibold text-zinc-600 uppercase tracking-wide">Branch Name *</Label>
+              <Input className="mt-1.5" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Gulberg Branch" />
             </div>
-            <div className="flex items-center gap-2"><Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} /><Label>Active</Label></div>
-            <Button onClick={handleSave} className="w-full">Save</Button>
+            <div>
+              <Label className="text-xs font-semibold text-zinc-600 uppercase tracking-wide">Address</Label>
+              <Input className="mt-1.5" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Street address" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-semibold text-zinc-600 uppercase tracking-wide">City</Label>
+                <Input className="mt-1.5" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} placeholder="e.g. Lahore" />
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-zinc-600 uppercase tracking-wide">Phone</Label>
+                <Input className="mt-1.5" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="0300-0000000" />
+              </div>
+            </div>
+            <div className="flex items-center justify-between py-2 px-3 bg-zinc-50 rounded-lg border border-zinc-100">
+              <div>
+                <p className="text-sm font-medium text-zinc-800">Active</p>
+                <p className="text-xs text-zinc-400">Branch is open for bookings</p>
+              </div>
+              <Switch checked={form.is_active} onCheckedChange={v => setForm({ ...form, is_active: v })} />
+            </div>
+            <Button onClick={handleSave} disabled={saving} className="w-full">
+              {saving ? 'Saving…' : editing ? 'Save Changes' : 'Create Branch'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
-      <Card>
-        <Table>
-          <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>City</TableHead><TableHead>Phone</TableHead><TableHead>Active</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
-          <TableBody>
-            {branches.map((b) => (
-              <TableRow key={b.id}>
-                <TableCell className="font-medium">{b.name}</TableCell>
-                <TableCell>{b.city}</TableCell>
-                <TableCell>{b.phone}</TableCell>
-                <TableCell>{b.is_active ? '✅' : '❌'}</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon" onClick={() => { setEditing(b); setForm({ name: b.name, address: b.address, city: b.city, phone: b.phone, is_active: b.is_active }); setDialogOpen(true); }}><Pencil className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" onClick={() => handleDelete(b.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                </TableCell>
-              </TableRow>
+
+      {loading ? (
+        <Card className="shadow-none">
+          <div className="divide-y">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex gap-4 p-4">
+                <div className="h-3 bg-zinc-100 rounded w-32 animate-pulse" />
+                <div className="h-3 bg-zinc-100 rounded w-20 animate-pulse" />
+                <div className="h-3 bg-zinc-100 rounded w-16 animate-pulse ml-auto" />
+              </div>
             ))}
-          </TableBody>
-        </Table>
-      </Card>
+          </div>
+        </Card>
+      ) : branches.length === 0 ? (
+        <div className="text-center py-16 text-zinc-400 border border-dashed border-zinc-200 rounded-xl bg-white">
+          <MapPin className="h-8 w-8 mx-auto mb-2 opacity-30" />
+          <p className="font-medium text-zinc-500">No branches yet</p>
+          <p className="text-sm mt-1">Add your first service location</p>
+        </div>
+      ) : (
+        <Card className="shadow-none overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-zinc-50 hover:bg-zinc-50">
+                <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Name</TableHead>
+                <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">City</TableHead>
+                <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Phone</TableHead>
+                <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Status</TableHead>
+                <TableHead className="text-right text-xs font-semibold text-zinc-500 uppercase tracking-wide">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {branches.map((b) => (
+                <TableRow key={b.id} className="hover:bg-zinc-50/60">
+                  <TableCell>
+                    <div className="font-medium text-sm text-zinc-900">{b.name}</div>
+                    {b.address && <div className="text-[11px] text-zinc-400">{b.address}</div>}
+                  </TableCell>
+                  <TableCell className="text-sm text-zinc-700">{b.city || '—'}</TableCell>
+                  <TableCell className="text-sm text-zinc-700">{b.phone || '—'}</TableCell>
+                  <TableCell>
+                    {b.is_active ? (
+                      <span className="inline-flex text-[11px] font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">Active</span>
+                    ) : (
+                      <span className="inline-flex text-[11px] font-semibold text-zinc-400 bg-zinc-50 border border-zinc-200 px-2 py-0.5 rounded-md">Inactive</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(b)}>
+                        <Pencil className="h-3.5 w-3.5 text-zinc-400" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-red-50" onClick={() => handleDelete(b.id)}>
+                        <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
     </div>
   );
 };

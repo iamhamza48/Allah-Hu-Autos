@@ -28,7 +28,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // If product has variants, go to product page to pick one
+    // No variants loaded means we can't add to cart from here — send user to product page
     if (!product.variants || product.variants.length === 0) {
       navigate(`/product/${product.slug}`);
       return;

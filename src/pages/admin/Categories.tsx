@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { Plus, Pencil, Trash2, Search, ChevronRight, Folder, FolderOpen } from 'lucide-react';
 
 interface CategoryRow {
@@ -89,22 +90,16 @@ const AdminCategories = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-xl font-bold">Categories ({displayed.length}{displayed.length !== categories.length ? ` of ${categories.length}` : ''})</h2>
-          {!hasParentIdCol && (
-            <p className="text-xs text-amber-500 mt-0.5">
-              ⚠️ Run <code className="bg-muted px-1 rounded text-xs">migration_add_parent_id.sql</code> in Supabase to enable subcategories &amp; mega-menu grouping.
-            </p>
-          )}
-        </div>
-        <Button onClick={() => openCreate()}><Plus className="h-4 w-4 mr-1" /> Add Category</Button>
-      </div>
+      <AdminPageHeader
+        title={`Categories (${displayed.length}${displayed.length !== categories.length ? ` of ${categories.length}` : ''})`}
+        subtitle={!hasParentIdCol ? '⚠ Run migration_add_parent_id.sql in Supabase to enable subcategories' : 'Manage product categories and hierarchy'}
+        action={<Button size="sm" className="h-8 text-xs" onClick={() => openCreate()}><Plus className="h-3.5 w-3.5 mr-1.5" /> Add Category</Button>}
+      />
 
       <div className="flex flex-wrap gap-3 mb-4">
         <div className="relative flex-1 min-w-48">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search categories..." className="pl-9" />
+          <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search categories…"  className="pl-9" />
         </div>
         <Select value={filterType} onValueChange={setFilterType}>
           <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
@@ -154,9 +149,9 @@ const AdminCategories = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">Icon</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Slug</TableHead>
-                {hasParentIdCol && <TableHead>Type</TableHead>}
+                <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Name</TableHead>
+                <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Slug</TableHead>
+                {hasParentIdCol && <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Type</TableHead>}
                 <TableHead className="w-16">Order</TableHead>
                 <TableHead className="w-20">Featured</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -168,7 +163,7 @@ const AdminCategories = () => {
                   const subs = subRows.filter(s => s.parent_id === parent.id);
                   return (
                     <>
-                      <TableRow key={parent.id} className="bg-muted/30 font-medium">
+                      <TableRow className="hover:bg-zinc-50/60 bg-muted/30 font-medium" key={parent.id}>
                         <TableCell className="text-xl">{parent.icon}</TableCell>
                         <TableCell className="font-semibold">{parent.name}</TableCell>
                         <TableCell className="text-muted-foreground text-xs font-mono">{parent.slug}</TableCell>
@@ -182,7 +177,7 @@ const AdminCategories = () => {
                         </TableCell>
                       </TableRow>
                       {subs.map(sub => (
-                        <TableRow key={sub.id}>
+                        <TableRow className="hover:bg-zinc-50/60" key={sub.id}>
                           <TableCell className="text-lg pl-8">{sub.icon}</TableCell>
                           <TableCell className="pl-8"><span className="flex items-center gap-1.5 text-muted-foreground"><ChevronRight className="h-3 w-3 shrink-0" />{sub.name}</span></TableCell>
                           <TableCell className="text-muted-foreground text-xs font-mono">{sub.slug}</TableCell>
@@ -200,7 +195,7 @@ const AdminCategories = () => {
                 })
               ) : (
                 displayed.map(c => (
-                  <TableRow key={c.id}>
+                  <TableRow className="hover:bg-zinc-50/60" key={c.id}>
                     <TableCell className="text-xl">{c.icon}</TableCell>
                     <TableCell className="font-medium">{c.name}</TableCell>
                     <TableCell className="text-muted-foreground text-xs font-mono">{c.slug}</TableCell>

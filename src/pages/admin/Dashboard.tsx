@@ -2,11 +2,15 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatPKR } from '@/lib/format';
-import { Package, ShoppingBag, Users, TrendingUp, Calendar, Clock, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Package, ShoppingBag, Users, TrendingUp, Calendar, Clock } from 'lucide-react';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { StatusBadge } from '@/components/admin/StatusBadge';
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState({ products: 0, orders: 0, customers: 0, revenue: 0, bookings: 0, pendingOrders: 0, pendingBookings: 0 });
+  const [stats, setStats] = useState({
+    products: 0, orders: 0, customers: 0, revenue: 0,
+    bookings: 0, pendingOrders: 0, pendingBookings: 0,
+  });
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,14 +23,13 @@ const AdminDashboard = () => {
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
       supabase.from('orders').select('total'),
       supabase.from('bookings').select('id, status', { count: 'exact' }),
-      supabase.from('orders').select('id, total, status, created_at, user_id, shipping_city').order('created_at', { ascending: false }).limit(5),
-      supabase.from('bookings').select('id, status, booking_date, booking_time, branch:branches(name), user_id').order('created_at', { ascending: false }).limit(5),
+      supabase.from('orders').select('id, total, status, created_at, user_id, shipping_city').order('created_at', { ascending: false }).limit(6),
+      supabase.from('bookings').select('id, status, booking_date, booking_time, branch:branches(name), user_id').order('created_at', { ascending: false }).limit(6),
     ]);
 
     const allOrders = orders.data || [];
     const allBookings = bookings.data || [];
 
-    // Fetch profiles for recent items
     const userIds = [...new Set([
       ...(recentO.data || []).map((o: any) => o.user_id),
       ...(recentB.data || []).map((b: any) => b.user_id),
@@ -55,95 +58,142 @@ const AdminDashboard = () => {
   useEffect(() => { fetchAll(); }, []);
 
   const statCards = [
-    { icon: Package,    label: 'Products',       value: stats.products,               color: 'text-orange-500', bg: 'bg-orange-50 border-orange-200' },
-    { icon: ShoppingBag,label: 'Orders',          value: stats.orders,                 color: 'text-blue-500',   bg: 'bg-blue-50 border-blue-200',   note: stats.pendingOrders > 0 ? `${stats.pendingOrders} pending` : undefined },
-    { icon: Calendar,   label: 'Bookings',        value: stats.bookings,               color: 'text-purple-500', bg: 'bg-purple-50 border-purple-200', note: stats.pendingBookings > 0 ? `${stats.pendingBookings} pending` : undefined },
-    { icon: Users,      label: 'Customers',       value: stats.customers,              color: 'text-green-500',  bg: 'bg-green-50 border-green-200' },
-    { icon: TrendingUp, label: 'Total Revenue',   value: formatPKR(stats.revenue),    color: 'text-orange-500', bg: 'bg-orange-50 border-orange-200', wide: true },
+    {
+      icon: TrendingUp,
+      label: 'Total Revenue',
+      value: formatPKR(stats.revenue),
+      iconClass: 'text-orange-500',
+      accent: 'border-l-orange-500',
+      wide: true,
+    },
+    {
+      icon: ShoppingBag,
+      label: 'Orders',
+      value: stats.orders,
+      iconClass: 'text-blue-500',
+      accent: 'border-l-blue-500',
+      note: stats.pendingOrders > 0 ? `${stats.pendingOrders} pending` : undefined,
+    },
+    {
+      icon: Calendar,
+      label: 'Bookings',
+      value: stats.bookings,
+      iconClass: 'text-violet-500',
+      accent: 'border-l-violet-500',
+      note: stats.pendingBookings > 0 ? `${stats.pendingBookings} pending` : undefined,
+    },
+    {
+      icon: Package,
+      label: 'Products',
+      value: stats.products,
+      iconClass: 'text-emerald-500',
+      accent: 'border-l-emerald-500',
+    },
+    {
+      icon: Users,
+      label: 'Customers',
+      value: stats.customers,
+      iconClass: 'text-zinc-500',
+      accent: 'border-l-zinc-400',
+    },
   ];
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold">Dashboard</h2>
-        <Button variant="outline" size="sm" onClick={fetchAll} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-1 ${loading ? 'animate-spin' : ''}`} /> Refresh
-        </Button>
-      </div>
+      <AdminPageHeader
+        title="Dashboard"
+        subtitle="Overview of your store"
+        onRefresh={fetchAll}
+        refreshing={loading}
+      />
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {statCards.map(({ icon: Icon, label, value, color, bg, note, wide }) => (
-          <Card key={label} className={`border ${bg} ${wide ? 'col-span-2 lg:col-span-4' : ''}`}>
-            <CardContent className="p-5">
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {statCards.map(({ icon: Icon, label, value, iconClass, accent, note, wide }) => (
+          <Card key={label} className={`border-l-4 ${accent} ${wide ? 'col-span-2 lg:col-span-4' : ''} shadow-none`}>
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">{label}</p>
-                  <p className="text-2xl font-bold mt-0.5">{loading ? '—' : value}</p>
-                  {note && <p className="text-xs text-yellow-600 font-medium mt-0.5">{note}</p>}
+                  <p className="text-xs text-zinc-500 font-medium uppercase tracking-wide">{label}</p>
+                  <p className="text-2xl font-bold text-zinc-900 mt-0.5">
+                    {loading ? <span className="text-zinc-300">—</span> : value}
+                  </p>
+                  {note && <p className="text-[11px] text-amber-600 font-semibold mt-0.5">{note}</p>}
                 </div>
-                <Icon className={`h-9 w-9 ${color} opacity-80`} />
+                <Icon className={`h-8 w-8 ${iconClass} opacity-70`} />
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Recent orders */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <ShoppingBag className="h-4 w-4 text-blue-500" />
-              <h3 className="font-semibold text-sm">Recent Orders</h3>
-            </div>
-            {loading ? <div className="h-32 bg-secondary animate-pulse rounded" /> :
-             recentOrders.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No orders yet</p> : (
-              <div className="space-y-2">
-                {recentOrders.map(o => (
-                  <div key={o.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                    <div>
-                      <p className="text-sm font-medium">{o.profile?.full_name || 'Unknown'}</p>
-                      <p className="text-xs text-muted-foreground">{o.shipping_city} · {new Date(o.created_at).toLocaleDateString('en-PK')}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-orange-500">{formatPKR(o.total)}</p>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium capitalize ${o.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : o.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-zinc-100 text-zinc-600'}`}>{o.status}</span>
-                    </div>
+        <Card className="shadow-none">
+          <div className="flex items-center gap-2 px-4 pt-4 pb-3 border-b border-zinc-100">
+            <ShoppingBag className="h-4 w-4 text-blue-500" />
+            <h3 className="text-sm font-semibold text-zinc-900">Recent Orders</h3>
+          </div>
+          <div className="divide-y divide-zinc-50">
+            {loading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="px-4 py-3 flex justify-between">
+                  <div className="h-3.5 bg-zinc-100 rounded w-28 animate-pulse" />
+                  <div className="h-3.5 bg-zinc-100 rounded w-16 animate-pulse" />
+                </div>
+              ))
+            ) : recentOrders.length === 0 ? (
+              <p className="text-sm text-zinc-400 text-center py-8">No orders yet</p>
+            ) : (
+              recentOrders.map(o => (
+                <div key={o.id} className="flex items-center justify-between px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-zinc-900">{o.profile?.full_name || 'Unknown'}</p>
+                    <p className="text-[11px] text-zinc-400">{o.shipping_city} · {new Date(o.created_at).toLocaleDateString('en-PK')}</p>
                   </div>
-                ))}
-              </div>
+                  <div className="text-right flex flex-col items-end gap-1">
+                    <p className="text-sm font-semibold text-zinc-900">{formatPKR(o.total)}</p>
+                    <StatusBadge status={o.status} />
+                  </div>
+                </div>
+              ))
             )}
-          </CardContent>
+          </div>
         </Card>
 
         {/* Recent bookings */}
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <Calendar className="h-4 w-4 text-purple-500" />
-              <h3 className="font-semibold text-sm">Recent Bookings</h3>
-            </div>
-            {loading ? <div className="h-32 bg-secondary animate-pulse rounded" /> :
-             recentBookings.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">No bookings yet</p> : (
-              <div className="space-y-2">
-                {recentBookings.map(b => (
-                  <div key={b.id} className="flex items-center justify-between py-2 border-b last:border-0">
-                    <div>
-                      <p className="text-sm font-medium">{b.profile?.full_name || 'Unknown'}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-3 w-3" />{b.booking_date} at {b.booking_time}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-muted-foreground">{b.branch?.name || '—'}</p>
-                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium capitalize ${b.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : b.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-zinc-100 text-zinc-600'}`}>{b.status}</span>
-                    </div>
+        <Card className="shadow-none">
+          <div className="flex items-center gap-2 px-4 pt-4 pb-3 border-b border-zinc-100">
+            <Calendar className="h-4 w-4 text-violet-500" />
+            <h3 className="text-sm font-semibold text-zinc-900">Recent Bookings</h3>
+          </div>
+          <div className="divide-y divide-zinc-50">
+            {loading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="px-4 py-3 flex justify-between">
+                  <div className="h-3.5 bg-zinc-100 rounded w-28 animate-pulse" />
+                  <div className="h-3.5 bg-zinc-100 rounded w-16 animate-pulse" />
+                </div>
+              ))
+            ) : recentBookings.length === 0 ? (
+              <p className="text-sm text-zinc-400 text-center py-8">No bookings yet</p>
+            ) : (
+              recentBookings.map(b => (
+                <div key={b.id} className="flex items-center justify-between px-4 py-3">
+                  <div>
+                    <p className="text-sm font-medium text-zinc-900">{b.profile?.full_name || 'Unknown'}</p>
+                    <p className="text-[11px] text-zinc-400 flex items-center gap-1">
+                      <Clock className="h-3 w-3" />{b.booking_date} at {b.booking_time}
+                    </p>
                   </div>
-                ))}
-              </div>
+                  <div className="text-right flex flex-col items-end gap-1">
+                    <p className="text-[11px] text-zinc-400">{b.branch?.name || '—'}</p>
+                    <StatusBadge status={b.status} type="booking" />
+                  </div>
+                </div>
+              ))
             )}
-          </CardContent>
+          </div>
         </Card>
       </div>
     </div>

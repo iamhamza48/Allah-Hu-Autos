@@ -10,7 +10,7 @@ import AccountLayout from "./components/layout/AccountLayout";
 import AdminLayout from "./components/layout/AdminLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
-import ScrollToTop from "./components/ScrollToTop"; // <--- ADDED IMPORT
+import ScrollToTop from "./components/ScrollToTop";
 
 import Index from "./pages/Index";
 import Categories from "./pages/Categories";
@@ -55,7 +55,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <ScrollToTop /> {/* <--- ADDED SCROLL WATCHER HERE */}
+        <ScrollToTop />
         <AuthProvider>
           <Routes>
             <Route element={<Layout />}>
