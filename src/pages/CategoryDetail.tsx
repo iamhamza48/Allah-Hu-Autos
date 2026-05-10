@@ -21,6 +21,7 @@ const CategoryDetail = () => {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('name');
   const [search, setSearch] = useState('');
+  const [reloadTick, setReloadTick] = useState(0);
 
   useEffect(() => {
     if (!slug) return;
@@ -28,7 +29,11 @@ const CategoryDetail = () => {
       setLoading(true);
       setSearch('');
 
-      const { data: cat } = await supabase.from('categories').select('*').eq('slug', slug).single();
+      const { data: cat, error: catError } = await supabase.from('categories').select('*').eq('slug', slug).single();
+      if (catError) {
+        setLoading(false);
+        return;
+      }
       if (!cat) { setLoading(false); return; }
       setCategory(cat as CategoryRow);
 
@@ -40,15 +45,15 @@ const CategoryDetail = () => {
         setParentCategory(null);
       }
 
-      const { data: subs } = await supabase.from('categories').select('*').eq('parent_id', cat.id).order('name');
-      const subList = (subs || []) as CategoryRow[];
+      const { data: subs, error: subsError } = await supabase.from('categories').select('*').eq('parent_id', cat.id).order('name');
+      const subList = subsError ? [] : (subs || []) as CategoryRow[];
       setSubcategories(subList);
 
       if (subList.length > 0) {
         const subIds = subList.map(s => s.id);
         const { data } = await supabase
           .from('products')
-          .select('*, category:categories(*), images:product_images(*)')
+          .select('*, category:categories(*), images:product_images(*), variants:product_variants(*)')
           .in('category_id', subIds)
           .order(sortBy === 'price_asc' || sortBy === 'price_desc' ? 'base_price' : 'name', {
             ascending: sortBy !== 'price_desc',
@@ -57,7 +62,7 @@ const CategoryDetail = () => {
       } else {
         const { data } = await supabase
           .from('products')
-          .select('*, category:categories(*), images:product_images(*)')
+          .select('*, category:categories(*), images:product_images(*), variants:product_variants(*)')
           .eq('category_id', cat.id)
           .order(sortBy === 'price_asc' || sortBy === 'price_desc' ? 'base_price' : 'name', {
             ascending: sortBy !== 'price_desc',
@@ -67,7 +72,21 @@ const CategoryDetail = () => {
       setLoading(false);
     };
     fetchData();
-  }, [slug, sortBy]);
+  }, [slug, sortBy, reloadTick]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('category-detail-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => setReloadTick((v) => v + 1))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => setReloadTick((v) => v + 1))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_images' }, () => setReloadTick((v) => v + 1))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_variants' }, () => setReloadTick((v) => v + 1))
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const filteredProducts = search.trim()
     ? products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()))

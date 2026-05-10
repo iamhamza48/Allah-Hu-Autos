@@ -15,7 +15,7 @@ const PasswordStrength = ({ password }: { password: string }) => {
     { label: 'One number', ok: /\d/.test(password) },
   ];
   const score = checks.filter((c) => c.ok).length;
-  const colors = ['bg-zinc-200', 'bg-red-500', 'bg-yellow-500', 'bg-green-500'];
+  const colors = ['bg-muted', 'bg-destructive', 'bg-primary', 'bg-emerald-600'];
   const labels = ['', 'Weak', 'Fair', 'Strong'];
 
   if (!password) return null;
@@ -26,10 +26,10 @@ const PasswordStrength = ({ password }: { password: string }) => {
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className={`h-1 flex-1 rounded-full transition-all duration-500 ${i < score ? colors[score] : 'bg-zinc-100'}`}
+            className={`h-1 flex-1 rounded-full transition-all duration-500 ${i < score ? colors[score] : 'bg-muted/60'}`}
           />
         ))}
-        <span className={`text-[10px] font-black uppercase ml-1 tracking-wider ${score === 3 ? 'text-green-600' : score === 2 ? 'text-yellow-600' : 'text-red-600'}`}>
+        <span className={`text-[10px] font-black uppercase ml-1 tracking-wider ${score === 3 ? 'text-emerald-600' : score === 2 ? 'text-primary' : 'text-destructive'}`}>
           {labels[score]}
         </span>
       </div>
@@ -81,20 +81,20 @@ const Register = () => {
 
   if (done) {
     return (
-      <div className="flex min-h-[85vh] items-center justify-center px-4 bg-zinc-50/50">
-        <div className="w-full max-w-md text-center p-8 bg-white rounded-3xl border border-zinc-200 shadow-2xl">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-green-50 text-green-600 border-4 border-white shadow-xl">
+      <div className="flex min-h-[85vh] items-center justify-center px-4 bg-background">
+        <div className="w-full max-w-md text-center p-8 bg-card rounded-3xl border border-border shadow-xl">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 border-4 border-card shadow-xl">
             <CheckCircle2 className="h-10 w-10" />
           </div>
-          <h2 className="text-3xl font-black text-zinc-900 mb-3 tracking-tight">Check your inbox!</h2>
-          <p className="text-zinc-500 text-sm mb-8 leading-relaxed">
+          <h2 className="text-3xl font-black text-foreground mb-3 tracking-tight">Check your inbox!</h2>
+          <p className="text-muted-foreground text-sm mb-8 leading-relaxed">
             We've sent a verification link to <br />
-            <span className="text-zinc-900 font-bold">{form.email}</span>.<br />
+            <span className="text-foreground font-bold">{form.email}</span>.<br />
             Click the link in the email to activate your account.
           </p>
           <Button
             onClick={() => navigate('/login')}
-            className="w-full h-12 rounded-xl font-black uppercase tracking-widest shadow-lg shadow-orange-500/20"
+            className="w-full h-12 rounded-xl font-black uppercase tracking-widest shadow-lg shadow-primary/20"
           >
             Go to Login
           </Button>
@@ -104,31 +104,31 @@ const Register = () => {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50/50 px-4 py-12 font-sans">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12 font-sans">
       <div className="w-full max-w-md space-y-6">
-        <Link to="/" className="inline-flex items-center gap-2 text-sm font-bold text-zinc-500 hover:text-orange-600 transition-colors">
+        <Link to="/" className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition-colors">
           <ArrowLeft className="h-4 w-4" /> Back to Home
         </Link>
 
-        <Card className="border-zinc-200 shadow-2xl shadow-zinc-200/50 rounded-3xl overflow-hidden bg-white">
+        <Card className="border-border shadow-xl rounded-3xl overflow-hidden bg-card">
           <CardHeader className="text-center space-y-1 pb-8 pt-8">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-500 shadow-lg shadow-orange-500/20">
-              <span className="text-2xl font-black text-white">A</span>
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/25">
+              <span className="text-2xl font-black">A</span>
             </div>
-            <CardTitle className="text-3xl font-black tracking-tight text-zinc-900">Create Account</CardTitle>
-            <CardDescription className="text-zinc-500 font-medium">Join Pakistan's premier auto community</CardDescription>
+            <CardTitle className="text-3xl font-black tracking-tight text-foreground">Create Account</CardTitle>
+            <CardDescription className="text-muted-foreground font-medium">Join Pakistan's premier auto community</CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6 px-8 pb-8">
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Full Name */}
               <div className="space-y-1.5">
-                <Label className="text-zinc-700 font-bold ml-1 uppercase text-[10px] tracking-widest">Full Name</Label>
+                <Label className="text-foreground font-bold ml-1 uppercase text-[10px] tracking-widest">Full Name</Label>
                 <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Muhammad Ali"
-                    className="pl-11 h-12 bg-zinc-50/50 border-zinc-200 rounded-xl focus:bg-white transition-all font-medium"
+                    className="pl-11 h-12 bg-muted/30 border-border rounded-xl focus:bg-card transition-all font-medium"
                     value={form.fullName}
                     onChange={set('fullName')}
                     required
@@ -138,13 +138,13 @@ const Register = () => {
 
               {/* Email */}
               <div className="space-y-1.5">
-                <Label className="text-zinc-700 font-bold ml-1 uppercase text-[10px] tracking-widest">Email Address</Label>
+                <Label className="text-foreground font-bold ml-1 uppercase text-[10px] tracking-widest">Email Address</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="email"
                     placeholder="ali@example.com"
-                    className="pl-11 h-12 bg-zinc-50/50 border-zinc-200 rounded-xl focus:bg-white transition-all font-medium"
+                    className="pl-11 h-12 bg-muted/30 border-border rounded-xl focus:bg-card transition-all font-medium"
                     value={form.email}
                     onChange={set('email')}
                     required
@@ -154,30 +154,30 @@ const Register = () => {
 
               {/* Phone */}
               <div className="space-y-1.5">
-                <Label className="text-zinc-700 font-bold ml-1 uppercase text-[10px] tracking-widest">Phone Number</Label>
+                <Label className="text-foreground font-bold ml-1 uppercase text-[10px] tracking-widest">Phone Number</Label>
                 <div className="relative">
-                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="tel"
                     placeholder="03XX XXXXXXX"
-                    className="pl-11 h-12 bg-zinc-50/50 border-zinc-200 rounded-xl focus:bg-white transition-all font-medium"
+                    className="pl-11 h-12 bg-muted/30 border-border rounded-xl focus:bg-card transition-all font-medium"
                     value={form.phone}
                     onChange={set('phone')}
                     required
                   />
                 </div>
-                <p className="text-[10px] text-zinc-400 ml-1">Used for order updates and delivery coordination</p>
+                <p className="text-[10px] text-muted-foreground ml-1">Used for order updates and delivery coordination</p>
               </div>
 
               {/* Password */}
               <div className="space-y-1.5">
-                <Label className="text-zinc-700 font-bold ml-1 uppercase text-[10px] tracking-widest">Password</Label>
+                <Label className="text-foreground font-bold ml-1 uppercase text-[10px] tracking-widest">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
-                    className="pl-11 pr-11 h-12 bg-zinc-50/50 border-zinc-200 rounded-xl focus:bg-white transition-all font-medium"
+                    className="pl-11 pr-11 h-12 bg-muted/30 border-border rounded-xl focus:bg-card transition-all font-medium"
                     value={form.password}
                     onChange={set('password')}
                     required
@@ -185,7 +185,7 @@ const Register = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors"
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -195,16 +195,16 @@ const Register = () => {
 
               {/* Confirm Password */}
               <div className="space-y-1.5">
-                <Label className="text-zinc-700 font-bold ml-1 uppercase text-[10px] tracking-widest">Confirm Password</Label>
+                <Label className="text-foreground font-bold ml-1 uppercase text-[10px] tracking-widest">Confirm Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="password"
                     placeholder="••••••••"
-                    className={`pl-11 h-12 bg-zinc-50/50 rounded-xl focus:bg-white transition-all font-medium border-2 ${
+                    className={`pl-11 h-12 bg-muted/30 rounded-xl focus:bg-card transition-all font-medium border-2 ${
                       !passwordsMatch
-                        ? 'border-red-500/20 focus:border-red-500'
-                        : 'border-zinc-200 focus:border-orange-500'
+                        ? 'border-destructive/30 focus:border-destructive'
+                        : 'border-border focus:border-primary'
                     }`}
                     value={form.confirm}
                     onChange={set('confirm')}
@@ -212,7 +212,7 @@ const Register = () => {
                   />
                 </div>
                 {!passwordsMatch && (
-                  <p className="text-[10px] font-black text-red-600 uppercase tracking-tight ml-1">
+                  <p className="text-[10px] font-black text-destructive uppercase tracking-tight ml-1">
                     Passwords do not match
                   </p>
                 )}
@@ -220,7 +220,7 @@ const Register = () => {
 
               <Button
                 type="submit"
-                className="w-full h-12 font-black text-xs uppercase tracking-[0.2em] rounded-xl shadow-xl shadow-orange-500/20 transition-all active:scale-[0.98] mt-4"
+                className="w-full h-12 font-black text-xs uppercase tracking-[0.2em] rounded-xl shadow-xl shadow-primary/20 transition-all active:scale-[0.98] mt-4"
                 disabled={loading || !isValid}
               >
                 {loading ? (
@@ -234,10 +234,10 @@ const Register = () => {
             </form>
           </CardContent>
 
-          <CardFooter className="bg-zinc-50/50 border-t border-zinc-100 py-6 flex flex-col gap-2 justify-center items-center">
-            <p className="text-sm text-zinc-500 font-medium">
+          <CardFooter className="bg-muted/20 border-t border-border py-6 flex flex-col gap-2 justify-center items-center">
+            <p className="text-sm text-muted-foreground font-medium">
               Already a member?{' '}
-              <Link to="/login" className="text-orange-600 font-black hover:underline ml-1">
+              <Link to="/login" className="text-primary font-black hover:underline ml-1">
                 Login Here
               </Link>
             </p>

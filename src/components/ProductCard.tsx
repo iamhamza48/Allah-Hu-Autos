@@ -54,9 +54,12 @@ const ProductCard = ({ product }: ProductCardProps) => {
             alt={product.name}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = getPlaceholderImage(product.name, 0);
+            }}
           />
           {discount && (
-            <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs z-10">
+            <Badge className="absolute top-2 left-2 bg-destructive text-destructive-foreground text-xs z-10 border-0">
               -{discount}%
             </Badge>
           )}
@@ -70,7 +73,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 p-2 translate-y-full group-hover:translate-y-0 transition-transform duration-200 ease-out z-20">
             <button
               onClick={handleAddToCart}
-              className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg bg-orange-500 hover:bg-orange-400 text-white text-xs font-semibold shadow-lg shadow-orange-500/30 transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg bg-primary text-primary-foreground hover:bg-brand-yellowHover hover:text-brand-slate text-xs font-semibold shadow-md shadow-primary/25 transition-colors"
               aria-label="Add to cart"
             >
               <ShoppingCart className="h-3.5 w-3.5" />
@@ -80,8 +83,8 @@ const ProductCard = ({ product }: ProductCardProps) => {
               onClick={handleWishlist}
               className={`flex items-center justify-center h-9 w-9 rounded-lg border transition-all shrink-0 ${
                 wishlisted
-                  ? 'bg-red-500/10 border-red-500/40 text-red-500'
-                  : 'bg-zinc-900/80 border-zinc-700 text-zinc-400 hover:border-red-500/40 hover:text-red-400'
+                  ? 'bg-primary/15 border-primary/50 text-primary'
+                  : 'bg-background/90 border-border text-muted-foreground hover:border-primary/40 hover:text-primary'
               }`}
               aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
             >
@@ -108,7 +111,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
             <button
               onClick={handleWishlist}
               className={`p-1 rounded transition-colors ${
-                wishlisted ? 'text-red-500' : 'text-zinc-400 hover:text-red-400'
+                wishlisted ? 'text-primary' : 'text-muted-foreground hover:text-primary'
               }`}
               aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
             >

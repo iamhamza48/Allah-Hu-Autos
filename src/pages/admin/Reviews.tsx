@@ -119,8 +119,8 @@ const AdminReviews = () => {
                           <Check className="h-4 w-4 text-emerald-600" />
                         </Button>
                       )}
-                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-red-50" onClick={() => remove(r.id)} title="Delete">
-                        <Trash2 className="h-4 w-4 text-red-400" />
+                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/10" onClick={() => remove(r.id)} title="Delete">
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   </TableCell>

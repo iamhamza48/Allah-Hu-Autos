@@ -243,10 +243,10 @@ const AdminInventory = () => {
           </div>
         </Card>
       ) : error ? (
-        <div className="text-center py-16 border border-dashed border-red-200 rounded-xl bg-red-50">
-          <AlertCircle className="h-8 w-8 mx-auto mb-2 text-red-300" />
-          <p className="font-medium text-red-500">Failed to load inventory</p>
-          <p className="text-sm text-red-400 mt-1 max-w-sm mx-auto">{error}</p>
+        <div className="text-center py-16 border border-dashed border-destructive/30 rounded-xl bg-destructive/5">
+          <AlertCircle className="h-8 w-8 mx-auto mb-2 text-destructive/50" />
+          <p className="font-medium text-destructive">Failed to load inventory</p>
+          <p className="text-sm text-destructive/80 mt-1 max-w-sm mx-auto">{error}</p>
         </div>
       ) : displayed.length === 0 ? (
         <div className="text-center py-16 text-zinc-400 border border-dashed border-zinc-200 rounded-xl bg-white">
@@ -306,14 +306,14 @@ const AdminInventory = () => {
                           }}
                         />
                       ) : (
-                        <span className={`text-sm font-bold tabular-nums ${isLow ? 'text-orange-500' : 'text-zinc-900'}`}>
+                        <span className={`text-sm font-bold tabular-nums ${isLow ? 'text-primary' : 'text-zinc-900'}`}>
                           {qty}
                         </span>
                       )}
                     </TableCell>
                     <TableCell>
                       {isLow ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-orange-600 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-md">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 border border-primary/25 px-2 py-0.5 rounded-md">
                           <AlertCircle className="h-3 w-3" /> Low Stock
                         </span>
                       ) : (

@@ -16,6 +16,7 @@ const Categories = () => {
   const [children, setChildren] = useState<CategoryRow[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
+  const [reloadTick, setReloadTick] = useState(0);
 
   useEffect(() => {
     supabase.from('categories').select('*').order('sort_order', { ascending: true }).order('name').then(({ data }) => {
@@ -24,6 +25,19 @@ const Categories = () => {
       setChildren(all.filter(c => !!c.parent_id));
       setLoading(false);
     });
+  }, [reloadTick]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('categories-page-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => {
+        setReloadTick((v) => v + 1);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const getChildren = (parentId: string) => children.filter(c => c.parent_id === parentId);
@@ -41,7 +55,7 @@ const Categories = () => {
     return kids.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
   };
 
-  const totalCategories = children.length || parents.length;
+  const totalCategories = parents.length + children.length;
 
   return (
     <div>

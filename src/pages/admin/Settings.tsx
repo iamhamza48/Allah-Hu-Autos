@@ -163,8 +163,8 @@ const AdminSettings = () => {
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(b)}>
                         <Pencil className="h-3.5 w-3.5 text-zinc-400" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-red-50" onClick={() => handleDelete(b.id)}>
-                        <Trash2 className="h-3.5 w-3.5 text-red-400" />
+                      <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-destructive/10" onClick={() => handleDelete(b.id)}>
+                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
                       </Button>
                     </div>
                   </TableCell>

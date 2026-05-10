@@ -29,24 +29,36 @@ const ProductDetail = () => {
   useEffect(() => {
     if (!slug) return;
     const fetch = async () => {
-      const { data } = await supabase
+      setLoading(true);
+      const { data, error: productError } = await supabase
         .from('products')
         .select('*, category:categories(*), variants:product_variants(*), images:product_images(*)')
         .eq('slug', slug)
         .single();
-      setProduct(data);
-      if (data?.variants?.[0]) setSelectedVariant(data.variants[0]);
 
-      if (data) {
+      if (productError) {
+        setProduct(null);
+        setLoading(false);
+        return;
+      }
+
+      const sortedVariants = [...(data?.variants || [])].sort((a, b) => a.name.localeCompare(b.name));
+      const normalizedProduct = { ...data, variants: sortedVariants };
+      setProduct(normalizedProduct);
+      setSelectedVariant(sortedVariants[0] || null);
+      setSelectedImage(0);
+      setQuantity(1);
+
+      if (normalizedProduct) {
         const { data: revs, error } = await supabase
           .from('reviews')
-          .select('*, profiles(*)') // <--- REMOVED the "profile:" alias
-          .eq('product_id', data.id)
+          .select('*, profile:profiles(*)')
+          .eq('product_id', normalizedProduct.id)
           .eq('is_approved', true)
           .order('created_at', { ascending: false });
           
         if (error) {
-          console.error("Supabase Error:", error.message);
+          console.error('Supabase Error:', error.message);
         }
 
         setReviews(revs || []);
@@ -69,7 +81,10 @@ const ProductDetail = () => {
   }, [selectedVehicle, product]);
 
   const handleAddToCart = () => {
-    if (!product || !selectedVariant) return;
+    if (!product || !selectedVariant) {
+      toast.error('Please select a variant first');
+      return;
+    }
     addItem({
       productId: product.id,
       variantId: selectedVariant.id,
@@ -173,9 +188,9 @@ const ProductDetail = () => {
           <p className="text-muted-foreground">{product.description}</p>
 
           {/* Variant selector */}
-          {product.variants && product.variants.length > 1 && (
-            <div>
-              <label className="text-sm font-medium mb-2 block">Variant</label>
+          <div>
+            <label className="text-sm font-medium mb-2 block">Variant</label>
+            {product.variants && product.variants.length > 1 ? (
               <Select
                 value={selectedVariant?.id}
                 onValueChange={(v) => setSelectedVariant(product.variants!.find((vr) => vr.id === v) || null)}
@@ -191,8 +206,16 @@ const ProductDetail = () => {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          )}
+            ) : product.variants && product.variants.length === 1 ? (
+              <div className="h-10 px-3 rounded-md border bg-secondary/40 flex items-center text-sm">
+                {product.variants[0].name} — {formatPKR(product.variants[0].price)}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground border border-dashed rounded-md px-3 py-2">
+                No variants configured yet.
+              </p>
+            )}
+          </div>
 
           {/* Install type */}
           {product.installable && (
@@ -276,7 +299,7 @@ const ProductDetail = () => {
                       </div>
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(r.created_at).toLocaleDateString()}
+                      {r.created_at ? new Date(r.created_at).toLocaleDateString() : '—'}
                     </span>
                   </div>
                   <p className="text-sm text-muted-foreground">{r.comment}</p>

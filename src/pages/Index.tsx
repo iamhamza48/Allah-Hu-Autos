@@ -16,26 +16,58 @@ const Index = () => {
   const [featuredCategories, setFeaturedCategories] = useState<Category[]>([]);
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reloadTick, setReloadTick] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
-      const [productsRes, categoriesRes, newRes] = await Promise.all([
-        supabase.from('products').select('*, category:categories(*), images:product_images(*)').eq('featured', true).limit(10),
-        supabase.from('categories').select('*').eq('featured', true).is('parent_id', null).limit(6),
-        supabase.from('products').select('*, category:categories(*), images:product_images(*)').order('created_at', { ascending: false }).limit(10),
-      ]);
-      setFeaturedProducts(productsRes.data || []);
-      setFeaturedCategories(categoriesRes.data || []);
-      setNewArrivals(newRes.data || []);
-      setLoading(false);
+      try {
+        const [productsRes, categoriesRes, newRes] = await Promise.all([
+          supabase.from('products').select('*, category:categories(*), images:product_images(*), variants:product_variants(*)').eq('featured', true).limit(10),
+          supabase.from('categories').select('*').eq('featured', true).is('parent_id', null).limit(6),
+          supabase.from('products').select('*, category:categories(*), images:product_images(*), variants:product_variants(*)').order('created_at', { ascending: false }).limit(10),
+        ]);
+
+        if (productsRes.error) throw productsRes.error;
+        if (newRes.error) throw newRes.error;
+
+        // Keep homepage categories working even when parent_id is not present in older schemas.
+        if (categoriesRes.error) {
+          const fallback = await supabase.from('categories').select('*').eq('featured', true).limit(6);
+          if (fallback.error) throw fallback.error;
+          setFeaturedCategories(fallback.data || []);
+        } else {
+          setFeaturedCategories(categoriesRes.data || []);
+        }
+
+        setFeaturedProducts(productsRes.data || []);
+        setNewArrivals(newRes.data || []);
+      } catch (error) {
+        console.error('Failed to load homepage data', error);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchData();
+  }, [reloadTick]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('home-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => setReloadTick((v) => v + 1))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => setReloadTick((v) => v + 1))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_images' }, () => setReloadTick((v) => v + 1))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_variants' }, () => setReloadTick((v) => v + 1))
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   return (
     <div>
       {/* Hero */}
-      <section className="relative bg-zinc-900 overflow-hidden">
+      <section className="relative bg-brand-navy overflow-hidden">
         {/* Slightly darkened the gradient for better text contrast */}
         <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/80 to-black/30 z-0" />
         <div
@@ -104,7 +136,7 @@ const Index = () => {
           {/* Centered Text Layout */}
           <div className="max-w mx-auto text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3 text-white 
-              [text-shadow:_-2px_-2px_0_#000,_2px_-2px_0_#000,_-2px_2px_0_#000,_2px_px_0_#000]">
+              [text-shadow:_-2px_-2px_0_#000,_2px_-2px_0_#000,_-2px_2px_0_#000,_2px_2px_0_#000]">
               Shop by Your Car
             </h2>
             <p className="text-zinc-900">
@@ -120,14 +152,14 @@ const Index = () => {
       </section>
 
 {/* Featured Categories */}
-      <section className="bg-white py-12 lg:py-16">
+      <section className="bg-white py-12 lg:py-16 dark:bg-zinc-950">
         <div className="container">
           {/* Centered Header Layout */}
           <div className="max-w-2xl mx-auto text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3 text-zinc-900">
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3 text-zinc-900 dark:text-zinc-100">
               Shop by Category
             </h2>
-            <p className="text-zinc-500 text-sm sm:text-base">
+            <p className="text-zinc-500 dark:text-zinc-400 text-sm sm:text-base">
               Find exactly what you need for your vehicle from our premium selection of accessories.
             </p>
           </div>
@@ -161,14 +193,14 @@ const Index = () => {
 
       {/* Featured Products */}
       {/* Added a very subtle primary (orange) tint to the background to add color without being dark */}
-      <section className="bg-primary/[0.03] border-y border-primary/10 py-12 lg:py-16">
+      <section className="bg-primary/[0.03] border-y border-primary/10 py-12 lg:py-16 dark:bg-zinc-900/40 dark:border-zinc-800">
         <div className="container">
           {/* Centered Header Layout */}
           <div className="max-w-2xl mx-auto text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3 text-zinc-900">
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3 text-zinc-900 dark:text-zinc-100">
               Featured Products
             </h2>
-            <p className="text-zinc-500 text-sm sm:text-base">
+            <p className="text-zinc-500 dark:text-zinc-400 text-sm sm:text-base">
               Handpicked, top-rated accessories guaranteed to upgrade your ride.
             </p>
           </div>
@@ -196,7 +228,7 @@ const Index = () => {
 
           {/* Centered View All Button */}
           <div className="mt-10 flex justify-center">
-            <Link to="/categories">
+            <Link to="/products">
               <Button className="gap-2 rounded-full px-8 shadow-md shadow-primary/20 font-bold">
                 Shop All Products <ArrowRight className="h-4 w-4" />
               </Button>
@@ -207,14 +239,14 @@ const Index = () => {
 
 
       {/* New Arrivals */}
-      <section className="bg-white py-12 lg:py-16">
+      <section className="bg-white py-12 lg:py-16 dark:bg-zinc-950">
         <div className="container">
           {/* Centered Header Layout */}
           <div className="max-w-2xl mx-auto text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3 text-zinc-900">
+            <h2 className="text-3xl md:text-4xl font-black tracking-tight mb-3 text-zinc-900 dark:text-zinc-100">
               New Arrivals
             </h2>
-            <p className="text-zinc-500 text-sm sm:text-base">
+            <p className="text-zinc-500 dark:text-zinc-400 text-sm sm:text-base">
               Discover the latest premium accessories added to our collection.
             </p>
           </div>
@@ -242,7 +274,7 @@ const Index = () => {
 
           {/* Centered View All Button */}
           <div className="mt-10 flex justify-center">
-            <Link to="/categories">
+            <Link to="/products">
               <Button className="gap-2 rounded-full px-8 shadow-md shadow-primary/20 font-bold">
                 Explore More <ArrowRight className="h-4 w-4" />
               </Button>
@@ -253,7 +285,7 @@ const Index = () => {
 
       {/* High-End Dark CTA Banner */}
       {/* CHANGE: Background changed from dark (#111111) to a light orange tint (primary/10) */}
-      <section className="relative bg-primary/10 py-16 lg:py-24 overflow-hidden border-t border-border/10">
+      <section className="relative bg-primary/10 py-16 lg:py-24 overflow-hidden border-t border-border/10 dark:bg-zinc-900 dark:border-zinc-800">
         
         {/* Optional: You might want to remove this dark gradient background for the light version */}
         {/* <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent z-0" /> */}
@@ -262,13 +294,13 @@ const Index = () => {
           <div className="max-w-3xl mx-auto text-center">
             
             {/* CHANGE: Headline text color changed from white to zinc-950 for contrast */}
-            <h2 className="text-3xl md:text-5xl font-black text-zinc-950 tracking-tight mb-4">
+            <h2 className="text-3xl md:text-5xl font-black text-zinc-950 dark:text-zinc-100 tracking-tight mb-4">
               Need help choosing the <br className="hidden sm:block" />
               <span className="text-primary">right accessories?</span>
             </h2>
             
             {/* CHANGE: Description text color changed from zinc-400 to zinc-600 for contrast */}
-            <p className="text-zinc-600 text-base sm:text-lg mb-10 max-w-xl mx-auto font-medium">
+            <p className="text-zinc-600 dark:text-zinc-400 text-base sm:text-lg mb-10 max-w-xl mx-auto font-medium">
               Our auto experts are available Monday–Saturday, 10AM–9PM to help you find the perfect fit for your ride.
             </p>
             
@@ -280,7 +312,7 @@ const Index = () => {
               </a>
               <Link to="/booking" className="w-full sm:w-auto">
                 {/* CHANGE: 'Book Installation' button border and text color updated for the light background */}
-                <Button size="lg" variant="outline" className="w-full sm:w-auto rounded-full px-8 gap-2 border-zinc-200 text-zinc-900 hover:bg-zinc-50 font-medium text-base">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto rounded-full px-8 gap-2 border-zinc-200 text-zinc-900 hover:bg-zinc-50 font-medium text-base dark:border-zinc-700 dark:text-zinc-100 dark:hover:bg-zinc-800">
                   Book Installation
                 </Button>
               </Link>

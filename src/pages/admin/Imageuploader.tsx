@@ -48,13 +48,17 @@ const AdminImageUploader = () => {
   useEffect(() => {
     supabase
       .from('products')
-      .select('id, name, categories(name)')
+      .select('id, name, category:categories(name)')
       .order('name')
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          toast.error('Failed to load products: ' + error.message);
+          return;
+        }
         const mapped = (data || []).map((p: any) => ({
           id: p.id,
           name: p.name,
-          category: p.categories,
+          category: p.category,
         }));
         setProducts(mapped);
         setFiltered(mapped);
@@ -130,6 +134,8 @@ const AdminImageUploader = () => {
     setUploading(true);
     setProgress(0);
     let done = 0;
+    let successCount = 0;
+    let errorCountLocal = 0;
 
     for (const item of pending) {
       setQueue(q => q.map(i => i.id === item.id ? { ...i, status: 'uploading' } : i));
@@ -147,17 +153,18 @@ const AdminImageUploader = () => {
         });
         if (dbErr) throw dbErr;
         setQueue(q => q.map(i => i.id === item.id ? { ...i, status: 'done' } : i));
+        successCount++;
       } catch (e: any) {
         setQueue(q => q.map(i => i.id === item.id ? { ...i, status: 'error', error: e.message } : i));
+        errorCountLocal++;
       }
       done++;
       setProgress(Math.round((done / pending.length) * 100));
     }
 
     setUploading(false);
-    const errors = queue.filter(i => i.status === 'error').length;
-    if (errors === 0) toast.success(`All ${done} images uploaded!`);
-    else toast.error(`${done - errors} uploaded, ${errors} failed`);
+    if (errorCountLocal === 0) toast.success(`All ${done} images uploaded!`);
+    else toast.error(`${successCount} uploaded, ${errorCountLocal} failed`);
   };
 
   const pending = queue.filter(i => i.status === 'pending').length;

@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatPKR } from '@/lib/format';
-import type { Product, Category, ProductImage } from '@/types/database';
+import type { Product, Category, ProductImage, ProductVariant } from '@/types/database';
 import { toast } from 'sonner';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { Plus, Pencil, Trash2, Upload, X, ImagePlus, Loader2, Search, ArrowUpDown, Car, Package } from 'lucide-react';
@@ -19,6 +19,13 @@ import { Plus, Pencil, Trash2, Upload, X, ImagePlus, Loader2, Search, ArrowUpDow
 const BUCKET = 'product-images';
 type SortKey = 'name' | 'price' | 'created_at';
 type SortDir = 'asc' | 'desc';
+type VariantForm = {
+  name: string;
+  sku: string;
+  price: number;
+  compare_price: number;
+  attributes: string;
+};
 
 // ─── Quick Stock Dialog ───────────────────────────────────────────────────────
 interface QuickStockDialogProps {
@@ -329,6 +336,17 @@ const AdminProducts = () => {
   });
 
   const [images, setImages] = useState<ProductImage[]>([]);
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
+  const [variantLoading, setVariantLoading] = useState(false);
+  const [variantSaving, setVariantSaving] = useState(false);
+  const [editingVariantId, setEditingVariantId] = useState<string | null>(null);
+  const [variantForm, setVariantForm] = useState<VariantForm>({
+    name: '',
+    sku: '',
+    price: 0,
+    compare_price: 0,
+    attributes: '{}',
+  });
   const [compatibleVehicles, setCompatibleVehicles] = useState<string[]>([]);
   const [imgLoading, setImgLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -340,10 +358,11 @@ const AdminProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('products')
         .select('*, category:categories(*), images:product_images(*)')
         .order('created_at', { ascending: false });
+      if (error) throw error;
       setProducts(data || []);
     } catch (e: any) {
       toast.error('Failed to load products: ' + e.message);
@@ -414,10 +433,31 @@ const AdminProducts = () => {
     setCompatibleVehicles(data?.map(d => d.vehicle_id) || []);
   };
 
+  const fetchVariants = async (productId: string) => {
+    setVariantLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('product_variants')
+        .select('*')
+        .eq('product_id', productId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      setVariants(data || []);
+    } catch (e: any) {
+      toast.error('Failed to load variants: ' + e.message);
+      setVariants([]);
+    } finally {
+      setVariantLoading(false);
+    }
+  };
+
   const openCreate = () => {
     setEditing(null); setActiveTab('details');
     setForm({ name: '', slug: '', description: '', category_id: '', base_price: 0, compare_price: 0, installable: false, featured: false });
     setImages([]);
+    setVariants([]);
+    setEditingVariantId(null);
+    setVariantForm({ name: '', sku: '', price: 0, compare_price: 0, attributes: '{}' });
     setCompatibleVehicles([]);
     setDialogOpen(true);
   };
@@ -426,14 +466,126 @@ const AdminProducts = () => {
     setEditing(p); setActiveTab('details');
     setForm({ name: p.name, slug: p.slug, description: p.description ?? '', category_id: p.category_id ?? '', base_price: p.base_price, compare_price: p.compare_price || 0, installable: p.installable ?? false, featured: p.featured ?? false });
     setImages([]);
+    setVariants([]);
+    setEditingVariantId(null);
+    setVariantForm({ name: '', sku: '', price: p.base_price, compare_price: p.compare_price || 0, attributes: '{}' });
     fetchImages(p.id);
+    fetchVariants(p.id);
     fetchCompatibilities(p.id);
     setDialogOpen(true);
   };
 
+  const resetVariantForm = () => {
+    setEditingVariantId(null);
+    setVariantForm({
+      name: '',
+      sku: '',
+      price: form.base_price || 0,
+      compare_price: form.compare_price || 0,
+      attributes: '{}',
+    });
+  };
+
+  const startVariantEdit = (variant: ProductVariant) => {
+    setEditingVariantId(variant.id);
+    setVariantForm({
+      name: variant.name,
+      sku: variant.sku || '',
+      price: variant.price,
+      compare_price: variant.compare_price || 0,
+      attributes: JSON.stringify(variant.attributes || {}, null, 2),
+    });
+  };
+
+  const saveVariant = async () => {
+    if (!editing?.id) {
+      toast.error('Save product first, then add variants');
+      return;
+    }
+    if (!variantForm.name.trim()) {
+      toast.error('Variant name is required');
+      return;
+    }
+
+    let parsedAttributes: Record<string, string> | null = null;
+    const rawAttributes = variantForm.attributes.trim();
+    if (rawAttributes && rawAttributes !== '{}') {
+      try {
+        const parsed = JSON.parse(rawAttributes);
+        parsedAttributes = parsed && typeof parsed === 'object' ? parsed : null;
+      } catch {
+        toast.error('Attributes must be valid JSON');
+        return;
+      }
+    }
+
+    setVariantSaving(true);
+    const payload = {
+      product_id: editing.id,
+      name: variantForm.name.trim(),
+      sku: variantForm.sku.trim() || null,
+      price: Math.max(0, variantForm.price),
+      compare_price: variantForm.compare_price > 0 ? variantForm.compare_price : null,
+      attributes: parsedAttributes,
+    };
+
+    try {
+      if (editingVariantId) {
+        const { data, error } = await supabase
+          .from('product_variants')
+          .update(payload)
+          .eq('id', editingVariantId)
+          .eq('product_id', editing.id)
+          .select('*')
+          .single();
+        if (error) throw error;
+        setVariants(prev => prev.map(v => (v.id === editingVariantId ? data : v)));
+        toast.success('Variant updated');
+      } else {
+        const { data, error } = await supabase
+          .from('product_variants')
+          .insert(payload)
+          .select('*')
+          .single();
+        if (error) throw error;
+        setVariants(prev => [...prev, data]);
+        toast.success('Variant added');
+      }
+      resetVariantForm();
+      fetchProducts();
+    } catch (e: any) {
+      toast.error('Failed to save variant: ' + e.message);
+    } finally {
+      setVariantSaving(false);
+    }
+  };
+
+  const deleteVariant = async (variantId: string) => {
+    if (!editing?.id) return;
+    if (!confirm('Delete this variant?')) return;
+    const { error } = await supabase
+      .from('product_variants')
+      .delete()
+      .eq('id', variantId)
+      .eq('product_id', editing.id);
+    if (error) {
+      toast.error('Failed to delete variant: ' + error.message);
+      return;
+    }
+    setVariants(prev => prev.filter(v => v.id !== variantId));
+    if (editingVariantId === variantId) resetVariantForm();
+    toast.success('Variant deleted');
+    fetchProducts();
+  };
+
   const handleSave = async () => {
     const slug = form.slug || form.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-    const data = { ...form, slug, compare_price: form.compare_price || null };
+    const data = {
+      ...form,
+      slug,
+      category_id: form.category_id || null,
+      compare_price: form.compare_price || null,
+    };
     let savedProductId = editing?.id;
 
     if (editing) {
@@ -467,7 +619,11 @@ const AdminProducts = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this product?')) return;
-    await supabase.from('products').delete().eq('id', id);
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    if (error) {
+      toast.error('Failed to delete: ' + error.message);
+      return;
+    }
     toast.success('Product deleted'); fetchProducts();
   };
 
@@ -553,6 +709,7 @@ const AdminProducts = () => {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="w-full">
               <TabsTrigger value="details" className="flex-1">Details</TabsTrigger>
+              <TabsTrigger value="variants" className="flex-1" disabled={!editing}>Variants {variants.length > 0 && `(${variants.length})`}</TabsTrigger>
               <TabsTrigger value="compatibility" className="flex-1">Compatibility {compatibleVehicles.length > 0 && `(${compatibleVehicles.length})`}</TabsTrigger>
               <TabsTrigger value="images" className="flex-1" disabled={!editing}>Images {images.length > 0 && `(${images.length})`}</TabsTrigger>
             </TabsList>
@@ -563,9 +720,12 @@ const AdminProducts = () => {
               <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="mt-1" /></div>
               <div>
                 <Label>Category</Label>
-                <Select value={form.category_id} onValueChange={v => setForm({ ...form, category_id: v })}>
+                <Select value={form.category_id || '__none__'} onValueChange={v => setForm({ ...form, category_id: v === '__none__' ? '' : v })}>
                   <SelectTrigger className="mt-1"><SelectValue placeholder="Select category" /></SelectTrigger>
-                  <SelectContent>{categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
+                  <SelectContent>
+                    <SelectItem value="__none__">Unassigned</SelectItem>
+                    {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
                 </Select>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -577,6 +737,107 @@ const AdminProducts = () => {
                 <div className="flex items-center gap-2"><Switch checked={form.featured} onCheckedChange={v => setForm({ ...form, featured: v })} /><Label>Featured on homepage</Label></div>
               </div>
               <Button onClick={handleSave} className="w-full">Save Product</Button>
+            </TabsContent>
+
+            <TabsContent value="variants" className="space-y-4 pt-2">
+              {!editing ? (
+                <p className="text-sm text-muted-foreground">Save the product first to manage variants.</p>
+              ) : (
+                <>
+                  <Card className="p-4 space-y-3">
+                    <p className="text-sm font-semibold">{editingVariantId ? 'Edit variant' : 'Add variant'}</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs">Variant name</Label>
+                        <Input
+                          value={variantForm.name}
+                          onChange={e => setVariantForm({ ...variantForm, name: e.target.value })}
+                          placeholder="e.g. Standard"
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">SKU</Label>
+                        <Input
+                          value={variantForm.sku}
+                          onChange={e => setVariantForm({ ...variantForm, sku: e.target.value })}
+                          placeholder="Optional"
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs">Price</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={variantForm.price}
+                          onChange={e => setVariantForm({ ...variantForm, price: +e.target.value || 0 })}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs">Compare price</Label>
+                        <Input
+                          type="number"
+                          min={0}
+                          value={variantForm.compare_price}
+                          onChange={e => setVariantForm({ ...variantForm, compare_price: +e.target.value || 0 })}
+                          className="mt-1"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs">Attributes JSON</Label>
+                      <Textarea
+                        value={variantForm.attributes}
+                        onChange={e => setVariantForm({ ...variantForm, attributes: e.target.value })}
+                        className="mt-1 font-mono text-xs min-h-24"
+                        placeholder='{"color":"black","size":"L"}'
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button className="flex-1" onClick={saveVariant} disabled={variantSaving}>
+                        {variantSaving ? 'Saving...' : editingVariantId ? 'Update Variant' : 'Add Variant'}
+                      </Button>
+                      {editingVariantId && (
+                        <Button variant="outline" onClick={resetVariantForm}>Cancel Edit</Button>
+                      )}
+                    </div>
+                  </Card>
+
+                  <Card className="p-4">
+                    <p className="text-sm font-semibold mb-3">Current variants</p>
+                    {variantLoading ? (
+                      <div className="flex items-center justify-center h-20">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : variants.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4 border rounded-lg border-dashed">No variants yet</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {variants.map(v => (
+                          <div key={v.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{v.name}</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {formatPKR(v.price)}{v.compare_price ? ` (was ${formatPKR(v.compare_price)})` : ''}{v.sku ? ` · SKU: ${v.sku}` : ''}
+                              </p>
+                            </div>
+                            <Button variant="ghost" size="icon" onClick={() => startVariantEdit(v)}>
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => deleteVariant(v.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </Card>
+                </>
+              )}
             </TabsContent>
 
             <TabsContent value="compatibility" className="space-y-4 pt-2">

@@ -3,8 +3,12 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import {
   LayoutDashboard, Package, FolderTree, ShoppingBag, Calendar,
-  Warehouse, Users, Star, Car, Settings, ImagePlus, LogOut, Shield,
+  Warehouse, Users, Star, Car, Settings, ImagePlus, LogOut, Shield, Menu,
 } from 'lucide-react';
+import ThemeToggle from '@/components/ThemeToggle';
+import { useState, type ComponentType } from 'react';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 const links = [
   { to: '/admin',            label: 'Dashboard',     icon: LayoutDashboard, exact: true },
@@ -25,87 +29,115 @@ const links = [
 const AdminLayout = () => {
   const location = useLocation();
   const { profile, signOut } = useAuth();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const currentSection = (() => {
+    const match = links.find(l => {
+      if ('divider' in l) return false;
+      const item = l as { to: string; exact?: boolean };
+      return item.exact
+        ? location.pathname === item.to
+        : location.pathname.startsWith(item.to);
+    }) as { label?: string } | undefined;
+    return match?.label ?? 'Admin';
+  })();
+
+  const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => (
+    <>
+      <div className="h-14 flex items-center gap-2.5 px-4 border-b border-brand-border/60 bg-brand-slate">
+        <div className="logo-mark shrink-0 p-1">
+          <img src="/logo.png" alt="" className="h-7 w-7 object-contain" />
+        </div>
+        <div className="min-w-0 flex items-center gap-2">
+          <Shield className="h-4 w-4 text-brand-yellow shrink-0" />
+          <span className="text-sm font-bold text-white tracking-tight truncate">Admin</span>
+        </div>
+      </div>
+
+      <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto bg-brand-slate">
+        {links.map((item, i) => {
+          if ('divider' in item) {
+            return <div key={i} className="my-2 border-t border-brand-border/50" />;
+          }
+          const { to, label, icon: Icon, exact = false } = item as { to: string; label: string; icon: ComponentType<{ className?: string }>; exact?: boolean };
+          const active = exact
+            ? location.pathname === to
+            : location.pathname.startsWith(to);
+
+          return (
+            <Link
+              key={to}
+              to={to}
+              onClick={onNavigate}
+              className={cn(
+                'group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200',
+                active
+                  ? 'bg-brand-yellow text-brand-slate shadow-md shadow-black/20'
+                  : 'text-brand-muted hover:text-white hover:bg-white/5'
+              )}
+            >
+              <Icon className={cn('h-4 w-4 shrink-0 transition-transform duration-200', active ? 'text-brand-slate' : 'text-brand-muted group-hover:text-white')} />
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="border-t border-brand-border/60 p-3 bg-black/25">
+        <div className="flex items-center gap-2.5 mb-2">
+          <div className="h-8 w-8 rounded-full bg-brand-yellow flex items-center justify-center text-brand-slate text-[11px] font-bold shrink-0">
+            {profile?.full_name?.charAt(0) ?? 'A'}
+          </div>
+          <div className="min-w-0">
+            <p className="text-[12px] font-medium text-white truncate">{profile?.full_name ?? 'Admin'}</p>
+            <p className="text-[10px] text-brand-muted">Administrator</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={signOut}
+          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] text-brand-muted hover:text-white hover:bg-white/5 transition-colors"
+        >
+          <LogOut className="h-3.5 w-3.5" />
+          Sign out
+        </button>
+      </div>
+    </>
+  );
 
   return (
-    <div className="flex min-h-screen bg-zinc-50">
-      {/* Sidebar */}
-      <aside className="w-56 shrink-0 bg-zinc-950 flex flex-col border-r border-zinc-800">
-        {/* Logo area */}
-        <div className="h-14 flex items-center px-4 border-b border-zinc-800">
-          <Shield className="h-5 w-5 text-orange-500 mr-2.5" />
-          <span className="text-sm font-bold text-white tracking-tight">Admin Panel</span>
-        </div>
-
-        {/* Nav */}
-        <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
-          {links.map((item, i) => {
-              if ('divider' in item) {
-                return <div key={i} className="my-2 border-t border-zinc-800" />;
-              }
-              const { to, label, icon: Icon, exact = false } = item as { to: string; label: string; icon: any; exact?: boolean };
-              const active = exact
-                ? location.pathname === to
-                : location.pathname.startsWith(to);
-
-            return (
-              <Link
-                key={to}
-                to={to}
-                className={cn(
-                  'flex items-center gap-2.5 rounded-md px-3 py-2 text-[13px] font-medium transition-colors',
-                  active
-                    ? 'bg-orange-500 text-white'
-                    : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
-                )}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                {label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Bottom user strip */}
-        <div className="border-t border-zinc-800 p-3">
-          <div className="flex items-center gap-2.5 mb-2">
-            <div className="h-7 w-7 rounded-full bg-orange-500 flex items-center justify-center text-white text-[11px] font-bold shrink-0">
-              {profile?.full_name?.charAt(0) ?? 'A'}
-            </div>
-            <div className="min-w-0">
-              <p className="text-[12px] font-medium text-white truncate">{profile?.full_name ?? 'Admin'}</p>
-              <p className="text-[10px] text-zinc-500">Administrator</p>
-            </div>
-          </div>
-          <button
-            onClick={signOut}
-            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] text-zinc-500 hover:text-red-400 hover:bg-zinc-800 transition-colors"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            Sign out
-          </button>
-        </div>
+    <div className="admin-app flex min-h-screen bg-background text-foreground">
+      <aside className="hidden md:flex w-60 shrink-0 bg-brand-slate border-r border-brand-border/40 flex-col text-white">
+        <SidebarContent />
       </aside>
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
-        <header className="h-14 bg-white border-b border-zinc-200 flex items-center px-6 shrink-0">
-          <h1 className="text-sm font-semibold text-zinc-500">
-            {(() => {
-              const match = links.find(l => {
-                if ('divider' in l) return false;
-                const item = l as { to: string; exact?: boolean };
-                return item.exact
-                  ? location.pathname === item.to
-                  : location.pathname.startsWith(item.to);
-              }) as any;
-              return match?.label ?? 'Admin';
-            })()}
+        <header className="h-14 bg-card border-b border-border flex items-center px-4 md:px-6 shrink-0 shadow-sm">
+          <div className="md:hidden mr-2">
+            <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-foreground">
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0 w-[280px] border-brand-border bg-brand-slate text-white">
+                <SheetHeader className="sr-only">
+                  <SheetTitle>Admin Navigation</SheetTitle>
+                </SheetHeader>
+                <div className="h-full flex flex-col">
+                  <SidebarContent onNavigate={() => setMobileNavOpen(false)} />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+          <h1 className="text-sm font-semibold text-muted-foreground">
+            {currentSection}
           </h1>
+          <div className="ml-auto">
+            <ThemeToggle />
+          </div>
         </header>
 
-        {/* Page content */}
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-4 md:p-6 overflow-auto bg-brand-adminBg">
           <Outlet />
         </main>
       </div>

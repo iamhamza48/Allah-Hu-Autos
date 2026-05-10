@@ -90,7 +90,7 @@ const Booking = () => {
 
   if (loading || authLoading) return (
     <div className="flex h-[80vh] items-center justify-center">
-      <Loader2 className="h-10 w-10 animate-spin text-orange-500" />
+      <Loader2 className="h-10 w-10 animate-spin text-primary" />
     </div>
   );
 
@@ -102,7 +102,7 @@ const Booking = () => {
         </div>
         <h2 className="text-4xl font-black text-zinc-900 tracking-tighter mb-4 uppercase">Success!</h2>
         <p className="text-zinc-600 font-bold mb-10 leading-relaxed uppercase text-xs tracking-widest">
-          We will call you at <span className="text-orange-600 font-black">{phone}</span> <br/> 
+          We will call you at <span className="text-primary font-black">{phone}</span> <br/> 
           to confirm your slot and details.
         </p>
         <Button className="w-full h-16 rounded-2xl font-black text-lg uppercase tracking-widest" onClick={() => navigate('/')}>Return to Shop</Button>
@@ -111,7 +111,7 @@ const Booking = () => {
   );
 
   return (
-    <div className="min-h-screen bg-zinc-50/50 pt-10 pb-24 px-4">
+    <div className="min-h-screen bg-background pt-10 pb-24 px-4">
       <div className="max-w-2xl mx-auto">
         
         <div className="flex items-center justify-between mb-12">
@@ -119,8 +119,8 @@ const Booking = () => {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex gap-1.5">
-            <div className={`h-1.5 w-8 rounded-full transition-all ${step >= 1 ? 'bg-orange-500' : 'bg-zinc-300'}`} />
-            <div className={`h-1.5 w-8 rounded-full transition-all ${step >= 2 ? 'bg-orange-500' : 'bg-zinc-300'}`} />
+            <div className={`h-1.5 w-8 rounded-full transition-all ${step >= 1 ? 'bg-primary' : 'bg-muted'}`} />
+            <div className={`h-1.5 w-8 rounded-full transition-all ${step >= 2 ? 'bg-primary' : 'bg-muted'}`} />
           </div>
         </div>
 
@@ -128,7 +128,7 @@ const Booking = () => {
           <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <header className="space-y-2">
               <h1 className="text-6xl font-black text-zinc-900 tracking-tighter leading-[0.9] uppercase">
-                Pick your <br/><span className="text-orange-600">Upgrades</span>
+                Pick your <br/><span className="text-primary">Upgrades</span>
               </h1>
               <p className="text-zinc-500 font-bold text-xs uppercase tracking-[0.3em]">Select services & location</p>
             </header>
@@ -142,12 +142,12 @@ const Booking = () => {
                     onClick={() => toggleService(service)}
                     className={`relative flex items-center justify-between px-6 py-5 rounded-2xl border-2 transition-all duration-300 text-left ${
                       isSelected 
-                        ? 'border-orange-500 bg-orange-500 text-white shadow-xl shadow-orange-500/20 scale-[0.98]' 
+                        ? 'border-primary bg-primary text-primary-foreground shadow-xl shadow-primary/20 scale-[0.98]' 
                         : 'border-zinc-300 bg-white text-zinc-900 hover:border-zinc-500 shadow-sm'
                     }`}
                   >
                     <span className="text-[11px] font-black uppercase tracking-wider">{service}</span>
-                    {isSelected && <X className="h-3 w-3 text-white/60" />}
+                    {isSelected && <X className="h-3 w-3 text-primary-foreground/70" />}
                   </button>
                 );
               })}
@@ -166,7 +166,7 @@ const Booking = () => {
                   >
                     <div className="text-left">
                       <p className="font-black text-lg uppercase leading-none">{b.name}</p>
-                      <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${branchId === b.id ? 'text-orange-400' : 'text-zinc-500'}`}>{b.city}</p>
+                      <p className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${branchId === b.id ? 'text-primary/90' : 'text-zinc-500'}`}>{b.city}</p>
                     </div>
                   </button>
                 ))}
@@ -174,7 +174,7 @@ const Booking = () => {
             </div>
 
             <Button 
-              className="w-full h-20 rounded-3xl font-black text-xl uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/20 active:scale-95 transition-all"
+              className="w-full h-20 rounded-3xl font-black text-xl uppercase tracking-[0.2em] shadow-2xl shadow-primary/20 active:scale-95 transition-all"
               disabled={selectedServices.length === 0 || !branchId}
               onClick={() => setStep(2)}
             >
@@ -185,14 +185,14 @@ const Booking = () => {
           <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500">
              <header className="space-y-2">
               <h1 className="text-6xl font-black text-zinc-900 tracking-tighter leading-[0.9] uppercase">
-                Contact <br/><span className="text-orange-600">Details</span>
+                Contact <br/><span className="text-primary">Details</span>
               </h1>
               <p className="text-zinc-500 font-bold text-xs uppercase tracking-[0.3em]">We will call you to confirm</p>
             </header>
 
             <div className="flex flex-wrap gap-2">
               {selectedServices.map(s => (
-                <Badge key={s} className="bg-orange-100 text-orange-600 border-none px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-wider">
+                <Badge key={s} className="bg-primary/15 text-primary border-none px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-wider">
                   {s}
                 </Badge>
               ))}
@@ -202,12 +202,12 @@ const Booking = () => {
                 {/* DARKER LABEL */}
                 <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-1">Contact Number (For Confirmation Call)</Label>
                 <div className="relative group">
-                  <Phone className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-600 transition-colors group-focus-within:text-orange-500" />
+                  <Phone className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-600 transition-colors group-focus-within:text-primary" />
                   <input 
                     type="tel" 
                     placeholder="03XX XXXXXXX"
                     
-                    className="w-full h-16 pl-14 pr-6 rounded-2xl bg-white border-2 border-zinc-300 font-black uppercase text-sm outline-none focus:border-orange-500 transition-all shadow-sm text-zinc-900 placeholder:text-zinc-400"
+                    className="w-full h-16 pl-14 pr-6 rounded-2xl bg-white border-2 border-zinc-300 font-black uppercase text-sm outline-none focus:border-primary transition-all shadow-sm text-zinc-900 placeholder:text-zinc-400"
                     value={phone} 
                     onChange={(e) => setPhone(e.target.value)}
                     required
@@ -222,7 +222,7 @@ const Booking = () => {
                 <input 
                   type="date" 
                   min={new Date().toISOString().split('T')[0]} 
-                  className="w-full h-16 px-6 rounded-2xl bg-white border-2 border-zinc-300 font-black uppercase text-sm outline-none focus:border-orange-500 transition-all shadow-sm text-zinc-900"
+                  className="w-full h-16 px-6 rounded-2xl bg-white border-2 border-zinc-300 font-black uppercase text-sm outline-none focus:border-primary transition-all shadow-sm text-zinc-900"
                   value={date} 
                   onChange={(e) => setDate(e.target.value)}
                 />
@@ -230,7 +230,7 @@ const Booking = () => {
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-1">Arrival Time</Label>
                 <select 
-                  className="w-full h-16 px-6 rounded-2xl bg-white border-2 border-zinc-300 font-black uppercase text-sm outline-none appearance-none focus:border-orange-500 transition-all shadow-sm text-zinc-900"
+                  className="w-full h-16 px-6 rounded-2xl bg-white border-2 border-zinc-300 font-black uppercase text-sm outline-none appearance-none focus:border-primary transition-all shadow-sm text-zinc-900"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
                 >
@@ -244,14 +244,14 @@ const Booking = () => {
                <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-1">Vehicle Info & Special Requests</Label>
                <Textarea 
                 placeholder="E.G. LAND CRUISER 300, 2024, BLACK..."
-                className="bg-white border-2 border-zinc-300 rounded-[2rem] p-8 focus:ring-0 resize-none font-black text-sm uppercase placeholder:text-zinc-400 h-40 transition-all focus:border-orange-500 shadow-sm text-zinc-900"
+                className="bg-white border-2 border-zinc-300 rounded-[2rem] p-8 focus:ring-0 resize-none font-black text-sm uppercase placeholder:text-zinc-400 h-40 transition-all focus:border-primary shadow-sm text-zinc-900"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                />
             </div>
 
             <Button 
-              className="w-full h-20 rounded-3xl font-black text-xl uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/30 active:scale-95 transition-all"
+              className="w-full h-20 rounded-3xl font-black text-xl uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 active:scale-95 transition-all"
               disabled={submitting || !date || !time || !phone}
               onClick={handleSubmit}
             >

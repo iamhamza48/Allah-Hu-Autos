@@ -15,6 +15,7 @@ const Products = () => {
   const [search, setSearch] = useState(searchParams.get('q') || '');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortBy, setSortBy] = useState('name');
+  const [reloadTick, setReloadTick] = useState(0);
 
   useEffect(() => {
     supabase.from('categories').select('*').order('name').then(({ data }) => {
@@ -27,7 +28,7 @@ const Products = () => {
       setLoading(true);
       let query = supabase
         .from('products')
-        .select('*, category:categories(*), images:product_images(*)');
+        .select('*, category:categories(*), images:product_images(*), variants:product_variants(*)');
 
       if (search) {
         query = query.ilike('name', `%${search}%`);
@@ -46,7 +47,26 @@ const Products = () => {
       setLoading(false);
     };
     fetch();
-  }, [search, categoryFilter, sortBy]);
+  }, [search, categoryFilter, sortBy, reloadTick]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('products-page-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
+        setReloadTick((v) => v + 1);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_images' }, () => {
+        setReloadTick((v) => v + 1);
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'product_variants' }, () => {
+        setReloadTick((v) => v + 1);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   return (
     <div className="container py-8">

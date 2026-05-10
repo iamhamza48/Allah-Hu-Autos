@@ -14,9 +14,20 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Poppins', 'system-ui', 'sans-serif'],
+        heading: ['Poppins', 'system-ui', 'sans-serif'],
       },
       colors: {
+        brand: {
+          navy: "#0A1B3D",
+          slate: "#111827",
+          yellow: "#F5C400",
+          yellowHover: "#FFD84D",
+          muted: "#D1D5DB",
+          border: "#374151",
+          danger: "#DC2626",
+          adminBg: "#F9FAFB",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

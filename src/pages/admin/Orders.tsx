@@ -175,7 +175,7 @@ const AdminOrders = () => {
                 <div className="bg-zinc-50 rounded-lg p-3 border border-zinc-100">
                   <p className="text-[10px] text-zinc-400 mb-1.5 font-semibold uppercase tracking-wider">Delivery</p>
                   <p className="font-medium text-zinc-900 flex items-center gap-1">
-                    <MapPin className="h-3 w-3 text-orange-500" />{viewOrder.shipping_city}
+                    <MapPin className="h-3 w-3 text-primary" />{viewOrder.shipping_city}
                   </p>
                   {viewOrder.shipping_address && <p className="text-zinc-400 text-xs mt-0.5">{viewOrder.shipping_address}</p>}
                   {viewOrder.shipping_phone && (
@@ -210,7 +210,7 @@ const AdminOrders = () => {
 
               <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
                 <span className="font-semibold text-zinc-700">Total</span>
-                <span className="font-bold text-orange-500 text-lg">{formatPKR(viewOrder.total)}</span>
+                <span className="font-bold text-primary text-lg">{formatPKR(viewOrder.total)}</span>
               </div>
 
               {viewOrder.notes && (

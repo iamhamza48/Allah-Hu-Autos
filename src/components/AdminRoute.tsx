@@ -9,7 +9,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-950">
         <div className="flex flex-col items-center gap-3">
-          <Shield className="h-8 w-8 text-orange-500 animate-pulse" />
+          <Shield className="h-8 w-8 text-primary animate-pulse" />
           <p className="text-sm text-zinc-400 font-medium">Verifying access…</p>
         </div>
       </div>

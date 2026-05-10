@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { Fragment, useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -69,7 +69,11 @@ const AdminCategories = () => {
     const hasChildren = categories.some(c => c.parent_id === id);
     const msg = hasChildren ? 'This has subcategories. They will become unlinked. Delete anyway?' : 'Delete this category?';
     if (!confirm(msg)) return;
-    await supabase.from('categories').delete().eq('id', id);
+    const { error } = await supabase.from('categories').delete().eq('id', id);
+    if (error) {
+      toast.error('Failed to delete: ' + error.message);
+      return;
+    }
     toast.success('Deleted'); fetchCats();
   };
 
@@ -128,7 +132,7 @@ const AdminCategories = () => {
                   <SelectContent>
                     <SelectItem value="__none__"><span className="flex items-center gap-2"><Folder className="h-4 w-4" /> None — main category</span></SelectItem>
                     {topLevel.filter(c => c.id !== editing?.id).map(c => (
-                      <SelectItem key={c.id} value={c.id}><span className="flex items-center gap-2"><FolderOpen className="h-4 w-4 text-orange-500" />{c.icon} {c.name}</span></SelectItem>
+                      <SelectItem key={c.id} value={c.id}><span className="flex items-center gap-2"><FolderOpen className="h-4 w-4 text-primary" />{c.icon} {c.name}</span></SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -162,7 +166,7 @@ const AdminCategories = () => {
                 parentRows.map(parent => {
                   const subs = subRows.filter(s => s.parent_id === parent.id);
                   return (
-                    <>
+                    <Fragment key={parent.id}>
                       <TableRow className="hover:bg-zinc-50/60 bg-muted/30 font-medium" key={parent.id}>
                         <TableCell className="text-xl">{parent.icon}</TableCell>
                         <TableCell className="font-semibold">{parent.name}</TableCell>
@@ -190,7 +194,7 @@ const AdminCategories = () => {
                           </TableCell>
                         </TableRow>
                       ))}
-                    </>
+                    </Fragment>
                   );
                 })
               ) : (
