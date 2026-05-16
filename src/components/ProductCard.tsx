@@ -46,7 +46,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   return (
     <Link to={`/product/${product.slug}`}>
-      <div className="group overflow-hidden rounded-xl border bg-card hover:border-primary/40 hover:shadow-lg transition-all duration-200">
+      <div className="group overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-primary/40 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
         {/* Image */}
         <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
           <img
@@ -73,7 +73,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 p-2 translate-y-full group-hover:translate-y-0 transition-transform duration-200 ease-out z-20">
             <button
               onClick={handleAddToCart}
-              className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg bg-primary text-primary-foreground hover:bg-brand-yellowHover hover:text-brand-slate text-xs font-semibold shadow-md shadow-primary/25 transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg bg-primary text-white hover:bg-primary/90 text-xs font-semibold shadow-md shadow-primary/20 transition-colors"
               aria-label="Add to cart"
             >
               <ShoppingCart className="h-3.5 w-3.5" />
@@ -81,11 +81,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
             </button>
             <button
               onClick={handleWishlist}
-              className={`flex items-center justify-center h-9 w-9 rounded-lg border transition-all shrink-0 ${
-                wishlisted
-                  ? 'bg-primary/15 border-primary/50 text-primary'
-                  : 'bg-background/90 border-border text-muted-foreground hover:border-primary/40 hover:text-primary'
-              }`}
+              className={`flex items-center justify-center h-9 w-9 rounded-lg border transition-all shrink-0 ${wishlisted
+                ? 'bg-primary/15 border-primary/50 text-primary'
+                : 'bg-background/90 border-border text-muted-foreground hover:border-primary/40 hover:text-primary'
+                }`}
               aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
             >
               <Heart className="h-4 w-4" fill={wishlisted ? 'currentColor' : 'none'} />
@@ -110,9 +109,8 @@ const ProductCard = ({ product }: ProductCardProps) => {
             </div>
             <button
               onClick={handleWishlist}
-              className={`p-1 rounded transition-colors ${
-                wishlisted ? 'text-primary' : 'text-muted-foreground hover:text-primary'
-              }`}
+              className={`p-1 rounded transition-colors ${wishlisted ? 'text-primary' : 'text-muted-foreground hover:text-primary'
+                }`}
               aria-label={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
             >
               <Heart className="h-4 w-4" fill={wishlisted ? 'currentColor' : 'none'} />

@@ -12,6 +12,7 @@ interface AuthContextValue {
   isAdmin: boolean;
   signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
+  signInWithGoogle: () => Promise<any>;
   signOut: () => Promise<void>;
 }
 
@@ -93,6 +94,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return supabase.auth.signInWithPassword({ email, password });
   };
 
+  const signInWithGoogle = async () => {
+    return supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -103,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, role, loading, isAdmin: role === 'admin', signUp, signIn, signOut }}
+      value={{ user, session, profile, role, loading, isAdmin: role === 'admin', signUp, signIn, signInWithGoogle, signOut }}
     >
       {children}
     </AuthContext.Provider>

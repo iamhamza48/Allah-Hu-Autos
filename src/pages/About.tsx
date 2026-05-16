@@ -55,7 +55,7 @@ const About = () => {
     <div className="bg-background">
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <section className="relative bg-brand-navy overflow-hidden">
+      <section className="relative bg-[#0B4DAE] overflow-hidden">
         {/* dot grid */}
         <div className="absolute inset-0 opacity-[0.06]"
           style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
@@ -78,7 +78,7 @@ const About = () => {
               in <span className="text-primary">Your Ride</span>
             </h1>
             <p className="text-base text-white/55 leading-relaxed max-w-xl">
-              Allah-Hu-Autos has been Pakistan's go-to destination for premium automotive accessories for over 27 years. 
+              Allah-Hu-Autos has been Pakistan's go-to destination for premium automotive accessories for over 27 years.
               From a single shop in Lahore to two branches serving customers nationwide — our passion for cars has never wavered.
             </p>
           </div>
@@ -112,22 +112,22 @@ const About = () => {
             </h2>
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
               <p>
-                It started in 1997 with a small shop and a simple belief: Pakistani car owners deserve access to quality accessories at honest prices. 
+                It started in 1997 with a small shop and a simple belief: Pakistani car owners deserve access to quality accessories at honest prices.
                 What began as a local business in Lahore quickly earned a reputation for genuine products and skilled installation.
               </p>
               <p>
-                Word spread. Customers drove from across Punjab — and eventually from Balochistan — just to get the Allah-Hu-Autos experience. 
+                Word spread. Customers drove from across Punjab — and eventually from Balochistan — just to get the Allah-Hu-Autos experience.
                 That demand led us to open our second branch in Quetta, serving the south with the same commitment that built our name in Lahore.
               </p>
               <p>
-                Today we carry 500+ products across lighting, exterior, interior, tech, and maintenance — all backed by our expert installation team 
+                Today we carry 500+ products across lighting, exterior, interior, tech, and maintenance — all backed by our expert installation team
                 and our promise to stand behind every item we sell.
               </p>
             </div>
 
             <div className="flex gap-3 mt-8">
               <Link to="/products"
-                className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-primary text-primary-foreground hover:bg-brand-yellowHover hover:text-brand-slate text-sm font-semibold shadow-lg shadow-primary/25 transition-all">
+                className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-primary text-white hover:bg-primary/90 text-sm font-semibold shadow-lg shadow-primary/25 transition-all">
                 Shop Now <ChevronRight className="h-4 w-4" />
               </Link>
               <Link to="/booking"
@@ -212,7 +212,7 @@ const About = () => {
                   </div>
                 </div>
                 <a href={mapsLink} target="_blank" rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 mt-5 text-xs font-semibold text-primary hover:text-brand-yellowHover transition-colors group-hover:gap-2">
+                  className="inline-flex items-center gap-1.5 mt-5 text-xs font-semibold text-primary hover:text-primary/70 transition-colors group-hover:gap-2">
                   Get Directions <ChevronRight className="h-3.5 w-3.5" />
                 </a>
               </div>
@@ -222,7 +222,7 @@ const About = () => {
       </section>
 
       {/* ── CTA ───────────────────────────────────────────────────────── */}
-      <section className="bg-brand-slate border-t border-border">
+      <section className="bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
         <div className="container py-14 text-center">
           <h2 className="text-2xl sm:text-3xl font-black text-foreground mb-3">
             Ready to upgrade your ride?
@@ -232,7 +232,7 @@ const About = () => {
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <Link to="/categories"
-              className="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-primary-foreground hover:bg-brand-yellowHover hover:text-brand-slate text-sm font-bold shadow-lg shadow-primary/30 transition-all">
+              className="inline-flex items-center gap-2 h-11 px-6 rounded-xl bg-primary text-white hover:bg-primary/90 text-sm font-bold shadow-lg shadow-primary/30 transition-all">
               Browse Products <ChevronRight className="h-4 w-4" />
             </Link>
             <Link to="/booking"

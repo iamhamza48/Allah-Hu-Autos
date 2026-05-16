@@ -12,7 +12,7 @@ const CategoryCard = ({ category }: CategoryCardProps) => {
 
   return (
     <Link to={`/category/${category.slug}`}>
-      <div className="group relative overflow-hidden rounded-xl cursor-pointer">
+      <div className="group relative overflow-hidden rounded-xl cursor-pointer ring-0 hover:ring-2 hover:ring-primary/60 hover:ring-offset-2 transition-all duration-250">
         <div className="aspect-[4/3] overflow-hidden bg-secondary">
           <img
             src={img}
@@ -24,8 +24,7 @@ const CategoryCard = ({ category }: CategoryCardProps) => {
             }}
           />
         </div>
-        {/* dark gradient overlay with text on top of image */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent group-hover:from-[#0B4DAE]/80 group-hover:via-[#0B4DAE]/20 transition-all duration-300" />
         <div className="absolute bottom-0 left-0 right-0 p-2">
           <p className="text-white text-xs font-semibold text-center leading-tight line-clamp-2 drop-shadow">
             {category.name}

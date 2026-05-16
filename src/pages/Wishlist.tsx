@@ -45,7 +45,7 @@ const Wishlist = () => {
           </p>
           <Link
             to="/categories"
-            className="flex items-center gap-2 px-8 py-3.5 rounded-full bg-primary text-primary-foreground hover:bg-brand-yellowHover hover:text-brand-slate font-semibold text-sm shadow-lg shadow-primary/25 transition-all"
+            className="flex items-center gap-2 px-8 py-3.5 rounded-full bg-primary text-white hover:bg-primary/90 font-semibold text-sm shadow-lg shadow-primary/25 transition-all"
           >
             Browse Products
           </Link>

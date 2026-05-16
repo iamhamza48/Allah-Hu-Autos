@@ -11,19 +11,19 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 const links = [
-  { to: '/admin',            label: 'Dashboard',     icon: LayoutDashboard, exact: true },
-  { to: '/admin/products',   label: 'Products',      icon: Package },
-  { to: '/admin/categories', label: 'Categories',    icon: FolderTree },
-  { to: '/admin/images',     label: 'Images',        icon: ImagePlus },
+  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+  { to: '/admin/products', label: 'Products', icon: Package },
+  { to: '/admin/categories', label: 'Categories', icon: FolderTree },
+  { to: '/admin/images', label: 'Images', icon: ImagePlus },
   { divider: true },
-  { to: '/admin/orders',     label: 'Orders',        icon: ShoppingBag },
-  { to: '/admin/bookings',   label: 'Bookings',      icon: Calendar },
-  { to: '/admin/inventory',  label: 'Inventory',     icon: Warehouse },
+  { to: '/admin/orders', label: 'Orders', icon: ShoppingBag },
+  { to: '/admin/bookings', label: 'Bookings', icon: Calendar },
+  { to: '/admin/inventory', label: 'Inventory', icon: Warehouse },
   { divider: true },
-  { to: '/admin/customers',  label: 'Customers',     icon: Users },
-  { to: '/admin/reviews',    label: 'Reviews',       icon: Star },
-  { to: '/admin/vehicles',   label: 'Vehicles',      icon: Car },
-  { to: '/admin/settings',   label: 'Settings',      icon: Settings },
+  { to: '/admin/customers', label: 'Customers', icon: Users },
+  { to: '/admin/reviews', label: 'Reviews', icon: Star },
+  { to: '/admin/vehicles', label: 'Vehicles', icon: Car },
+  { to: '/admin/settings', label: 'Settings', icon: Settings },
 ] as const;
 
 const AdminLayout = () => {
@@ -43,20 +43,20 @@ const AdminLayout = () => {
 
   const SidebarContent = ({ onNavigate }: { onNavigate?: () => void }) => (
     <>
-      <div className="h-14 flex items-center gap-2.5 px-4 border-b border-brand-border/60 bg-brand-slate">
+      <div className="h-14 flex items-center gap-2.5 px-4 border-b border-white/10 bg-[#0F172A]">
         <div className="logo-mark shrink-0 p-1">
           <img src="/logo.png" alt="" className="h-7 w-7 object-contain" />
         </div>
         <div className="min-w-0 flex items-center gap-2">
-          <Shield className="h-4 w-4 text-brand-yellow shrink-0" />
+          <Shield className="h-4 w-4 text-blue-400 shrink-0" />
           <span className="text-sm font-bold text-white tracking-tight truncate">Admin</span>
         </div>
       </div>
 
-      <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto bg-brand-slate">
+      <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto bg-[#0F172A]">
         {links.map((item, i) => {
           if ('divider' in item) {
-            return <div key={i} className="my-2 border-t border-brand-border/50" />;
+            return <div key={i} className="my-2 border-t border-white/10" />;
           }
           const { to, label, icon: Icon, exact = false } = item as { to: string; label: string; icon: ComponentType<{ className?: string }>; exact?: boolean };
           const active = exact
@@ -71,31 +71,31 @@ const AdminLayout = () => {
               className={cn(
                 'group flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-all duration-200',
                 active
-                  ? 'bg-brand-yellow text-brand-slate shadow-md shadow-black/20'
-                  : 'text-brand-muted hover:text-white hover:bg-white/5'
+                  ? 'bg-primary text-white shadow-md shadow-black/20'
+                  : 'text-slate-400 hover:text-white hover:bg-white/5'
               )}
             >
-              <Icon className={cn('h-4 w-4 shrink-0 transition-transform duration-200', active ? 'text-brand-slate' : 'text-brand-muted group-hover:text-white')} />
+              <Icon className={cn('h-4 w-4 shrink-0 transition-transform duration-200', active ? 'text-white' : 'text-slate-400 group-hover:text-white')} />
               {label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="border-t border-brand-border/60 p-3 bg-black/25">
+      <div className="border-t border-white/10 p-3 bg-black/25">
         <div className="flex items-center gap-2.5 mb-2">
-          <div className="h-8 w-8 rounded-full bg-brand-yellow flex items-center justify-center text-brand-slate text-[11px] font-bold shrink-0">
+          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-white text-[11px] font-bold shrink-0">
             {profile?.full_name?.charAt(0) ?? 'A'}
           </div>
           <div className="min-w-0">
             <p className="text-[12px] font-medium text-white truncate">{profile?.full_name ?? 'Admin'}</p>
-            <p className="text-[10px] text-brand-muted">Administrator</p>
+            <p className="text-[10px] text-slate-400">Administrator</p>
           </div>
         </div>
         <button
           type="button"
           onClick={signOut}
-          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] text-brand-muted hover:text-white hover:bg-white/5 transition-colors"
+          className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
         >
           <LogOut className="h-3.5 w-3.5" />
           Sign out
@@ -106,7 +106,7 @@ const AdminLayout = () => {
 
   return (
     <div className="admin-app flex min-h-screen bg-background text-foreground">
-      <aside className="hidden md:flex w-60 shrink-0 bg-brand-slate border-r border-brand-border/40 flex-col text-white">
+      <aside className="hidden md:flex w-60 shrink-0 bg-[#0F172A] border-r border-white/10 flex-col text-white">
         <SidebarContent />
       </aside>
 
@@ -119,7 +119,7 @@ const AdminLayout = () => {
                   <Menu className="h-4 w-4" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-[280px] border-brand-border bg-brand-slate text-white">
+              <SheetContent side="left" className="p-0 w-[280px] border-white/10 bg-[#0F172A] text-white">
                 <SheetHeader className="sr-only">
                   <SheetTitle>Admin Navigation</SheetTitle>
                 </SheetHeader>
@@ -137,7 +137,7 @@ const AdminLayout = () => {
           </div>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 overflow-auto bg-brand-adminBg">
+        <main className="flex-1 p-4 md:p-6 overflow-auto">
           <Outlet />
         </main>
       </div>

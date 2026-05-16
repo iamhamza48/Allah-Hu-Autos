@@ -28,6 +28,7 @@ import VehicleProducts from "./pages/VehicleProducts";
 import Wishlist from "./pages/Wishlist";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
+import AuthCallback from "./pages/AuthCallback";
 
 import AccountDashboard from "./pages/account/Dashboard";
 import AccountOrders from "./pages/account/Orders";
@@ -60,48 +61,49 @@ const App = () => (
           <ScrollToTop />
           <AuthProvider>
             <Routes>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/categories" element={<Categories />} />
-              <Route path="/category/:slug" element={<CategoryDetail />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/product/:slug" element={<ProductDetail />} />
-              <Route path="/search" element={<SearchPage />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-              <Route path="/booking" element={<Booking />} />
-              <Route path="/wishlist" element={<Wishlist />} />
-              <Route path="/vehicles/:vehicleId/products" element={<VehicleProducts />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+              <Route element={<Layout />}>
+                <Route path="/" element={<Index />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/categories" element={<Categories />} />
+                <Route path="/category/:slug" element={<CategoryDetail />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/product/:slug" element={<ProductDetail />} />
+                <Route path="/search" element={<SearchPage />} />
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+                <Route path="/booking" element={<Booking />} />
+                <Route path="/wishlist" element={<Wishlist />} />
+                <Route path="/vehicles/:vehicleId/products" element={<VehicleProducts />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
 
-              {/* Account */}
-              <Route path="/account" element={<ProtectedRoute><AccountLayout /></ProtectedRoute>}>
-                <Route index element={<AccountDashboard />} />
-                <Route path="orders" element={<AccountOrders />} />
-                <Route path="bookings" element={<AccountBookings />} />
-                <Route path="vehicles" element={<AccountVehicles />} />
-                <Route path="addresses" element={<AccountAddresses />} />
+                {/* Account */}
+                <Route path="/account" element={<ProtectedRoute><AccountLayout /></ProtectedRoute>}>
+                  <Route index element={<AccountDashboard />} />
+                  <Route path="orders" element={<AccountOrders />} />
+                  <Route path="bookings" element={<AccountBookings />} />
+                  <Route path="vehicles" element={<AccountVehicles />} />
+                  <Route path="addresses" element={<AccountAddresses />} />
+                </Route>
+
+                {/* Admin */}
+                <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="products" element={<AdminProducts />} />
+                  <Route path="categories" element={<AdminCategories />} />
+                  <Route path="orders" element={<AdminOrders />} />
+                  <Route path="bookings" element={<AdminBookings />} />
+                  <Route path="inventory" element={<AdminInventory />} />
+                  <Route path="customers" element={<AdminCustomers />} />
+                  <Route path="reviews" element={<AdminReviews />} />
+                  <Route path="vehicles" element={<AdminVehicles />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                  <Route path="images" element={<AdminImageUploader />} />
+                </Route>
+
+                <Route path="*" element={<NotFound />} />
               </Route>
-
-              {/* Admin */}
-              <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-                <Route index element={<AdminDashboard />} />
-                <Route path="products" element={<AdminProducts />} />
-                <Route path="categories" element={<AdminCategories />} />
-                <Route path="orders" element={<AdminOrders />} />
-                <Route path="bookings" element={<AdminBookings />} />
-                <Route path="inventory" element={<AdminInventory />} />
-                <Route path="customers" element={<AdminCustomers />} />
-                <Route path="reviews" element={<AdminReviews />} />
-                <Route path="vehicles" element={<AdminVehicles />} />
-                <Route path="settings" element={<AdminSettings />} />
-                <Route path="images" element={<AdminImageUploader />} />
-              </Route>
-
-              <Route path="*" element={<NotFound />} />
-            </Route>
             </Routes>
           </AuthProvider>
         </BrowserRouter>
