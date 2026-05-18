@@ -45,7 +45,7 @@ const AdminLayout = () => {
     <>
       <div className="h-14 flex items-center gap-2.5 px-4 border-b border-white/10 bg-[#0F172A]">
         <div className="logo-mark shrink-0 p-1">
-          <img src="/logo.png" alt="" className="h-7 w-7 object-contain" />
+          <img src="/logo.webp" alt="" width="28" height="28" className="h-7 w-7 object-contain" />
         </div>
         <div className="min-w-0 flex items-center gap-2">
           <Shield className="h-4 w-4 text-blue-400 shrink-0" />

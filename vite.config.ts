@@ -14,6 +14,33 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     chunkSizeWarningLimit: 1600,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (
+              id.includes("react") ||
+              id.includes("react-dom") ||
+              id.includes("react-router") ||
+              id.includes("@tanstack")
+            ) {
+              return "react-vendor";
+            }
+            if (id.includes("@supabase")) {
+              return "supabase-vendor";
+            }
+            if (
+              id.includes("framer-motion") ||
+              id.includes("lucide-react") ||
+              id.includes("@radix-ui")
+            ) {
+              return "ui-vendor";
+            }
+            return "vendor";
+          }
+        },
+      },
+    },
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {

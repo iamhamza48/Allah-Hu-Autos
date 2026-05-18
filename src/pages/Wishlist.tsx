@@ -74,8 +74,11 @@ const Wishlist = () => {
                     <img
                       src={image}
                       alt={product.name}
+                      width="400"
+                      height="300"
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                       loading="lazy"
+                      decoding="async"
                     />
                     {discount && (
                       <span className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-destructive text-destructive-foreground text-[10px] font-bold shadow-sm">

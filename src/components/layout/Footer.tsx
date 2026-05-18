@@ -78,7 +78,7 @@ const Footer = () => (
         <div className="sm:col-span-2 lg:col-span-4 lg:pr-6">
           <div className="flex items-center gap-4 mb-4">
             <div className="shrink-0">
-              <img src="/logo.png" alt="Logo" className="h-[4.5rem] w-[4.5rem] object-contain drop-shadow-md" />
+              <img src="/logo.webp" alt="Logo" width="72" height="72" loading="lazy" decoding="async" className="h-[4.5rem] w-[4.5rem] object-contain drop-shadow-md" />
             </div>
             <div>
               <h3 className="font-black text-white text-lg leading-tight">Allah-Hu-Autos</h3>

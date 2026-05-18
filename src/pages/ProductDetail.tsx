@@ -56,7 +56,7 @@ const ProductDetail = () => {
           .eq('product_id', normalizedProduct.id)
           .eq('is_approved', true)
           .order('created_at', { ascending: false });
-          
+
         if (error) {
           console.error('Supabase Error:', error.message);
         }
@@ -150,9 +150,8 @@ const ProductDetail = () => {
               <button
                 key={i}
                 onClick={() => setSelectedImage(i)}
-                className={`h-16 w-16 shrink-0 rounded-md overflow-hidden border-2 transition-colors ${
-                  i === selectedImage ? 'border-primary' : 'border-transparent'
-                }`}
+                className={`h-16 w-16 shrink-0 rounded-md overflow-hidden border-2 transition-colors ${i === selectedImage ? 'border-primary' : 'border-transparent'
+                  }`}
               >
                 <img src={img} alt="" className="h-full w-full object-cover" />
               </button>

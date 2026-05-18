@@ -32,7 +32,11 @@ const Cart = () => {
                 <img
                   src={item.product?.images?.[0]?.url || getPlaceholderImage(item.product?.name || 'Product')}
                   alt={item.product?.name}
+                  width="80"
+                  height="80"
                   className="h-20 w-20 rounded-md object-cover"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold truncate">{item.product?.name}</h3>

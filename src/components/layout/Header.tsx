@@ -353,7 +353,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 shrink-0">
             <div className="logo-mark shrink-0">
-              <img src="/logo.png" alt="Allah-Hu-Autos" className="h-10 w-10 object-contain" />
+              <img src="/logo.webp" alt="Allah-Hu-Autos" width="40" height="40" className="h-10 w-10 object-contain" />
             </div>
             <div className="hidden sm:block">
               <p className="text-[15px] font-black text-gray-900 dark:text-white leading-none tracking-tight">Allah-Hu-Autos</p>
