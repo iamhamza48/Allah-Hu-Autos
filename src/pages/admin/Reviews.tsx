@@ -22,13 +22,48 @@ const AdminReviews = () => {
 
   const fetchReviews = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    const { data: reviewsData, error: reviewsError } = await supabase
       .from('reviews')
-      .select('*, profile:profiles(*), product:products(name)')
+      .select('*, product:products(name)')
       .order('is_approved', { ascending: true })
       .order('created_at', { ascending: false });
-    if (error) toast.error('Failed to load reviews: ' + error.message);
-    setReviews(data || []);
+
+    if (reviewsError) {
+      toast.error('Failed to load reviews: ' + reviewsError.message);
+      setLoading(false);
+      return;
+    }
+
+    if (!reviewsData || reviewsData.length === 0) {
+      setReviews([]);
+      setLoading(false);
+      return;
+    }
+
+    const userIds = Array.from(new Set(reviewsData.map(r => r.user_id).filter(Boolean)));
+    let profileMap: Record<string, any> = {};
+
+    if (userIds.length > 0) {
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', userIds);
+
+      if (profilesError) {
+        console.error('Failed to load profiles for reviews:', profilesError.message);
+      } else {
+        profilesData?.forEach(p => {
+          profileMap[p.id] = p;
+        });
+      }
+    }
+
+    const reviewsWithProfiles = reviewsData.map(r => ({
+      ...r,
+      profile: profileMap[r.user_id] || null
+    }));
+
+    setReviews(reviewsWithProfiles);
     setLoading(false);
   };
 

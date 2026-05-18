@@ -50,18 +50,43 @@ const ProductDetail = () => {
       setQuantity(1);
 
       if (normalizedProduct) {
-        const { data: revs, error } = await supabase
+        const { data: revsData, error: revsError } = await supabase
           .from('reviews')
-          .select('*, profile:profiles(*)')
+          .select('*')
           .eq('product_id', normalizedProduct.id)
           .eq('is_approved', true)
           .order('created_at', { ascending: false });
 
-        if (error) {
-          console.error('Supabase Error:', error.message);
-        }
+        if (revsError) {
+          console.error('Supabase Error loading reviews:', revsError.message);
+          setReviews([]);
+        } else if (revsData && revsData.length > 0) {
+          const userIds = Array.from(new Set(revsData.map(r => r.user_id).filter(Boolean)));
+          let profileMap: Record<string, any> = {};
 
-        setReviews(revs || []);
+          if (userIds.length > 0) {
+            const { data: profilesData, error: profilesError } = await supabase
+              .from('profiles')
+              .select('*')
+              .in('id', userIds);
+
+            if (profilesError) {
+              console.error('Supabase Error loading review profiles:', profilesError.message);
+            } else {
+              profilesData?.forEach(p => {
+                profileMap[p.id] = p;
+              });
+            }
+          }
+
+          const mappedRevs = revsData.map(r => ({
+            ...r,
+            profile: profileMap[r.user_id] || null
+          }));
+          setReviews(mappedRevs);
+        } else {
+          setReviews([]);
+        }
       }
       setLoading(false);
     };
