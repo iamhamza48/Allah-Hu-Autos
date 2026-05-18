@@ -113,6 +113,7 @@ const AdminOrders = () => {
               <TableRow className="bg-zinc-50 hover:bg-zinc-50">
                 <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Order</TableHead>
                 <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Customer</TableHead>
+                <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Phone</TableHead>
                 <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Items</TableHead>
                 <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Total</TableHead>
                 <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">City</TableHead>
@@ -127,8 +128,8 @@ const AdminOrders = () => {
                   <TableCell className="font-mono text-[11px] text-zinc-400">#{o.id.slice(0, 8)}</TableCell>
                   <TableCell>
                     <p className="font-medium text-sm text-zinc-900">{o.profile?.full_name || 'Unknown'}</p>
-                    {o.profile?.phone && <p className="text-[11px] text-zinc-400">{o.profile.phone}</p>}
                   </TableCell>
+                  <TableCell className="text-sm text-zinc-600">{o.shipping_phone || o.profile?.phone || '—'}</TableCell>
                   <TableCell className="text-sm text-zinc-600">{(o.items || []).length} item{(o.items || []).length !== 1 ? 's' : ''}</TableCell>
                   <TableCell className="font-semibold text-sm text-zinc-900">{formatPKR(o.total)}</TableCell>
                   <TableCell className="text-sm text-zinc-600">{o.shipping_city || '—'}</TableCell>

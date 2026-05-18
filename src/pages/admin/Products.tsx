@@ -596,6 +596,20 @@ const AdminProducts = () => {
       const { data: newProd, error } = await supabase.from('products').insert(data).select().single();
       if (error) { toast.error('Failed to create: ' + error.message); return; }
       savedProductId = newProd.id;
+      
+      // Auto-create a default variant so the product can be added to the cart
+      const { error: variantError } = await supabase.from('product_variants').insert({
+        product_id: newProd.id,
+        name: 'Default',
+        price: data.base_price,
+        compare_price: data.compare_price || null,
+        attributes: {}
+      });
+      
+      if (variantError) {
+        console.error('Failed to create default variant:', variantError);
+      }
+      
       toast.success('Product created');
     }
 
