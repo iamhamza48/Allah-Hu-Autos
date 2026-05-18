@@ -23,9 +23,69 @@ interface QueueItem {
   replaceExisting: boolean;
   status: 'pending' | 'uploading' | 'done' | 'error';
   error?: string;
+  size: number;
+  originalSize?: number;
 }
 
 const BUCKET = 'product-images';
+
+const compressImage = (file: File, maxWidth = 1200, quality = 0.8): Promise<File> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
+                type: 'image/webp',
+                lastModified: Date.now()
+              });
+              resolve(compressedFile);
+            } else {
+              resolve(file);
+            }
+          },
+          'image/webp',
+          quality
+        );
+      };
+      img.onerror = () => resolve(file);
+      img.src = event.target?.result as string;
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+};
+
+const formatSize = (bytes: number) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+};
 
 const AdminImageUploader = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -39,6 +99,8 @@ const AdminImageUploader = () => {
   const [altText, setAltText] = useState('');
   const [altAuto, setAltAuto] = useState(false);
   const [replaceExisting, setReplaceExisting] = useState(false);
+  const [optimizeImage, setOptimizeImage] = useState(true);
+  const [compressing, setCompressing] = useState(false);
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -99,13 +161,29 @@ const AdminImageUploader = () => {
     reader.readAsDataURL(file);
   };
 
-  const addToQueue = () => {
+  const addToQueue = async () => {
     if (!currentFile) { toast.error('Select an image first'); return; }
     if (!selectedProduct) { toast.error('Select a product first'); return; }
+    
+    setCompressing(true);
+    let finalFile = currentFile;
+    let finalPreview = preview!;
+    
+    if (optimizeImage) {
+      try {
+        finalFile = await compressImage(currentFile, 1200, 0.8);
+        finalPreview = URL.createObjectURL(finalFile);
+      } catch (e) {
+        console.error('Compression failed, using original file:', e);
+      }
+    }
+    
+    setCompressing(false);
+
     setQueue(q => [...q, {
       id: Date.now(),
-      file: currentFile,
-      preview: preview!,
+      file: finalFile,
+      preview: finalPreview,
       productId: selectedProduct.id,
       productName: selectedProduct.name,
       productCategory: selectedProduct.category?.name || '',
@@ -113,7 +191,10 @@ const AdminImageUploader = () => {
       alt: altText || selectedProduct.name,
       replaceExisting,
       status: 'pending',
+      size: finalFile.size,
+      originalSize: optimizeImage ? currentFile.size : undefined,
     }]);
+
     // reset
     setCurrentFile(null);
     setPreview(null);
@@ -301,22 +382,44 @@ const AdminImageUploader = () => {
                 className="mt-1"
               />
             </div>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="optimize"
+                  checked={optimizeImage}
+                  onChange={e => setOptimizeImage(e.target.checked)}
+                  className="accent-primary cursor-pointer"
+                />
+                <Label htmlFor="optimize" className="cursor-pointer font-medium text-sm text-green-600 flex items-center gap-1.5">
+                  Optimize image (Auto-WebP, Max 1200px) ✨
+                </Label>
+              </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="replace"
-                checked={replaceExisting}
-                onChange={e => setReplaceExisting(e.target.checked)}
-                className="accent-primary"
-              />
-              <Label htmlFor="replace" className="cursor-pointer font-normal text-sm">
-                Delete existing images for this product first
-              </Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="replace"
+                  checked={replaceExisting}
+                  onChange={e => setReplaceExisting(e.target.checked)}
+                  className="accent-primary cursor-pointer"
+                />
+                <Label htmlFor="replace" className="cursor-pointer font-normal text-sm text-zinc-600">
+                  Delete existing images for this product first
+                </Label>
+              </div>
             </div>
 
-            <Button className="w-full" onClick={addToQueue} disabled={!currentFile || !selectedProduct}>
-              <ImagePlus className="h-4 w-4 mr-2" /> Add to queue
+            <Button className="w-full mt-2" onClick={addToQueue} disabled={!currentFile || !selectedProduct || compressing}>
+              {compressing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Compressing image...
+                </>
+              ) : (
+                <>
+                  <ImagePlus className="h-4 w-4 mr-2" /> Add to queue
+                </>
+              )}
             </Button>
           </CardContent>
         </Card>
@@ -360,13 +463,26 @@ const AdminImageUploader = () => {
                     'border-border bg-secondary/30'
                   }`}
                 >
-                  <img src={item.preview} alt="" className="w-12 h-12 object-cover rounded-md border flex-shrink-0" />
+                  <img src={item.preview} alt="" className="w-12 h-12 object-cover rounded-md border flex-shrink-0 bg-white" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{item.productName}</p>
+                    <p className="font-medium text-sm truncate text-zinc-900 dark:text-white">{item.productName}</p>
                     <p className="text-xs text-muted-foreground truncate">
                       {item.productCategory} · {item.file.name} · pos {item.sortOrder}
                       {item.replaceExisting && ' · replaces existing'}
-                      {item.error && <span className="text-destructive"> · {item.error}</span>}
+                    </p>
+                    <p className="text-[10px] text-zinc-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                      {item.originalSize ? (
+                        <>
+                          <span className="line-through">{formatSize(item.originalSize)}</span>
+                          <span className="text-green-600 font-semibold">→ {formatSize(item.size)}</span>
+                          <span className="text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400 px-1 py-0.5 rounded font-medium text-[9px]">
+                            Saved {Math.round((1 - item.size / item.originalSize) * 100)}%
+                          </span>
+                        </>
+                      ) : (
+                        <span>Size: {formatSize(item.size)}</span>
+                      )}
+                      {item.error && <span className="text-destructive ml-1"> · {item.error}</span>}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
