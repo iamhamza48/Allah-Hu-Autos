@@ -11,8 +11,18 @@ import type { Branch } from '@/types/database';
 import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, MapPin } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { getBranchFields, serializeBranchFields } from '@/lib/branch-utils';
 
-const emptyForm = { name: '', address: '', city: '', phone: '', is_active: true };
+const emptyForm = {
+  name: '',
+  address: '',
+  map_iframe_url: '',
+  map_link: '',
+  hours: 'Mon–Sat: 10AM – 9PM',
+  city: '',
+  phone: '',
+  is_active: true
+};
 
 const AdminSettings = () => {
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -33,19 +43,45 @@ const AdminSettings = () => {
   const openAdd = () => { setEditing(null); setForm(emptyForm); setDialogOpen(true); };
   const openEdit = (b: Branch) => {
     setEditing(b);
-    setForm({ name: b.name, address: b.address || '', city: b.city || '', phone: b.phone || '', is_active: b.is_active ?? true });
+    const fields = getBranchFields(b.address);
+    setForm({
+      name: b.name,
+      address: fields.address,
+      map_iframe_url: fields.map_iframe_url,
+      map_link: fields.map_link,
+      hours: fields.hours,
+      city: b.city || '',
+      phone: b.phone || '',
+      is_active: b.is_active ?? true
+    });
     setDialogOpen(true);
   };
 
   const handleSave = async () => {
     if (!form.name.trim()) return toast.error('Branch name is required');
     setSaving(true);
+
+    const serializedAddress = serializeBranchFields({
+      address: form.address,
+      map_iframe_url: form.map_iframe_url,
+      map_link: form.map_link,
+      hours: form.hours
+    });
+
+    const payload = {
+      name: form.name,
+      address: serializedAddress,
+      city: form.city,
+      phone: form.phone,
+      is_active: form.is_active
+    };
+
     if (editing) {
-      const { error } = await supabase.from('branches').update(form).eq('id', editing.id);
+      const { error } = await supabase.from('branches').update(payload).eq('id', editing.id);
       if (error) { toast.error(error.message); setSaving(false); return; }
       toast.success('Branch updated');
     } else {
-      const { error } = await supabase.from('branches').insert(form);
+      const { error } = await supabase.from('branches').insert(payload);
       if (error) { toast.error(error.message); setSaving(false); return; }
       toast.success('Branch created');
     }
@@ -75,7 +111,7 @@ const AdminSettings = () => {
       />
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing ? 'Edit Branch' : 'Add Branch'}</DialogTitle>
           </DialogHeader>
@@ -85,8 +121,21 @@ const AdminSettings = () => {
               <Input className="mt-1.5" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. Gulberg Branch" />
             </div>
             <div>
-              <Label className="text-xs font-semibold text-zinc-600 uppercase tracking-wide">Address</Label>
+              <Label className="text-xs font-semibold text-zinc-600 uppercase tracking-wide">Street Address</Label>
               <Input className="mt-1.5" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} placeholder="Street address" />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold text-zinc-600 uppercase tracking-wide">Google Maps Embed Iframe URL</Label>
+              <Input className="mt-1.5" value={form.map_iframe_url} onChange={e => setForm({ ...form, map_iframe_url: e.target.value })} placeholder="https://www.google.com/maps/embed?pb=..." />
+              <p className="text-[10px] text-zinc-400 mt-1">{"Copy the iframe 'src' attribute from Share -> Embed Map on Google Maps."}</p>
+            </div>
+            <div>
+              <Label className="text-xs font-semibold text-zinc-600 uppercase tracking-wide">Google Maps Directions Link</Label>
+              <Input className="mt-1.5" value={form.map_link} onChange={e => setForm({ ...form, map_link: e.target.value })} placeholder="https://maps.app.goo.gl/... or google.com/maps/place/..." />
+            </div>
+            <div>
+              <Label className="text-xs font-semibold text-zinc-600 uppercase tracking-wide">Working Hours</Label>
+              <Input className="mt-1.5" value={form.hours} onChange={e => setForm({ ...form, hours: e.target.value })} placeholder="e.g. Mon–Sat: 10AM – 9PM" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -147,7 +196,7 @@ const AdminSettings = () => {
                 <TableRow key={b.id} className="hover:bg-zinc-50/60">
                   <TableCell>
                     <div className="font-medium text-sm text-zinc-900">{b.name}</div>
-                    {b.address && <div className="text-[11px] text-zinc-400">{b.address}</div>}
+                    {b.address && <div className="text-[11px] text-zinc-400">{getBranchFields(b.address).address}</div>}
                   </TableCell>
                   <TableCell className="text-sm text-zinc-700">{b.city || '—'}</TableCell>
                   <TableCell className="text-sm text-zinc-700">{b.phone || '—'}</TableCell>

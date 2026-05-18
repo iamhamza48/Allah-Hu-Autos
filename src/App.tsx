@@ -76,7 +76,7 @@ const App = () => (
                   <Route path="/search" element={<SearchPage />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-                  <Route path="/booking" element={<Booking />} />
+                  <Route path="/booking" element={<ProtectedRoute><Booking /></ProtectedRoute>} />
                   <Route path="/wishlist" element={<Wishlist />} />
                   <Route path="/vehicles/:vehicleId/products" element={<VehicleProducts />} />
                   <Route path="/login" element={<Login />} />

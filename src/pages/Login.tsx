@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,17 +25,19 @@ const Login = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const { signIn, signInWithGoogle, isAdmin, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo') || '/';
 
-  // Redirect after sign-in: admins go to /admin, others go to /
+  // Redirect after sign-in: admins go to /admin, others go to redirect target
   useEffect(() => {
     if (!authLoading && user) {
       if (isAdmin) {
         navigate('/admin', { replace: true });
       } else {
-        navigate('/', { replace: true });
+        navigate(redirectTo, { replace: true });
       }
     }
-  }, [user, isAdmin, authLoading, navigate]);
+  }, [user, isAdmin, authLoading, navigate, redirectTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
