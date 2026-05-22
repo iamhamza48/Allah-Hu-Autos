@@ -111,7 +111,7 @@ const VehicleProducts = () => {
           <div className="flex flex-col lg:flex-row lg:items-start gap-8">
 
             {/* Left — car identity */}
-            <div className="flex-1">
+            <div className="flex-1 mb-6 lg:mb-0">
               {loading && !vehicle ? (
                 <div className="space-y-3">
                   <div className="h-10 w-72 bg-white/10 rounded-lg animate-pulse" />
@@ -157,7 +157,7 @@ const VehicleProducts = () => {
             </div>
 
             {/* Right — change vehicle */}
-            <div className="lg:w-[440px] shrink-0">
+            <div className="w-full lg:w-[440px] shrink-0">
               <p className="text-[10px] text-white/30 font-semibold uppercase tracking-widest mb-2">
                 Search Another Vehicle
               </p>
@@ -178,14 +178,16 @@ const VehicleProducts = () => {
         <div className="sticky top-[104px] z-30 bg-white/80 dark:bg-zinc-900/80 backdrop-blur border-b border-zinc-200 dark:border-zinc-800 shadow-sm">
           <div className="container flex items-center gap-3 py-2.5 overflow-x-auto scrollbar-hide">
             {/* Category filters */}
-            <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="flex items-center gap-3 flex-1 min-w-0 whitespace-nowrap overflow-x-auto scrollbar-hide py-1">
               <button
                 onClick={() => setActiveCategory('all')}
-                className={`shrink-0 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                className={`flex-shrink-0 min-w-[140px] max-w-[200px] px-4 py-1 rounded-full text-xs font-semibold border transition-all overflow-hidden whitespace-nowrap text-ellipsis ${
                   activeCategory === 'all'
                     ? 'bg-primary text-white border-primary shadow-sm'
                     : 'bg-transparent border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-500'
                 }`}
+                style={{textOverflow:'ellipsis'}}
+                title={`All (${products.length})`}
               >
                 All ({products.length})
               </button>
@@ -195,11 +197,13 @@ const VehicleProducts = () => {
                   <button
                     key={id}
                     onClick={() => setActiveCategory(id)}
-                    className={`shrink-0 px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                    className={`flex-shrink-0 min-w-[140px] max-w-[200px] px-4 py-1 rounded-full text-xs font-semibold border transition-all overflow-hidden whitespace-nowrap text-ellipsis ${
                       activeCategory === id
                         ? 'bg-primary text-white border-primary shadow-sm'
                         : 'bg-transparent border-zinc-300 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-500'
                     }`}
+                    style={{textOverflow:'ellipsis'}}
+                    title={`${name} (${count})`}
                   >
                     {name} ({count})
                   </button>
