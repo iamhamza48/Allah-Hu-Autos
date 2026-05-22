@@ -7,7 +7,7 @@ import ProductCard from '@/components/ProductCard';
 import CategoryCard from '@/components/CategoryCard';
 import VehicleSelector from '@/components/VehicleSelector';
 import type { Product, Category } from '@/types/database';
-import { ArrowRight, Shield, Truck, Wrench, Phone } from 'lucide-react';
+import { ArrowRight, Shield, Truck, Wrench, Phone, Star, ChevronRight } from 'lucide-react';
 
 const BRANDS = ['Toyota', 'Honda', 'Suzuki', 'KIA', 'Hyundai', 'MG', 'Changan', 'Haval', 'Daihatsu', 'Audi', 'BMW', 'Mercedes'];
 
@@ -63,60 +63,76 @@ const Index = () => {
 
   return (
     <div>
-      {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <section className="relative bg-gray-950 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/75 to-black/30 z-0" />
-        <div
-          className="absolute inset-0 opacity-45 z-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=1600&q=80&fit=crop')" }}
-        />
+{/* ── Hero ──────────────────────────────────────────────────────── */}
+<section className="relative min-h-[560px] lg:min-h-[680px] bg-gray-950 overflow-hidden flex items-center">
 
-        <div className="container relative z-10 py-20 lg:py-32">
-          <div className="max-w-2xl">
-            <Badge className="mb-5 bg-blue-500/20 text-blue-300 border-blue-400/30 text-xs px-3 py-1 rounded-full font-semibold tracking-wider uppercase">
-              Premium Automotive Accessories
-            </Badge>
+  {/* Background image — side profile car, car is on the RIGHT */}
+  <div
+    className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+    style={{
+      backgroundImage:
+        "url('https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=1800&q=85&fit=crop&crop=right')",
+    }}
+  />
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-5 leading-[1.08] tracking-tight">
-              We Take Pride in{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-blue-300">
-                Your Ride
-              </span>
-            </h1>
+  {/* Very strong left gradient so text is always readable */}
+  <div className="absolute inset-0 z-[1]"
+    style={{
+      background: 'linear-gradient(to right, rgba(3,7,18,1) 0%, rgba(3,7,18,0.97) 30%, rgba(3,7,18,0.85) 50%, rgba(3,7,18,0.4) 70%, rgba(3,7,18,0.15) 100%)'
+    }}
+  />
+  {/* Bottom fade */}
+  <div className="absolute bottom-0 left-0 right-0 h-24 z-[1] bg-gradient-to-t from-gray-950/70 to-transparent" />
 
-            <p className="text-base sm:text-lg text-white/75 mb-8 max-w-lg leading-relaxed">
-              Premium automotive accessories for every car on Pakistani roads — LED lights, body kits, mats, audio &amp; more.
-            </p>
+  {/* Blue left accent bar */}
+  <div className="absolute left-0 top-20 bottom-20 w-[3px] z-[2] bg-gradient-to-b from-transparent via-blue-500 to-transparent" />
 
-            <div className="flex flex-wrap items-center gap-3 mb-12">
-              <Link to="/products">
-                <Button size="lg" className="gap-2 font-bold bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/30 px-7">
-                  Shop Now <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link to="/categories">
-                <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 hover:text-white bg-transparent font-medium">
-                  Browse Categories
-                </Button>
-              </Link>
-              <Link to="/booking">
-                <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 hover:text-white bg-transparent font-medium">
-                  Book Installation
-                </Button>
-              </Link>
-            </div>
+  <div className="container relative z-10 py-20 lg:py-28">
+    <div className="max-w-xl">
+      <Badge className="mb-5 bg-blue-500/20 text-blue-300 border border-blue-400/30 text-[11px] px-3 py-1 rounded-full font-semibold tracking-widest uppercase backdrop-blur-sm">
+        ✦ Premium Automotive Accessories
+      </Badge>
 
-            <div className="flex gap-8 sm:gap-12 border-t border-white/10 pt-6">
-              {[['500+', 'Products'], ['50+', 'Brands'], ['2', 'Branches']].map(([num, label]) => (
-                <div key={label}>
-                  <p className="text-2xl sm:text-3xl font-black text-blue-400 mb-1">{num}</p>
-                  <p className="text-xs sm:text-sm text-white/55 font-medium uppercase tracking-wider">{label}</p>
-                </div>
-              ))}
-            </div>
+      <h1 className="text-4xl sm:text-5xl lg:text-[3.4rem] font-black text-white mb-5 leading-[1.07] tracking-tight">
+        We Take Pride in{' '}
+        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-300">
+          Your Ride
+        </span>
+      </h1>
+
+      <p className="text-base sm:text-lg text-white/70 mb-8 max-w-md leading-relaxed">
+        Premium automotive accessories for every car on Pakistani roads — LED lights, body kits, mats, audio &amp; more. Delivered to your door.
+      </p>
+
+      <div className="flex flex-wrap items-center gap-3 mb-10">
+        <Link to="/products">
+          <Button size="lg" className="gap-2 font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30 px-7 rounded-xl">
+            Shop Now <ArrowRight className="h-4 w-4" />
+          </Button>
+        </Link>
+        <Link to="/categories">
+          <Button size="lg" variant="outline" className="border border-white/25 text-white hover:bg-white/10 hover:text-white bg-white/5 backdrop-blur-sm font-medium rounded-xl">
+            Browse Categories
+          </Button>
+        </Link>
+        <Link to="/booking">
+          <Button size="lg" variant="outline" className="border border-white/25 text-white hover:bg-white/10 hover:text-white bg-white/5 backdrop-blur-sm font-medium rounded-xl">
+            Book Installation
+          </Button>
+        </Link>
+      </div>
+
+      <div className="flex gap-8 sm:gap-10 border-t border-white/10 pt-6">
+        {[['500+', 'Products'], ['50+', 'Brands'], ['2', 'Branches']].map(([num, label]) => (
+          <div key={label}>
+            <p className="text-2xl sm:text-3xl font-black text-blue-400 mb-1 leading-none">{num}</p>
+            <p className="text-[11px] sm:text-xs text-white/50 font-semibold uppercase tracking-widest mt-1">{label}</p>
           </div>
-        </div>
-      </section>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* ── Trust bar ─────────────────────────────────────────────────── */}
       <section className="bg-[#0B4DAE] border-b border-blue-700/30">

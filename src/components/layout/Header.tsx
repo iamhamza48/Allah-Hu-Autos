@@ -47,21 +47,19 @@ const MegaMenu = ({
     if (!anchorRef.current) return;
     const rect = anchorRef.current.getBoundingClientRect();
     const dropdownWidth = 420;
-    // If not enough space to the right, align to the right edge of the trigger instead
     setAlignRight(rect.left + dropdownWidth > window.innerWidth - 16);
   }, [anchorRef]);
 
   return (
     <div
-      className={`absolute top-full w-[420px] max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-xl rounded-b-xl z-50 border-t-[3px] border-t-primary animate-dropdown-in ${alignRight ? 'right-0' : 'left-0'
-        }`}
+      className={`absolute top-full w-[420px] max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 shadow-xl rounded-b-xl z-50 border-t-[3px] border-t-blue-500 animate-dropdown-in ${alignRight ? 'right-0' : 'left-0'}`}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 dark:border-gray-700">
         <Link
           to={`/category/${category.slug}`}
           onClick={onClose}
-          className="flex items-center gap-2 font-bold text-gray-900 dark:text-white hover:text-primary transition-colors text-sm"
+          className="flex items-center gap-2 font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-sm"
         >
           {category.name}
           <ChevronRight className="h-3.5 w-3.5" />
@@ -78,9 +76,9 @@ const MegaMenu = ({
             key={sub.id}
             to={`/category/${sub.slug}`}
             onClick={onClose}
-            className="flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:text-primary hover:bg-blue-50 dark:hover:bg-primary/10 transition-all group"
+            className="flex items-center gap-2 px-2 py-2 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all group"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-primary transition-colors shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-full bg-gray-300 dark:bg-gray-600 group-hover:bg-blue-500 transition-colors shrink-0" />
             {sub.name}
           </Link>
         ))}
@@ -91,7 +89,7 @@ const MegaMenu = ({
         <Link
           to={`/category/${category.slug}`}
           onClick={onClose}
-          className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+          className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
         >
           View all {category.name} <ArrowRight className="h-3 w-3" />
         </Link>
@@ -151,13 +149,13 @@ const SearchDropdown = ({ onClose }: { onClose: () => void }) => {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Search accessories, parts, brands..."
-                className="w-full h-12 pl-12 pr-28 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 text-sm transition-all"
+                className="w-full h-12 pl-12 pr-28 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-sm transition-all"
               />
               <div className="absolute right-2 flex items-center gap-2">
                 {query && (
                   <button
                     type="submit"
-                    className="h-8 px-3 rounded-lg bg-primary text-white hover:bg-primary/90 text-xs font-semibold transition-colors flex items-center gap-1"
+                    className="h-8 px-3 rounded-lg bg-blue-600 text-white hover:bg-blue-500 text-xs font-semibold transition-colors flex items-center gap-1"
                   >
                     Search <ArrowRight className="h-3 w-3" />
                   </button>
@@ -177,7 +175,7 @@ const SearchDropdown = ({ onClose }: { onClose: () => void }) => {
             <div className="mt-4">
               {searching ? (
                 <div className="flex items-center gap-2 py-4 text-gray-500 text-sm">
-                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                   Searching...
                 </div>
               ) : results.length === 0 ? (
@@ -204,10 +202,10 @@ const SearchDropdown = ({ onClose }: { onClose: () => void }) => {
                             }
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm text-gray-900 dark:text-white font-medium line-clamp-1 group-hover:text-primary transition-colors">{p.name}</p>
-                            <p className="text-xs text-primary font-semibold mt-0.5">{formatPKR(p.base_price)}</p>
+                            <p className="text-sm text-gray-900 dark:text-white font-medium line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{p.name}</p>
+                            <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold mt-0.5">{formatPKR(p.base_price)}</p>
                           </div>
-                          <ChevronRight className="h-3.5 w-3.5 text-gray-400 group-hover:text-primary shrink-0 transition-colors" />
+                          <ChevronRight className="h-3.5 w-3.5 text-gray-400 group-hover:text-blue-500 shrink-0 transition-colors" />
                         </Link>
                       );
                     })}
@@ -216,7 +214,7 @@ const SearchDropdown = ({ onClose }: { onClose: () => void }) => {
                     <button
                       type="button"
                       onClick={() => { navigate(`/search?q=${encodeURIComponent(query)}`); onClose(); }}
-                      className="mt-3 w-full py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary/50 text-gray-500 hover:text-primary text-xs font-semibold transition-colors"
+                      className="mt-3 w-full py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-blue-400/50 text-gray-500 hover:text-blue-600 text-xs font-semibold transition-colors"
                     >
                       View all results for "{query}" →
                     </button>
@@ -234,7 +232,7 @@ const SearchDropdown = ({ onClose }: { onClose: () => void }) => {
                   key={term}
                   type="button"
                   onClick={() => setQuery(term)}
-                  className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-primary hover:border-primary/40 text-xs transition-colors"
+                  className="px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-400/40 text-xs transition-colors"
                 >
                   {term}
                 </button>
@@ -256,7 +254,6 @@ const Header = () => {
   const [navCategories, setNavCategories] = useState<NavCategory[]>([]);
   const [navReload, setNavReload] = useState(0);
   const menuTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // Refs for viewport-aware dropdown positioning
   const catRefs = useRef<Record<string, React.RefObject<HTMLDivElement | null>>>({});
 
   const navigate = useNavigate();
@@ -315,7 +312,6 @@ const Header = () => {
     return () => window.removeEventListener('keydown', handler);
   }, []);
 
-  // Ensure each category has a ref for viewport detection
   const getCatRef = (id: string): React.RefObject<HTMLDivElement | null> => {
     if (!catRefs.current[id]) {
       catRefs.current[id] = { current: null };
@@ -334,11 +330,17 @@ const Header = () => {
       {/* ── Top bar ─────────────────────────────────────────────────── */}
       <div className="bg-[#0B4DAE] text-white/90">
         <div className="container flex h-9 items-center justify-between text-[11px] font-medium">
-          <a href="tel:03337778606" className="flex items-center gap-1.5 hover:text-white transition-colors group">
-            <Phone className="h-3 w-3 text-blue-200" /> 0333 7778606
+          <a
+            href="tel:03337778606"
+            className="flex items-center gap-1.5 hover:text-white transition-colors group"
+          >
+            <Phone className="h-3 w-3 text-blue-200 group-hover:text-white transition-colors" />
+            <span>0333 7778606</span>
           </a>
           <span className="hidden sm:flex items-center gap-2 text-blue-200 tracking-widest uppercase text-[10px]">
-            <span className="w-4 h-px bg-blue-400/50" /> We Take Pride in Your Ride <span className="w-4 h-px bg-blue-400/50" />
+            <span className="w-4 h-px bg-blue-400/50" />
+            We Take Pride in Your Ride
+            <span className="w-4 h-px bg-blue-400/50" />
           </span>
           <div className="flex items-center gap-1.5 text-blue-200">
             <MapPin className="h-3 w-3" /> Lahore &amp; Quetta
@@ -348,31 +350,56 @@ const Header = () => {
 
       {/* ── Main header ─────────────────────────────────────────────── */}
       <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm relative">
-        <div className="container flex h-[64px] items-center gap-3">
+        <div className="container flex h-[68px] items-center gap-4">
 
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 shrink-0">
-            <div className="logo-mark shrink-0">
-              <img src="/logo.webp" alt="Allah-Hu-Autos" width="40" height="40" className="h-10 w-10 object-contain" />
-            </div>
-            <div className="hidden sm:block">
-              <p className="text-[15px] font-black text-gray-900 dark:text-white leading-none tracking-tight">Allah-Hu-Autos</p>
-              <p className="text-[10px] text-gray-500 leading-none mt-0.5 tracking-wide">We Take Pride in Your Ride</p>
-            </div>
-          </Link>
+{/* Logo */}
+<Link to="/" className="flex items-center gap-3 shrink-0">
+  <div className="shrink-0 bg-[#0B4DAE] rounded-xl p-1.5">
+    <img
+      src="/logo.webp"
+      alt="Allah-Hu-Autos"
+      width="44"
+      height="44"
+      className="h-9 w-9 object-contain"
+    />
+  </div>
+  <div className="hidden sm:block">
+    <p className="text-[15px] font-black text-gray-900 dark:text-white leading-none tracking-tight">
+      Allah-Hu-Autos
+    </p>
+    <p className="text-[10px] text-gray-400 dark:text-gray-500 leading-none mt-1 tracking-wide font-medium">
+      We Take Pride in Your Ride
+    </p>
+  </div>
+</Link>
 
           <div className="flex-1" />
+
+          {/* Desktop: inline search bar for larger screens */}
+          <div className="hidden lg:flex flex-1 max-w-sm mx-4">
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              className="w-full flex items-center gap-3 h-10 px-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-400 text-sm hover:border-blue-400/50 hover:bg-gray-100 dark:hover:bg-gray-750 transition-all text-left"
+            >
+              <Search className="h-4 w-4 shrink-0" />
+              <span className="flex-1">Search accessories...</span>
+              <kbd className="hidden xl:flex items-center gap-0.5 text-[10px] text-gray-300 dark:text-gray-600 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded px-1.5 py-0.5 font-mono">
+                ⌘K
+              </kbd>
+            </button>
+          </div>
 
           {/* Icon actions */}
           <div className="flex items-center gap-0.5">
 
-            {/* Search icon */}
+            {/* Search icon (mobile/md only) */}
             <button
               type="button"
               onClick={() => setSearchOpen(s => !s)}
-              className={`flex items-center justify-center h-10 w-10 rounded-xl transition-all ${searchOpen
-                  ? 'bg-primary text-white shadow-md'
-                  : 'text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
+              className={`lg:hidden flex items-center justify-center h-10 w-10 rounded-xl transition-all ${searchOpen
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                : 'text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
                 }`}
               aria-label="Search"
             >
@@ -383,9 +410,11 @@ const Header = () => {
 
             {/* About Us — desktop */}
             <Link to="/about" className="hidden md:flex">
-              <button type="button" className={`flex items-center h-10 px-3 rounded-xl text-xs font-medium transition-all ${isActive('/about') ? 'text-primary bg-blue-50 dark:bg-primary/10' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
+              <button type="button" className={`flex items-center h-10 px-3 rounded-xl text-[13px] font-medium transition-all ${isActive('/about')
+                ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10'
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800'
                 }`}>
-                About Us
+                About
               </button>
             </Link>
 
@@ -394,7 +423,7 @@ const Header = () => {
               <button type="button" className="relative flex items-center justify-center h-10 w-10 rounded-xl text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all group" aria-label="Wishlist">
                 <Heart className="h-5 w-5 group-hover:scale-110 transition-transform" />
                 {wishlistCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white">
+                  <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-bold text-white shadow-md">
                     {wishlistCount}
                   </span>
                 )}
@@ -406,7 +435,7 @@ const Header = () => {
               <button type="button" className="relative flex items-center justify-center h-10 w-10 rounded-xl text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all group" aria-label="Cart">
                 <ShoppingCart className="h-5 w-5 group-hover:scale-110 transition-transform" />
                 {itemCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white shadow-md shadow-primary/30">
+                  <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[9px] font-bold text-white shadow-md shadow-blue-600/30">
                     {itemCount}
                   </span>
                 )}
@@ -420,10 +449,10 @@ const Header = () => {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button type="button" className="flex items-center gap-1.5 h-10 px-2.5 rounded-xl text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all">
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/30 flex items-center justify-center">
-                      <User className="h-3.5 w-3.5 text-primary" />
+                    <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
+                      <User className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <ChevronDown className="h-3 w-3 hidden sm:block" />
+                    <ChevronDown className="h-3 w-3 hidden sm:block text-gray-400" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white shadow-lg">
@@ -440,7 +469,7 @@ const Header = () => {
               </DropdownMenu>
             ) : (
               <Link to="/login">
-                <button type="button" className="flex items-center h-9 px-5 rounded-xl bg-primary text-white hover:bg-primary/90 text-sm font-semibold shadow-md shadow-primary/20 transition-all">
+                <button type="button" className="flex items-center h-9 px-5 rounded-xl bg-blue-600 text-white hover:bg-blue-500 text-sm font-semibold shadow-md shadow-blue-600/20 transition-all hover:shadow-blue-500/30 hover:-translate-y-px">
                   Login
                 </button>
               </Link>
@@ -463,8 +492,10 @@ const Header = () => {
 
       {/* ── Nav strip ───────────────────────────────────────────────── */}
       <nav className="hidden md:block bg-[#0B4DAE] border-b border-blue-700/30 relative overflow-visible">
-        <div className="container flex h-12 items-center justify-between">
-          <div className="flex items-center h-full gap-1">
+        <div className="container flex h-11 items-center justify-between">
+
+          {/* Left: primary nav links */}
+          <div className="flex items-center h-full">
             {[
               { to: '/', label: 'Home' },
               { to: '/products', label: 'Shop' },
@@ -474,16 +505,22 @@ const Header = () => {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`relative h-full flex items-center px-4 text-[13px] font-medium transition-colors ${isActive(item.to) ? 'text-white' : 'text-blue-200 hover:text-white'
+                className={`relative h-full flex items-center px-4 text-[13px] font-medium transition-colors ${isActive(item.to)
+                  ? 'text-white'
+                  : 'text-blue-200 hover:text-white'
                   }`}
               >
                 {item.label}
-                {isActive(item.to) && <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-white rounded-full" />}
+                {isActive(item.to) && (
+                  <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-white rounded-full" />
+                )}
               </Link>
             ))}
-          </div>
 
-          <div className="flex items-center h-full gap-1">
+            {/* Divider */}
+            <div className="h-4 w-px bg-blue-400/30 mx-1" />
+
+            {/* Category dropdowns */}
             {navCategories.slice(0, 5).map((cat) => {
               const ref = getCatRef(cat.id);
               return (
@@ -497,12 +534,17 @@ const Header = () => {
                   <button
                     type="button"
                     onClick={() => navigate(`/category/${cat.slug}`)}
-                    className={`relative flex items-center gap-1.5 h-full px-3 text-[12px] font-medium transition-colors whitespace-nowrap ${location.pathname.startsWith(`/category/${cat.slug}`) ? 'text-white' : 'text-blue-200 hover:text-white'
+                    className={`relative flex items-center gap-1.5 h-full px-3 text-[12px] font-medium transition-colors whitespace-nowrap ${location.pathname.startsWith(`/category/${cat.slug}`)
+                      ? 'text-white'
+                      : 'text-blue-200 hover:text-white'
                       }`}
                   >
                     {cat.name}
                     {cat.subcategories.length > 0 && (
-                      <ChevronDown className={`h-3 w-3 transition-transform duration-150 ${activeMenu === cat.id ? 'rotate-180 text-white' : ''}`} />
+                      <ChevronDown className={`h-3 w-3 transition-transform duration-150 ${activeMenu === cat.id ? 'rotate-180 text-white' : 'text-blue-300'}`} />
+                    )}
+                    {location.pathname.startsWith(`/category/${cat.slug}`) && (
+                      <span className="absolute bottom-0 left-2 right-2 h-[2px] bg-white rounded-full" />
                     )}
                   </button>
                   {activeMenu === cat.id && cat.subcategories.length > 0 && (
@@ -513,13 +555,16 @@ const Header = () => {
                 </div>
               );
             })}
-            <a
-              href="tel:03337778606"
-              className="ml-2 flex items-center gap-1.5 px-3 h-8 rounded-full bg-white/10 border border-white/20 text-white text-[11px] font-semibold hover:bg-white/20 transition-colors"
-            >
-              Contact
-            </a>
           </div>
+
+          {/* Right: contact pill */}
+          <a
+            href="tel:03337778606"
+            className="flex items-center gap-1.5 px-3 h-7 rounded-full bg-white/10 border border-white/20 text-white text-[11px] font-semibold hover:bg-white/20 transition-colors shrink-0"
+          >
+            <Phone className="h-3 w-3" />
+            Contact
+          </a>
         </div>
       </nav>
 
@@ -531,7 +576,7 @@ const Header = () => {
             <button
               type="button"
               onClick={() => { setMobileMenuOpen(false); setSearchOpen(true); }}
-              className="w-full flex items-center gap-3 h-10 px-4 rounded-xl bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 text-sm hover:border-primary/40 transition-colors"
+              className="w-full flex items-center gap-3 h-10 px-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 text-sm hover:border-blue-400/40 transition-colors"
             >
               <Search className="h-4 w-4" />
               Search accessories...
@@ -551,12 +596,12 @@ const Header = () => {
                 key={to}
                 to={to}
                 className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${isActive(to)
-                    ? 'bg-blue-50 dark:bg-primary/10 text-primary'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                  ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
                   }`}
               >
                 {label}
-                {isActive(to) && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />}
+                {isActive(to) && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400" />}
               </Link>
             ))}
           </div>
@@ -578,7 +623,7 @@ const Header = () => {
                   </button>
                   {mobileExpandedCat === cat.id && (
                     <div className="ml-4 pl-3 border-l border-gray-200 dark:border-gray-700 mb-1 space-y-0.5">
-                      <Link to={`/category/${cat.slug}`} className="flex items-center px-3 py-1.5 rounded text-xs text-primary font-semibold hover:bg-blue-50 dark:hover:bg-primary/10 transition-colors">View all {cat.name} →</Link>
+                      <Link to={`/category/${cat.slug}`} className="flex items-center px-3 py-1.5 rounded text-xs text-blue-600 dark:text-blue-400 font-semibold hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors">View all {cat.name} →</Link>
                       {cat.subcategories.map((sub) => (
                         <Link key={sub.id} to={`/category/${sub.slug}`} className="flex items-center px-3 py-1.5 rounded text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">{sub.name}</Link>
                       ))}
@@ -591,8 +636,8 @@ const Header = () => {
 
           <div className="px-2 pb-4 pt-1 border-t border-gray-100 dark:border-gray-700">
             <a href="tel:03337778606" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition-colors">
-              <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/25 flex items-center justify-center shrink-0">
-                <Phone className="h-3.5 w-3.5 text-primary" />
+              <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/25 flex items-center justify-center shrink-0">
+                <Phone className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
               </div>
               0333 7778606
             </a>
