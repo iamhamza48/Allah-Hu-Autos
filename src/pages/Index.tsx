@@ -24,7 +24,7 @@ const Index = () => {
         const [productsRes, categoriesRes, newRes] = await Promise.all([
           supabase.from('products').select('*, category:categories(*), images:product_images(*), variants:product_variants(*)').eq('featured', true).limit(10),
           supabase.from('categories').select('*').eq('featured', true).is('parent_id', null).limit(6),
-          supabase.from('products').select('*, category:categories(*), images:product_images(*), variants:product_variants(*)').order('created_at', { ascending: false }).limit(10),
+          supabase.from('products').select('*, category:categories(*), images:product_images(*), variants:product_variants(*)').eq('show_in_new_arrivals', true).order('created_at', { ascending: false }).limit(10),
         ]);
 
         if (productsRes.error) throw productsRes.error;
