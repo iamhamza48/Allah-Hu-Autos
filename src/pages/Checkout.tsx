@@ -9,11 +9,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { useCartStore } from '@/stores/cart';
 import { useAuth } from '@/hooks/use-auth';
 import { formatPKR } from '@/lib/format';
+import { notifyOrderViaWhatsApp } from '@/lib/whatsapp';
 import { toast } from 'sonner';
 import type { Address } from '@/types/database';
 
 const Checkout = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { items, getTotal, clearCart } = useCartStore();
   const navigate = useNavigate();
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -56,6 +57,7 @@ const Checkout = () => {
       return;
     }
     setSubmitting(true);
+    const whatsappWindow = window.open('about:blank', '_blank');
 
     const { data: order, error } = await supabase
       .from('orders')
@@ -72,6 +74,7 @@ const Checkout = () => {
       .single();
 
     if (error || !order) {
+      whatsappWindow?.close();
       toast.error('Failed to place order');
       setSubmitting(false);
       return;
@@ -87,8 +90,30 @@ const Checkout = () => {
     }));
 
     await supabase.from('order_items').insert(orderItems);
+
+    notifyOrderViaWhatsApp(
+      {
+        orderId: order.id,
+        customerName: profile?.full_name,
+        customerEmail: user.email,
+        shippingPhone,
+        shippingAddress,
+        shippingCity,
+        notes,
+        items: items.map((item) => ({
+          name: item.product?.name ?? 'Product',
+          quantity: item.quantity,
+          price: item.variant?.price ?? 0,
+          installType: item.installType,
+          variantName: item.variant?.name,
+        })),
+        total: getTotal(),
+      },
+      whatsappWindow
+    );
+
     clearCart();
-    toast.success('Order placed successfully!');
+    toast.success('Order placed! Tap Send in WhatsApp to notify us.');
     navigate('/account/orders');
     setSubmitting(false);
   };

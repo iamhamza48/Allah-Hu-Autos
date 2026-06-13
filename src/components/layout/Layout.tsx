@@ -1,9 +1,7 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
-
-const WHATSAPP_NUMBER = '923337778606'; // 92 = Pakistan country code
-const WHATSAPP_MESSAGE = encodeURIComponent('Assalam o Alaikum! I have a question about Allah-Hu-Autos.');
+import { WHATSAPP_NUMBER, WHATSAPP_DEFAULT_MESSAGE, getWhatsAppUrl } from '@/lib/whatsapp';
 
 const Layout = () => {
   const { pathname } = useLocation();
@@ -19,7 +17,7 @@ const Layout = () => {
       {/* Floating WhatsApp Button — hidden on account pages */}
       {!hideWhatsApp && (
         <a
-          href={`https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}`}
+          href={getWhatsAppUrl(WHATSAPP_DEFAULT_MESSAGE, WHATSAPP_NUMBER)}
           target="_blank"
           rel="noreferrer"
           aria-label="Chat with us on WhatsApp"
