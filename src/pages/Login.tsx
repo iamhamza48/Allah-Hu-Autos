@@ -51,7 +51,7 @@ const Login = () => {
               <Shield className="h-7 w-7" />
             </div>
             <CardTitle className="text-2xl">Administrator Login</CardTitle>
-            <CardDescription className="text-slate-400">Customer accounts are not required to shop.</CardDescription>
+            <CardDescription className="text-slate-400">Restricted access for Allah Hu Autos administrators.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">

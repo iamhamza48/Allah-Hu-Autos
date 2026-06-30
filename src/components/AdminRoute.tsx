@@ -1,9 +1,11 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/use-auth';
 import { Shield } from 'lucide-react';
+import Login from '@/pages/Login';
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, isAdmin, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -16,8 +18,12 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (!user) return <Navigate to="/admin/login" replace />;
-  if (!isAdmin) return <Navigate to="/" replace />;
+  if (!user || !isAdmin) {
+    // Authentication belongs exclusively to the admin entry point. Deep admin
+    // links return here instead of exposing a separate public login route.
+    if (location.pathname !== '/admin') return <Navigate to="/admin" replace />;
+    return <Login />;
+  }
 
   return <>{children}</>;
 };

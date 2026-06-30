@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,7 +23,6 @@ const SearchPage = lazy(() => import("./pages/Search"));
 const Cart = lazy(() => import("./pages/Cart"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const Booking = lazy(() => import("./pages/Booking"));
-const Login = lazy(() => import("./pages/Login"));
 const VehicleProducts = lazy(() => import("./pages/VehicleProducts"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const About = lazy(() => import("./pages/About"));
@@ -67,7 +66,7 @@ const App = () => (
                   <Route path="/booking" element={<Booking />} />
                   <Route path="/wishlist" element={<Wishlist />} />
                   <Route path="/vehicles/:vehicleId/products" element={<VehicleProducts />} />
-                  <Route path="/admin/login" element={<Login />} />
+                  <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
 
                   {/* Admin */}
                   <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
