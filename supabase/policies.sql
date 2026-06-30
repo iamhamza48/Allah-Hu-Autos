@@ -92,7 +92,6 @@ create policy "Admins can manage inventory" on public.inventory for all to authe
 -- Orders (own orders + admin)
 -- ==================
 create policy "Users can view own orders" on public.orders for select to authenticated using (user_id = auth.uid());
-create policy "Users can create orders" on public.orders for insert to authenticated with check (user_id = auth.uid());
 create policy "Admins can manage orders" on public.orders for all to authenticated using (public.has_role(auth.uid(), 'admin'));
 
 -- ==================
@@ -100,15 +99,12 @@ create policy "Admins can manage orders" on public.orders for all to authenticat
 -- ==================
 create policy "Users can view own order items" on public.order_items for select to authenticated
   using (exists (select 1 from public.orders where orders.id = order_items.order_id and orders.user_id = auth.uid()));
-create policy "Users can create order items" on public.order_items for insert to authenticated
-  with check (exists (select 1 from public.orders where orders.id = order_items.order_id and orders.user_id = auth.uid()));
 create policy "Admins can manage order items" on public.order_items for all to authenticated using (public.has_role(auth.uid(), 'admin'));
 
 -- ==================
 -- Bookings
 -- ==================
 create policy "Users can view own bookings" on public.bookings for select to authenticated using (user_id = auth.uid());
-create policy "Users can create bookings" on public.bookings for insert to authenticated with check (user_id = auth.uid());
 create policy "Admins can manage bookings" on public.bookings for all to authenticated using (public.has_role(auth.uid(), 'admin'));
 
 -- ==================

@@ -10,9 +10,7 @@ interface AuthContextValue {
   role: AppRole;
   loading: boolean;
   isAdmin: boolean;
-  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<any>;
   signIn: (email: string, password: string) => Promise<any>;
-  signInWithGoogle: () => Promise<any>;
   signOut: () => Promise<void>;
 }
 
@@ -52,6 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
+          setLoading(true);
           Promise.all([
             fetchProfile(session.user.id),
             fetchRole(session.user.id),
@@ -67,40 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, [fetchProfile, fetchRole]);
 
-  const signUp = async (email: string, password: string, fullName: string, phone?: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { full_name: fullName, phone: phone ?? '' },
-        emailRedirectTo: window.location.origin,
-      },
-    });
-
-    // Persist phone + name to profiles table immediately
-    if (!error && data.user) {
-      await supabase.from('profiles').upsert({
-        id: data.user.id,
-        full_name: fullName,
-        phone: phone ?? null,
-        updated_at: new Date().toISOString(),
-      });
-    }
-
-    return { data, error };
-  };
-
   const signIn = async (email: string, password: string) => {
     return supabase.auth.signInWithPassword({ email, password });
-  };
-
-  const signInWithGoogle = async () => {
-    return supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
   };
 
   const signOut = async () => {
@@ -113,7 +80,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, session, profile, role, loading, isAdmin: role === 'admin', signUp, signIn, signInWithGoogle, signOut }}
+      value={{ user, session, profile, role, loading, isAdmin: role === 'admin', signIn, signOut }}
     >
       {children}
     </AuthContext.Provider>

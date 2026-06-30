@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatPKR } from '@/lib/format';
 import { toast } from 'sonner';
-import { Search, Eye, ShoppingBag, MapPin, Phone } from 'lucide-react';
+import { Search, Eye, ShoppingBag, MapPin, Phone, MessageSquare } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { StatusBadge } from '@/components/admin/StatusBadge';
 
@@ -31,18 +31,32 @@ const AdminOrders = () => {
     if (error) { toast.error('Failed to load orders: ' + error.message); setLoading(false); return; }
 
     const rows = data || [];
-    const userIds = [...new Set(rows.map((o: any) => o.user_id))];
-    let profileMap: Record<string, any> = {};
+    const userIds = [...new Set(rows.map((o: any) => o.user_id).filter(Boolean))];
+    const profileMap: Record<string, any> = {};
     if (userIds.length > 0) {
       const { data: profiles } = await supabase.from('profiles').select('id, full_name, phone').in('id', userIds);
       (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
     }
 
-    setOrders(rows.map((o: any) => ({ ...o, profile: profileMap[o.user_id] || null })));
+    setOrders(rows.map((o: any) => ({
+      ...o,
+      profile: profileMap[o.user_id] || null,
+      display_name: o.customer_name || profileMap[o.user_id]?.full_name || 'Guest Customer',
+      contact_phone: o.shipping_phone || profileMap[o.user_id]?.phone || '',
+    })));
     setLoading(false);
   };
 
-  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => {
+    void fetchOrders();
+    const channel = supabase
+      .channel('admin-orders-list')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, () => {
+        void fetchOrders();
+      })
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, []);
 
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase.from('orders').update({ status }).eq('id', id);
@@ -54,7 +68,9 @@ const AdminOrders = () => {
   const displayed = orders.filter(o => {
     const q = search.toLowerCase();
     const matchSearch = !q ||
-      o.profile?.full_name?.toLowerCase().includes(q) ||
+      o.display_name?.toLowerCase().includes(q) ||
+      o.customer_email?.toLowerCase().includes(q) ||
+      o.contact_phone?.toLowerCase().includes(q) ||
       o.id.toLowerCase().includes(q) ||
       o.shipping_city?.toLowerCase().includes(q);
     const matchStatus = filterStatus === 'all' || o.status === filterStatus;
@@ -62,6 +78,14 @@ const AdminOrders = () => {
   });
 
   const revenue = displayed.reduce((sum, o) => sum + (o.total || 0), 0);
+
+  const openWhatsApp = (order: any) => {
+    let phone = String(order.contact_phone || '').replace(/\D/g, '');
+    if (phone.startsWith('0')) phone = '92' + phone.slice(1);
+    if (phone.length === 10) phone = '92' + phone;
+    const message = encodeURIComponent(`Assalam o Alaikum ${order.display_name}, your Allah-Hu-Autos order #${order.id.slice(0, 8)} has been received. We will confirm it shortly.`);
+    window.open(`https://wa.me/${phone}?text=${message}`, '_blank', 'noopener,noreferrer');
+  };
 
   return (
     <div>
@@ -127,9 +151,10 @@ const AdminOrders = () => {
                 <TableRow key={o.id} className="hover:bg-zinc-50/60">
                   <TableCell className="font-mono text-[11px] text-zinc-400">#{o.id.slice(0, 8)}</TableCell>
                   <TableCell>
-                    <p className="font-medium text-sm text-zinc-900">{o.profile?.full_name || 'Unknown'}</p>
+                    <p className="font-medium text-sm text-zinc-900">{o.display_name}</p>
+                    {o.customer_email && <p className="text-[11px] text-zinc-400">{o.customer_email}</p>}
                   </TableCell>
-                  <TableCell className="text-sm text-zinc-600">{o.shipping_phone || o.profile?.phone || '—'}</TableCell>
+                  <TableCell className="text-sm text-zinc-600">{o.contact_phone || '—'}</TableCell>
                   <TableCell className="text-sm text-zinc-600">{(o.items || []).length} item{(o.items || []).length !== 1 ? 's' : ''}</TableCell>
                   <TableCell className="font-semibold text-sm text-zinc-900">{formatPKR(o.total)}</TableCell>
                   <TableCell className="text-sm text-zinc-600">{o.shipping_city || '—'}</TableCell>
@@ -166,11 +191,17 @@ const AdminOrders = () => {
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="bg-zinc-50 rounded-lg p-3 border border-zinc-100">
                   <p className="text-[10px] text-zinc-400 mb-1.5 font-semibold uppercase tracking-wider">Customer</p>
-                  <p className="font-medium text-zinc-900">{viewOrder.profile?.full_name || 'Unknown'}</p>
-                  {viewOrder.profile?.phone && (
+                  <p className="font-medium text-zinc-900">{viewOrder.display_name}</p>
+                  {viewOrder.customer_email && <p className="text-zinc-500 text-xs mt-0.5">{viewOrder.customer_email}</p>}
+                  {viewOrder.contact_phone && (
                     <p className="text-zinc-500 text-xs flex items-center gap-1 mt-0.5">
-                      <Phone className="h-3 w-3" />{viewOrder.profile.phone}
+                      <Phone className="h-3 w-3" />{viewOrder.contact_phone}
                     </p>
+                  )}
+                  {viewOrder.contact_phone && (
+                    <Button size="sm" variant="outline" className="mt-2 h-7 text-xs text-emerald-600" onClick={() => openWhatsApp(viewOrder)}>
+                      <MessageSquare className="mr-1 h-3 w-3" /> WhatsApp customer
+                    </Button>
                   )}
                 </div>
                 <div className="bg-zinc-50 rounded-lg p-3 border border-zinc-100">

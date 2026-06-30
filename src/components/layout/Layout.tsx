@@ -5,7 +5,7 @@ import { WHATSAPP_NUMBER, WHATSAPP_DEFAULT_MESSAGE, getWhatsAppUrl } from '@/lib
 
 const Layout = () => {
   const { pathname } = useLocation();
-  const hideWhatsApp = pathname.startsWith('/account') || pathname.startsWith('/admin');
+  const hideWhatsApp = pathname.startsWith('/admin');
   return (
     <div className="flex min-h-screen flex-col">
       <Header />

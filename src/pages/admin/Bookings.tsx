@@ -27,18 +27,12 @@ const AdminBookings = () => {
     if (error) { toast.error('Fetch error: ' + error.message); setLoading(false); return; }
 
     const rows = bookingRows || [];
-    const userIds = [...new Set(rows.map((b: any) => b.user_id).filter(Boolean))];
-    let profileMap: Record<string, any> = {};
-
-    if (userIds.length > 0) {
-      const { data: profiles } = await supabase
-        .from('profiles').select('id, full_name, phone').in('id', userIds);
-      profiles?.forEach((p: any) => { profileMap[p.id] = p; });
-    }
-
     setBookings(rows.map((b: any) => ({
       ...b,
-      profile: profileMap[b.user_id] || { full_name: 'Guest User', phone: '' },
+      profile: {
+        full_name: b.customer_name || 'Guest Customer',
+        phone: b.customer_phone || '',
+      },
     })));
     setLoading(false);
   };

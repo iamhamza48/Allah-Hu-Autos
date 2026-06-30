@@ -41,7 +41,7 @@ const AdminReviews = () => {
     }
 
     const userIds = Array.from(new Set(reviewsData.map(r => r.user_id).filter(Boolean)));
-    let profileMap: Record<string, any> = {};
+    const profileMap: Record<string, any> = {};
 
     if (userIds.length > 0) {
       const { data: profilesData, error: profilesError } = await supabase

@@ -17,41 +17,30 @@ const AdminDashboard = () => {
 
   const fetchAll = async () => {
     setLoading(true);
-    const [products, orders, customers, revenue, bookings, recentO, recentB] = await Promise.all([
+    const [products, orders, revenue, bookings, recentO, recentB] = await Promise.all([
       supabase.from('products').select('id', { count: 'exact', head: true }),
-      supabase.from('orders').select('id, status', { count: 'exact' }),
-      supabase.from('profiles').select('id', { count: 'exact', head: true }),
+      supabase.from('orders').select('id, status, shipping_phone', { count: 'exact' }),
       supabase.from('orders').select('total'),
       supabase.from('bookings').select('id, status', { count: 'exact' }),
-      supabase.from('orders').select('id, total, status, created_at, user_id, shipping_city').order('created_at', { ascending: false }).limit(6),
-      supabase.from('bookings').select('id, status, booking_date, booking_time, branch:branches(name), user_id').order('created_at', { ascending: false }).limit(6),
+      supabase.from('orders').select('id, total, status, created_at, customer_name, shipping_city').order('created_at', { ascending: false }).limit(6),
+      supabase.from('bookings').select('id, status, booking_date, booking_time, customer_name, branch:branches(name)').order('created_at', { ascending: false }).limit(6),
     ]);
 
     const allOrders = orders.data || [];
     const allBookings = bookings.data || [];
 
-    const userIds = [...new Set([
-      ...(recentO.data || []).map((o: any) => o.user_id),
-      ...(recentB.data || []).map((b: any) => b.user_id),
-    ])];
-    let profileMap: Record<string, any> = {};
-    if (userIds.length > 0) {
-      const { data: profiles } = await supabase.from('profiles').select('id, full_name').in('id', userIds);
-      (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
-    }
-
     setStats({
       products: products.count || 0,
       orders: orders.count || 0,
-      customers: customers.count || 0,
+      customers: new Set(allOrders.map((o: any) => o.shipping_phone).filter(Boolean)).size,
       revenue: (revenue.data || []).reduce((s: number, o: any) => s + (o.total || 0), 0),
       bookings: bookings.count || 0,
       pendingOrders: allOrders.filter((o: any) => o.status === 'pending').length,
       pendingBookings: allBookings.filter((b: any) => b.status === 'pending').length,
     });
 
-    setRecentOrders((recentO.data || []).map((o: any) => ({ ...o, profile: profileMap[o.user_id] })));
-    setRecentBookings((recentB.data || []).map((b: any) => ({ ...b, profile: profileMap[b.user_id] })));
+    setRecentOrders(recentO.data || []);
+    setRecentBookings(recentB.data || []);
     setLoading(false);
   };
 
@@ -148,7 +137,7 @@ const AdminDashboard = () => {
               recentOrders.map(o => (
                 <div key={o.id} className="flex items-center justify-between px-4 py-3">
                   <div>
-                    <p className="text-sm font-medium text-foreground">{o.profile?.full_name || 'Unknown'}</p>
+                    <p className="text-sm font-medium text-foreground">{o.customer_name || 'Guest Customer'}</p>
                     <p className="text-[11px] text-muted-foreground">{o.shipping_city} · {new Date(o.created_at).toLocaleDateString('en-PK')}</p>
                   </div>
                   <div className="text-right flex flex-col items-end gap-1">
@@ -181,7 +170,7 @@ const AdminDashboard = () => {
               recentBookings.map(b => (
                 <div key={b.id} className="flex items-center justify-between px-4 py-3">
                   <div>
-                    <p className="text-sm font-medium text-foreground">{b.profile?.full_name || 'Unknown'}</p>
+                    <p className="text-sm font-medium text-foreground">{b.customer_name || 'Guest Customer'}</p>
                     <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                       <Clock className="h-3 w-3" />{b.booking_date} at {b.booking_time}
                     </p>

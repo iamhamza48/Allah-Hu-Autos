@@ -8,9 +8,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import Layout from "./components/layout/Layout";
-import AccountLayout from "./components/layout/AccountLayout";
 import AdminLayout from "./components/layout/AdminLayout";
-import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import ScrollToTop from "./components/ScrollToTop";
 import LoadingState from "./components/LoadingState";
@@ -26,19 +24,10 @@ const Cart = lazy(() => import("./pages/Cart"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const Booking = lazy(() => import("./pages/Booking"));
 const Login = lazy(() => import("./pages/Login"));
-const Register = lazy(() => import("./pages/Register"));
 const VehicleProducts = lazy(() => import("./pages/VehicleProducts"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const About = lazy(() => import("./pages/About"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const AuthCallback = lazy(() => import("./pages/AuthCallback"));
-
-// Lazy-loaded Account pages
-const AccountDashboard = lazy(() => import("./pages/account/Dashboard"));
-const AccountOrders = lazy(() => import("./pages/account/Orders"));
-const AccountBookings = lazy(() => import("./pages/account/Bookings"));
-const AccountVehicles = lazy(() => import("./pages/account/Vehicles"));
-const AccountAddresses = lazy(() => import("./pages/account/Addresses"));
 
 // Lazy-loaded Admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
@@ -47,7 +36,6 @@ const AdminCategories = lazy(() => import("./pages/admin/Categories"));
 const AdminOrders = lazy(() => import("./pages/admin/Orders"));
 const AdminBookings = lazy(() => import("./pages/admin/Bookings"));
 const AdminInventory = lazy(() => import("./pages/admin/Inventory"));
-const AdminCustomers = lazy(() => import("./pages/admin/Customers"));
 const AdminReviews = lazy(() => import("./pages/admin/Reviews"));
 const AdminVehicles = lazy(() => import("./pages/admin/Vehicles"));
 const AdminSettings = lazy(() => import("./pages/admin/Settings"));
@@ -75,22 +63,11 @@ const App = () => (
                   <Route path="/product/:slug" element={<ProductDetail />} />
                   <Route path="/search" element={<SearchPage />} />
                   <Route path="/cart" element={<Cart />} />
-                  <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-                  <Route path="/booking" element={<ProtectedRoute><Booking /></ProtectedRoute>} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/booking" element={<Booking />} />
                   <Route path="/wishlist" element={<Wishlist />} />
                   <Route path="/vehicles/:vehicleId/products" element={<VehicleProducts />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
-
-                  {/* Account */}
-                  <Route path="/account" element={<ProtectedRoute><AccountLayout /></ProtectedRoute>}>
-                    <Route index element={<AccountDashboard />} />
-                    <Route path="orders" element={<AccountOrders />} />
-                    <Route path="bookings" element={<AccountBookings />} />
-                    <Route path="vehicles" element={<AccountVehicles />} />
-                    <Route path="addresses" element={<AccountAddresses />} />
-                  </Route>
+                  <Route path="/admin/login" element={<Login />} />
 
                   {/* Admin */}
                   <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
@@ -100,7 +77,6 @@ const App = () => (
                     <Route path="orders" element={<AdminOrders />} />
                     <Route path="bookings" element={<AdminBookings />} />
                     <Route path="inventory" element={<AdminInventory />} />
-                    <Route path="customers" element={<AdminCustomers />} />
                     <Route path="reviews" element={<AdminReviews />} />
                     <Route path="vehicles" element={<AdminVehicles />} />
                     <Route path="settings" element={<AdminSettings />} />

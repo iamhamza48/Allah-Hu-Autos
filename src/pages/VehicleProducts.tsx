@@ -57,7 +57,7 @@ const VehicleProducts = () => {
   }, [products]);
 
   const filtered = useMemo(() => {
-    let list = activeCategory === 'all'
+    const list = activeCategory === 'all'
       ? products
       : products.filter(p => p.category_id === activeCategory);
 

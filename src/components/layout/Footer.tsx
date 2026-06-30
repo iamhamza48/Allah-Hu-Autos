@@ -11,7 +11,7 @@ const FALLBACK_BRANCHES = [
 
 const LINK_SECTIONS = [
   { title: 'Quick Links', links: [['/categories', 'Categories'], ['/products', 'Products'], ['/booking', 'Book Installation'], ['/search', 'Search']] },
-  { title: 'Account', links: [['/account', 'My Account'], ['/account/orders', 'My Orders'], ['/account/bookings', 'My Bookings'], ['/cart', 'Cart']] }
+  { title: 'Customer Care', links: [['/cart', 'Cart'], ['/wishlist', 'Wishlist'], ['/booking', 'Book Installation'], ['/about', 'About Us']] }
 ];
 
 const BranchCard = ({ b }: { b: any }) => {

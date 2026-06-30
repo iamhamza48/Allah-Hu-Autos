@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/hooks/use-auth';
 import { toast } from 'sonner';
 import {
   Calendar, Clock, MapPin, ChevronRight,
@@ -28,7 +27,6 @@ const fmt12 = (t: string) => {
 };
 
 const Booking = () => {
-  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   
   const [branches, setBranches] = useState<any[]>([]);
@@ -38,6 +36,8 @@ const Booking = () => {
   const [branchId, setBranchId] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
 
@@ -51,8 +51,7 @@ const Booking = () => {
       setLoading(false);
     };
     fetchData();
-    if (user?.user_metadata?.phone) setPhone(user.user_metadata.phone);
-  }, [user]);
+  }, []);
 
   const toggleService = (service: string) => {
     setSelectedServices(prev => 
@@ -63,21 +62,21 @@ const Booking = () => {
   };
 
   const handleSubmit = async () => {
-    if (!user) return;
-    if (!phone) {
-      toast.error("Phone number is required for confirmation");
+    if (!customerName.trim() || !phone.trim()) {
+      toast.error("Your name and phone number are required for confirmation");
       return;
     }
     setSubmitting(true);
     try {
-      const fullNotes = `CONTACT: ${phone}\nSERVICES: ${selectedServices.join(', ')}\n\nUSER NOTES: ${notes}`.trim();
-      const { error } = await supabase.from('bookings').insert({
-        user_id: user.id,
-        branch_id: branchId,
-        notes: fullNotes,
-        booking_date: date,
-        booking_time: time,
-        status: 'pending',
+      const { error } = await supabase.rpc('create_guest_booking', {
+        p_customer_name: customerName,
+        p_customer_email: customerEmail,
+        p_customer_phone: phone,
+        p_branch_id: branchId,
+        p_booking_date: date,
+        p_booking_time: time,
+        p_services: selectedServices,
+        p_notes: notes,
       });
       if (error) throw error;
       setStep(3);
@@ -88,7 +87,7 @@ const Booking = () => {
     }
   };
 
-  if (loading || authLoading) return (
+  if (loading) return (
     <div className="flex h-[80vh] items-center justify-center">
       <Loader2 className="h-10 w-10 animate-spin text-primary" />
     </div>
@@ -198,8 +197,33 @@ const Booking = () => {
               ))}
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-1">Full Name</Label>
+                <input
+                  type="text"
+                  autoComplete="name"
+                  placeholder="YOUR NAME"
+                  className="w-full h-16 px-6 rounded-2xl bg-white border-2 border-zinc-300 font-black uppercase text-sm outline-none focus:border-primary shadow-sm text-zinc-900"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-1">Email (Optional)</Label>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  placeholder="YOU@EXAMPLE.COM"
+                  className="w-full h-16 px-6 rounded-2xl bg-white border-2 border-zinc-300 font-black text-sm outline-none focus:border-primary shadow-sm text-zinc-900"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
-                {/* DARKER LABEL */}
                 <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-600 ml-1">Contact Number (For Confirmation Call)</Label>
                 <div className="relative group">
                   <Phone className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-600 transition-colors group-focus-within:text-primary" />
@@ -252,7 +276,7 @@ const Booking = () => {
 
             <Button 
               className="w-full h-20 rounded-3xl font-black text-xl uppercase tracking-[0.2em] shadow-2xl shadow-primary/30 active:scale-95 transition-all"
-              disabled={submitting || !date || !time || !phone}
+              disabled={submitting || !date || !time || !phone || !customerName}
               onClick={handleSubmit}
             >
               {submitting ? <Loader2 className="h-6 w-6 animate-spin" /> : 'Confirm Booking'}

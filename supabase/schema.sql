@@ -29,6 +29,9 @@ create table public.categories (
   slug text not null unique,
   icon text default '🔧',
   featured boolean default false,
+  image_url text,
+  parent_id uuid references public.categories(id) on delete set null,
+  sort_order int default 0,
   created_at timestamptz default now()
 );
 
@@ -43,6 +46,7 @@ create table public.products (
   compare_price numeric,
   installable boolean default false,
   featured boolean default false,
+  show_in_new_arrivals boolean default false,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
@@ -117,13 +121,16 @@ create table public.inventory (
   variant_id uuid references public.product_variants(id) on delete cascade not null,
   branch_id uuid references public.branches(id) on delete cascade not null,
   quantity int default 0,
-  updated_at timestamptz default now()
+  updated_at timestamptz default now(),
+  unique (variant_id, branch_id)
 );
 
 -- 13. Orders
 create table public.orders (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users(id) on delete set null not null,
+  user_id uuid references auth.users(id) on delete set null,
+  customer_name text,
+  customer_email text,
   status text default 'pending',
   total numeric default 0,
   shipping_address text default '',
@@ -148,7 +155,10 @@ create table public.order_items (
 -- 15. Bookings
 create table public.bookings (
   id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users(id) on delete set null not null,
+  user_id uuid references auth.users(id) on delete set null,
+  customer_name text,
+  customer_email text,
+  customer_phone text,
   branch_id uuid references public.branches(id) on delete set null,
   product_id uuid references public.products(id) on delete set null,
   vehicle_id uuid references public.vehicles(id) on delete set null,
@@ -201,11 +211,20 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, full_name)
-  values (new.id, new.raw_user_meta_data ->> 'full_name');
+  insert into public.profiles (id, full_name, phone)
+  values (
+    new.id,
+    nullif(trim(new.raw_user_meta_data ->> 'full_name'), ''),
+    nullif(trim(new.raw_user_meta_data ->> 'phone'), '')
+  )
+  on conflict (id) do update
+    set full_name = excluded.full_name,
+        phone = excluded.phone,
+        updated_at = now();
 
   insert into public.user_roles (user_id, role)
-  values (new.id, 'user');
+  values (new.id, 'user')
+  on conflict (user_id, role) do nothing;
 
   return new;
 end;

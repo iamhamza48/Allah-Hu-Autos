@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
@@ -7,120 +7,109 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCartStore } from '@/stores/cart';
-import { useAuth } from '@/hooks/use-auth';
 import { formatPKR } from '@/lib/format';
 import { notifyOrderViaWhatsApp } from '@/lib/whatsapp';
 import { toast } from 'sonner';
-import type { Address } from '@/types/database';
+
+interface CreatedOrderItem {
+  name: string;
+  variant_name: string;
+  quantity: number;
+  price: number;
+  install_type: 'self' | 'professional' | null;
+}
+
+interface CreatedOrder {
+  id: string;
+  total: number;
+  items: CreatedOrderItem[];
+}
 
 const Checkout = () => {
-  const { user, profile } = useAuth();
   const { items, getTotal, clearCart } = useCartStore();
   const navigate = useNavigate();
-  const [addresses, setAddresses] = useState<Address[]>([]);
-  const [selectedAddress, setSelectedAddress] = useState('');
+  const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
   const [shippingAddress, setShippingAddress] = useState('');
   const [shippingCity, setShippingCity] = useState('');
   const [shippingPhone, setShippingPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase.from('addresses').select('*').eq('user_id', user.id).then(({ data }) => {
-      setAddresses(data || []);
-      const def = data?.find((a) => a.is_default);
-      if (def) {
-        setSelectedAddress(def.id);
-        setShippingAddress(def.address_line);
-        setShippingCity(def.city);
-        setShippingPhone(def.phone);
-      }
-    });
-  }, [user]);
-
-  const handleAddressSelect = (id: string) => {
-    setSelectedAddress(id);
-    const addr = addresses.find((a) => a.id === id);
-    if (addr) {
-      setShippingAddress(addr.address_line);
-      setShippingCity(addr.city);
-      setShippingPhone(addr.phone);
-    }
-  };
+  const [completedOrderId, setCompletedOrderId] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || items.length === 0) return;
-    if (!shippingAddress || !shippingCity || !shippingPhone) {
-      toast.error('Please fill in all shipping details');
+    if (items.length === 0) return;
+    if (!customerName.trim() || !shippingAddress.trim() || !shippingCity.trim() || !shippingPhone.trim()) {
+      toast.error('Please complete your name, phone, and delivery details');
       return;
     }
     setSubmitting(true);
     const whatsappWindow = window.open('about:blank', '_blank');
 
-    const { data: order, error } = await supabase
-      .from('orders')
-      .insert({
-        user_id: user.id,
-        status: 'pending',
-        total: getTotal(),
-        shipping_address: shippingAddress,
-        shipping_city: shippingCity,
-        shipping_phone: shippingPhone,
-        notes,
-      })
-      .select()
-      .single();
+    const { data, error } = await supabase.rpc('create_guest_order', {
+      p_customer_name: customerName,
+      p_customer_email: customerEmail,
+      p_shipping_address: shippingAddress,
+      p_shipping_city: shippingCity,
+      p_shipping_phone: shippingPhone,
+      p_notes: notes,
+      p_items: items.map((item) => ({
+        variant_id: item.variantId,
+        quantity: item.quantity,
+        install_type: item.installType,
+      })),
+    });
+    const order = data as CreatedOrder | null;
 
     if (error || !order) {
       whatsappWindow?.close();
-      toast.error('Failed to place order');
+      toast.error(error?.message || 'Failed to place order');
       setSubmitting(false);
       return;
     }
 
-    const orderItems = items.map((item) => ({
-      order_id: order.id,
-      product_id: item.productId,
-      variant_id: item.variantId,
-      quantity: item.quantity,
-      price: item.variant?.price ?? 0,
-      install_type: item.installType,
-    }));
-
-    await supabase.from('order_items').insert(orderItems);
-
     notifyOrderViaWhatsApp(
       {
         orderId: order.id,
-        customerName: profile?.full_name,
-        customerEmail: user.email,
+        customerName,
+        customerEmail,
         shippingPhone,
         shippingAddress,
         shippingCity,
         notes,
-        items: items.map((item) => ({
-          name: item.product?.name ?? 'Product',
+        items: order.items.map((item) => ({
+          name: item.name,
           quantity: item.quantity,
-          price: item.variant?.price ?? 0,
-          installType: item.installType,
-          variantName: item.variant?.name,
+          price: item.price,
+          installType: item.install_type,
+          variantName: item.variant_name,
         })),
-        total: getTotal(),
+        total: order.total,
       },
       whatsappWindow
     );
 
+    setCompletedOrderId(order.id);
     clearCart();
     toast.success('Order placed! Tap Send in WhatsApp to notify us.');
-    navigate('/account/orders');
     setSubmitting(false);
   };
 
-  if (!user) {
-    navigate('/login');
-    return null;
+  if (completedOrderId) {
+    return (
+      <div className="container py-16">
+        <Card className="mx-auto max-w-xl text-center">
+          <CardContent className="p-10 space-y-4">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl">✓</div>
+            <h1 className="text-3xl font-bold">Order received</h1>
+            <p className="text-muted-foreground">Thank you, {customerName}. Our team will contact you on {shippingPhone} to confirm your order.</p>
+            <p className="text-sm font-mono text-muted-foreground">Order #{completedOrderId.slice(0, 8)}</p>
+            <Button onClick={() => navigate('/products')}>Continue shopping</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (items.length === 0) {
@@ -134,43 +123,31 @@ const Checkout = () => {
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            {/* Saved addresses */}
-            {addresses.length > 0 && (
-              <Card>
-                <CardHeader><CardTitle>Saved Addresses</CardTitle></CardHeader>
-                <CardContent className="space-y-2">
-                  {addresses.map((addr) => (
-                    <button
-                      key={addr.id}
-                      type="button"
-                      onClick={() => handleAddressSelect(addr.id)}
-                      className={`w-full text-left p-3 rounded-md border transition-colors ${
-                        selectedAddress === addr.id ? 'border-primary bg-primary/5' : 'border-border'
-                      }`}
-                    >
-                      <p className="font-medium">{addr.label}</p>
-                      <p className="text-sm text-muted-foreground">{addr.address_line}, {addr.city}</p>
-                    </button>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-
             <Card>
-              <CardHeader><CardTitle>Shipping Details</CardTitle></CardHeader>
+              <CardHeader><CardTitle>Contact & Shipping Details</CardTitle></CardHeader>
               <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Full Name</Label>
+                    <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} autoComplete="name" required />
+                  </div>
+                  <div>
+                    <Label>Email (optional)</Label>
+                    <Input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} autoComplete="email" />
+                  </div>
+                </div>
                 <div>
                   <Label>Address</Label>
-                  <Input value={shippingAddress} onChange={(e) => setShippingAddress(e.target.value)} required />
+                  <Input value={shippingAddress} onChange={(e) => setShippingAddress(e.target.value)} autoComplete="street-address" required />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>City</Label>
-                    <Input value={shippingCity} onChange={(e) => setShippingCity(e.target.value)} required />
+                    <Input value={shippingCity} onChange={(e) => setShippingCity(e.target.value)} autoComplete="address-level2" required />
                   </div>
                   <div>
                     <Label>Phone</Label>
-                    <Input value={shippingPhone} onChange={(e) => setShippingPhone(e.target.value)} required />
+                    <Input type="tel" value={shippingPhone} onChange={(e) => setShippingPhone(e.target.value)} autoComplete="tel" required />
                   </div>
                 </div>
                 <div>

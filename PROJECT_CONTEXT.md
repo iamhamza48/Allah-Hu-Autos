@@ -47,6 +47,9 @@ Prefer extending the existing system instead of rebuilding it.
 
 # Authentication & Roles
 
+Customer accounts are not used. Storefront browsing, checkout, and booking are guest flows.
+Only administrators authenticate, through `/admin/login` using email and password.
+
 ## User Roles
 
 Roles are stored in:
@@ -227,6 +230,7 @@ Tables:
 - order_items
 
 Orders contain:
+- guest customer name and optional email
 - shipping details
 - status
 - notes

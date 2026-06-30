@@ -35,9 +35,13 @@ VITE_SUPABASE_ANON_KEY=your-anon-key-here
 
 In Supabase Dashboard → SQL Editor, run these scripts **in order**:
 
-1. **`supabase/schema.sql`** — Creates all 17 tables, triggers, and storage bucket
+1. **`supabase/schema.sql`** — Creates the base tables, triggers, and storage bucket
 2. **`supabase/policies.sql`** — Sets up Row Level Security on all tables
-3. **`supabase/seed.sql`** — Inserts 43 categories, 150+ products, vehicles, branches
+3. **`supabase/migrations/20260630_guest_checkout.sql`** — Adds guest checkout, guest booking, and secure server pricing
+4. **`supabase/seed.sql`** — Inserts the initial catalog, vehicles, and branches
+
+After deploying the updated frontend, run
+**`supabase/migrations/20260630_harden_guest_writes.sql`** to disable the legacy direct-write paths.
 
 ### 4. Create Admin User
 
@@ -69,7 +73,7 @@ After setup, create your admin account manually (step 4 above).
 
 | Role    | Access                          |
 |---------|----------------------------------|
-| User    | Storefront, cart, checkout, account |
+| Guest   | Storefront, cart, checkout, and booking without login |
 | Admin   | Full admin panel at `/admin`     |
 
 ---
@@ -79,12 +83,11 @@ After setup, create your admin account manually (step 4 above).
 ```
 src/
 ├── components/
-│   ├── layout/          # Header, Footer, Layout, AdminLayout, AccountLayout
+│   ├── layout/          # Header, Footer, Layout, AdminLayout
 │   ├── ui/              # shadcn/ui components
 │   ├── ProductCard.tsx   # Product card component
 │   ├── CategoryCard.tsx  # Category card component
 │   ├── VehicleSelector.tsx # Make → Model → Year selector
-│   ├── ProtectedRoute.tsx
 │   └── AdminRoute.tsx
 ├── hooks/
 │   └── use-auth.ts      # Authentication hook
@@ -102,9 +105,7 @@ src/
 │   ├── Cart.tsx
 │   ├── Checkout.tsx
 │   ├── Booking.tsx
-│   ├── Login.tsx
-│   ├── Register.tsx
-│   ├── account/          # Customer account pages
+│   ├── Login.tsx         # Admin-only login
 │   └── admin/            # Admin panel pages
 ├── stores/
 │   └── cart.ts           # Zustand cart store
@@ -129,7 +130,7 @@ supabase/
 - 🔍 Full-text search
 - 🚗 Vehicle compatibility checker (Make → Model → Year)
 - 🛒 Persistent cart (Zustand + localStorage)
-- 💳 Real checkout with Supabase orders
+- 💳 Guest checkout with server-verified pricing and Supabase orders
 - 📅 Installation booking system
 
 ### Customer Account

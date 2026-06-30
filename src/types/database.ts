@@ -29,6 +29,7 @@ export interface Product {
   compare_price: number | null;
   installable: boolean | null;
   featured: boolean | null;
+  show_in_new_arrivals: boolean | null;
   created_at: string | null;
   updated_at: string | null;
   category?: Category;
@@ -106,7 +107,9 @@ export interface Inventory {
 
 export interface Order {
   id: string;
-  user_id: string;
+  user_id: string | null;
+  customer_name: string | null;
+  customer_email: string | null;
   status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | null;
   total: number | null;
   shipping_address: string | null;
@@ -133,7 +136,10 @@ export interface OrderItem {
 
 export interface Booking {
   id: string;
-  user_id: string;
+  user_id: string | null;
+  customer_name: string | null;
+  customer_email: string | null;
+  customer_phone: string | null;
   branch_id: string | null;
   product_id: string | null;
   vehicle_id: string | null;

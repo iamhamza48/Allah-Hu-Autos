@@ -50,20 +50,14 @@ create policy "Users can view their own role" on public.user_roles for select us
 
 -- Orders
 create policy "Users can view their own orders" on public.orders for select using (auth.uid() = user_id);
-create policy "Users can insert their own orders" on public.orders for insert with check (auth.uid() = user_id);
 
 -- Order Items
 create policy "Users can view their own order items" on public.order_items for select using (
   exists (select 1 from public.orders where id = order_items.order_id and user_id = auth.uid())
 );
-create policy "Users can insert their own order items" on public.order_items for insert with check (
-  exists (select 1 from public.orders where id = order_items.order_id and user_id = auth.uid())
-);
 
 -- Bookings
 create policy "Users can view their own bookings" on public.bookings for select using (auth.uid() = user_id);
-create policy "Users can insert their own bookings" on public.bookings for insert with check (auth.uid() = user_id);
-create policy "Users can update their own bookings" on public.bookings for update using (auth.uid() = user_id);
 
 -- Addresses
 create policy "Users can view their own addresses" on public.addresses for select using (auth.uid() = user_id);

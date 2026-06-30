@@ -62,7 +62,7 @@ const ProductDetail = () => {
           setReviews([]);
         } else if (revsData && revsData.length > 0) {
           const userIds = Array.from(new Set(revsData.map(r => r.user_id).filter(Boolean)));
-          let profileMap: Record<string, any> = {};
+          const profileMap: Record<string, any> = {};
 
           if (userIds.length > 0) {
             const { data: profilesData, error: profilesError } = await supabase
