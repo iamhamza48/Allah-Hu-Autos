@@ -21,7 +21,7 @@ const AdminBookings = () => {
     setLoading(true);
     const { data: bookingRows, error } = await supabase
       .from('bookings')
-      .select('*, branch:branches(name, city), product:products(name)')
+      .select('*, branch:branches(name, city), product:products(name), order:orders(id)')
       .order('created_at', { ascending: false });
 
     if (error) { toast.error('Fetch error: ' + error.message); setLoading(false); return; }
@@ -61,8 +61,12 @@ const AdminBookings = () => {
 
   const parseNotes = (notes: string) => {
     const contact = notes?.match(/CONTACT:\s*([^\n\r]*)/i)?.[1] || '';
-    const services = notes?.match(/SERVICES:\s*([^\n\r]*)/i)?.[1]?.split(',').map(s => s.trim()) || [];
-    const vehicle = notes?.match(/USER NOTES:\s*([\s\S]*)/i)?.[1] || '—';
+    const productLine = notes?.match(/INSTALLATION PRODUCTS:\s*([^\n\r]*)/i)?.[1];
+    const serviceLine = notes?.match(/SERVICES:\s*([^\n\r]*)/i)?.[1];
+    const services = (productLine || serviceLine || '').split(',').map(s => s.trim()).filter(Boolean);
+    const vehicle = notes?.match(/VEHICLE:\s*([^\n\r]*)/i)?.[1]
+      || notes?.match(/USER NOTES:\s*([\s\S]*)/i)?.[1]
+      || '—';
     return { contact, services, vehicle };
   };
 
@@ -137,6 +141,7 @@ const AdminBookings = () => {
                   <TableRow key={b.id} className="hover:bg-zinc-50/60">
                     <TableCell>
                       <div className="font-medium text-sm text-zinc-900">{b.profile?.full_name}</div>
+                      {b.order?.id && <div className="text-[10px] font-mono text-primary mt-0.5">Order #{b.order.id.slice(0, 8)}</div>}
                       {finalPhone && (
                         <div className="flex flex-col gap-1 mt-1">
                           <a href={`tel:${finalPhone}`} className="text-[11px] text-zinc-400 hover:text-zinc-700 flex items-center gap-1">

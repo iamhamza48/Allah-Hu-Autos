@@ -11,6 +11,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  normalizePakistaniMobile,
+  PAKISTANI_PHONE_EXAMPLE,
+  validateGuestDetails,
+} from '@/lib/customer-validation';
 
 const SPECIALIST_SERVICES = [
   "4x4 Face lifts", "PPF", "DETAILING", "WRAPPING", "Anti UV tints", 
@@ -62,16 +67,28 @@ const Booking = () => {
   };
 
   const handleSubmit = async () => {
-    if (!customerName.trim() || !phone.trim()) {
-      toast.error("Your name and phone number are required for confirmation");
+    const errors = validateGuestDetails({
+      name: customerName,
+      email: customerEmail,
+      phone,
+      notes,
+    });
+    if (Object.keys(errors).length > 0) {
+      toast.error(Object.values(errors)[0]);
       return;
     }
+    if (!branchId || !date || !time || selectedServices.length === 0) {
+      toast.error('Select services, branch, date, and time');
+      return;
+    }
+    const normalizedPhone = normalizePakistaniMobile(phone);
+    setPhone(normalizedPhone);
     setSubmitting(true);
     try {
       const { error } = await supabase.rpc('create_guest_booking', {
         p_customer_name: customerName,
         p_customer_email: customerEmail,
-        p_customer_phone: phone,
+        p_customer_phone: normalizedPhone,
         p_branch_id: branchId,
         p_booking_date: date,
         p_booking_time: time,
@@ -229,7 +246,7 @@ const Booking = () => {
                   <Phone className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-zinc-600 transition-colors group-focus-within:text-primary" />
                   <input 
                     type="tel" 
-                    placeholder="03XX XXXXXXX"
+                    placeholder="03000000000"
                     
                     className="w-full h-16 pl-14 pr-6 rounded-2xl bg-white border-2 border-zinc-300 font-black uppercase text-sm outline-none focus:border-primary transition-all shadow-sm text-zinc-900 placeholder:text-zinc-400"
                     value={phone} 
@@ -237,7 +254,7 @@ const Booking = () => {
                     required
                   />
                 </div>
-                <p className="text-[9px] font-black text-zinc-500 uppercase tracking-tight ml-1">Our manager will reach out to this number to finalize the time slot.</p>
+                <p className="text-[9px] font-black text-zinc-500 uppercase tracking-tight ml-1">Use {PAKISTANI_PHONE_EXAMPLE}. Our manager will call to confirm.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

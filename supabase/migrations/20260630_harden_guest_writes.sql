@@ -7,4 +7,5 @@ drop policy if exists "Users can insert their own order items" on public.order_i
 drop policy if exists "Users can create bookings" on public.bookings;
 drop policy if exists "Users can insert their own bookings" on public.bookings;
 drop policy if exists "Users can update their own bookings" on public.bookings;
+revoke execute on function public.create_guest_order(text, text, text, text, text, text, jsonb) from anon, authenticated;
 commit;

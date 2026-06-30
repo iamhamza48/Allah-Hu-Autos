@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,12 +9,13 @@ import { useCartStore } from '@/stores/cart';
 import { formatPKR, getPlaceholderImage, getDiscountPercent } from '@/lib/format';
 import VehicleSelector from '@/components/VehicleSelector';
 import type { Product, ProductVariant, Review, Vehicle } from '@/types/database';
-import { ShoppingCart, Check, X, Star, Minus, Plus } from 'lucide-react';
+import { ShoppingCart, Check, X, Star, Minus, Plus, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
@@ -105,20 +106,36 @@ const ProductDetail = () => {
       });
   }, [selectedVehicle, product]);
 
-  const handleAddToCart = () => {
+  const getSelectedItem = () => {
     if (!product || !selectedVariant) {
       toast.error('Please select a variant first');
-      return;
+      return null;
     }
-    addItem({
+    if (product.installable && !installType) {
+      toast.error('Please choose self or professional installation');
+      return null;
+    }
+    return {
       productId: product.id,
       variantId: selectedVariant.id,
       quantity,
       installType: product.installable ? installType : null,
       product,
       variant: selectedVariant,
-    });
+    };
+  };
+
+  const handleAddToCart = () => {
+    const item = getSelectedItem();
+    if (!item) return;
+    addItem(item);
     toast.success('Added to cart!');
+  };
+
+  const handleBuyNow = () => {
+    const item = getSelectedItem();
+    if (!item) return;
+    navigate('/checkout', { state: { buyNowItem: item } });
   };
 
   if (loading) {
@@ -264,19 +281,22 @@ const ProductDetail = () => {
             </div>
           )}
 
-          {/* Quantity + Add to cart */}
-          <div className="flex items-center gap-4">
+          {/* Quantity + purchase actions */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div className="flex items-center border rounded-md">
               <Button variant="ghost" size="icon" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
                 <Minus className="h-4 w-4" />
               </Button>
               <span className="w-10 text-center font-medium">{quantity}</span>
-              <Button variant="ghost" size="icon" onClick={() => setQuantity(quantity + 1)}>
+              <Button variant="ghost" size="icon" onClick={() => setQuantity(Math.min(99, quantity + 1))}>
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-            <Button onClick={handleAddToCart} className="flex-1 gap-2" size="lg">
+            <Button onClick={handleAddToCart} variant="outline" className="flex-1 gap-2" size="lg">
               <ShoppingCart className="h-4 w-4" /> Add to Cart
+            </Button>
+            <Button onClick={handleBuyNow} className="flex-1 gap-2" size="lg">
+              <Zap className="h-4 w-4" /> Buy Now
             </Button>
           </div>
 

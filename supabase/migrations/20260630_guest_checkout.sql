@@ -16,6 +16,7 @@ alter table public.bookings alter column user_id drop not null;
 alter table public.bookings add column if not exists customer_name text;
 alter table public.bookings add column if not exists customer_email text;
 alter table public.bookings add column if not exists customer_phone text;
+alter table public.bookings add column if not exists order_id uuid;
 
 update public.orders o
 set customer_name = coalesce(o.customer_name, p.full_name),
@@ -47,6 +48,19 @@ begin
   end if;
 end $$;
 
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conrelid = 'public.bookings'::regclass
+      and conname = 'bookings_order_id_fkey'
+  ) then
+    alter table public.bookings
+      add constraint bookings_order_id_fkey
+      foreign key (order_id) references public.orders(id) on delete cascade;
+  end if;
+end $$;
+
 with ranked as (
   select id,
     row_number() over (partition by variant_id, branch_id order by updated_at desc nulls last, id) as rn,
@@ -67,6 +81,7 @@ create index if not exists product_compatibility_vehicle_idx on public.product_c
 create index if not exists orders_created_idx on public.orders (created_at desc);
 create index if not exists orders_phone_idx on public.orders (shipping_phone);
 create index if not exists bookings_created_idx on public.bookings (created_at desc);
+create unique index if not exists bookings_order_uidx on public.bookings (order_id) where order_id is not null;
 create index if not exists reviews_product_approved_idx on public.reviews (product_id, is_approved, created_at desc);
 
 create or replace function public.create_guest_order(
@@ -89,17 +104,16 @@ declare
   v_item_count integer;
   v_total numeric;
 begin
-  if nullif(trim(p_customer_name), '') is null
-     or char_length(trim(p_customer_name)) > 120 then
+  if char_length(trim(coalesce(p_customer_name, ''))) not between 2 and 120 then
     raise exception 'A valid customer name is required';
   end if;
-  if nullif(trim(p_shipping_address), '') is null
-     or nullif(trim(p_shipping_city), '') is null
-     or nullif(trim(p_shipping_phone), '') is null then
+  if char_length(trim(coalesce(p_shipping_address, ''))) not between 8 and 500
+     or char_length(trim(coalesce(p_shipping_city, ''))) not between 2 and 80 then
     raise exception 'Complete shipping details are required';
   end if;
-  if char_length(regexp_replace(p_shipping_phone, '\D', '', 'g')) not between 10 and 15 then
-    raise exception 'A valid phone number is required';
+  if regexp_replace(trim(coalesce(p_shipping_phone, '')), '[[:space:]()-]', '', 'g')
+     !~ '^([+]92|92|0)3[0-9]{9}$' then
+    raise exception 'Use a Pakistani mobile number such as 03000000000 or +923000000000';
   end if;
   if exists (
     select 1 from public.orders
@@ -112,6 +126,7 @@ begin
      and trim(p_customer_email) !~* '^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$' then
     raise exception 'A valid email address is required';
   end if;
+  if char_length(coalesce(p_notes, '')) > 1000 then raise exception 'Notes are too long'; end if;
   if p_items is null or jsonb_typeof(p_items) <> 'array'
      or coalesce(jsonb_array_length(p_items), 0) = 0
      or jsonb_array_length(p_items) > 50 then
@@ -164,6 +179,122 @@ begin
 end;
 $$;
 
+-- Creates the order and, when professional installation is selected, a linked
+-- appointment in the same transaction. Any failure rolls both records back.
+create or replace function public.create_guest_order_with_booking(
+  p_customer_name text,
+  p_customer_email text,
+  p_shipping_address text,
+  p_shipping_city text,
+  p_shipping_phone text,
+  p_notes text,
+  p_items jsonb,
+  p_installation jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+declare
+  v_requires_installation boolean;
+  v_result jsonb;
+  v_order_id uuid;
+  v_booking_id uuid;
+  v_branch_id uuid;
+  v_booking_date date;
+  v_booking_time text;
+  v_vehicle_info text;
+  v_installation_notes text;
+  v_products text;
+begin
+  if p_items is null or jsonb_typeof(p_items) <> 'array' then
+    raise exception 'Order items are invalid';
+  end if;
+
+  select exists (
+    select 1 from jsonb_array_elements(p_items) item
+    where item ->> 'install_type' = 'professional'
+  ) into v_requires_installation;
+
+  if v_requires_installation then
+    if p_installation is null or jsonb_typeof(p_installation) <> 'object' then
+      raise exception 'Installation appointment details are required';
+    end if;
+
+    begin
+      v_branch_id := (p_installation ->> 'branch_id')::uuid;
+      v_booking_date := (p_installation ->> 'booking_date')::date;
+    exception when invalid_text_representation then
+      raise exception 'Select a valid branch and installation date';
+    end;
+
+    v_booking_time := trim(coalesce(p_installation ->> 'booking_time', ''));
+    v_vehicle_info := trim(coalesce(p_installation ->> 'vehicle_info', ''));
+    v_installation_notes := trim(coalesce(p_installation ->> 'notes', ''));
+
+    if not exists (select 1 from public.branches where id = v_branch_id and is_active = true) then
+      raise exception 'The selected installation branch is unavailable';
+    end if;
+    if v_booking_date is null or v_booking_date < current_date then
+      raise exception 'Select a valid installation date';
+    end if;
+    if v_booking_time !~ '^(09|10|11|12|13|14|15|16|17):00$' then
+      raise exception 'Select a valid installation time';
+    end if;
+    if char_length(v_vehicle_info) not between 3 and 200 then
+      raise exception 'Enter your vehicle make, model, and year';
+    end if;
+    if char_length(v_installation_notes) > 500 then
+      raise exception 'Installation notes are too long';
+    end if;
+  end if;
+
+  v_result := public.create_guest_order(
+    p_customer_name,
+    p_customer_email,
+    p_shipping_address,
+    p_shipping_city,
+    p_shipping_phone,
+    p_notes,
+    p_items
+  );
+  v_order_id := (v_result ->> 'id')::uuid;
+
+  if v_requires_installation then
+    select string_agg(product.name || ' (' || variant.name || ')', ', ' order by product.name)
+    into v_products
+    from jsonb_array_elements(p_items) item
+    join public.product_variants variant on variant.id = (item ->> 'variant_id')::uuid
+    join public.products product on product.id = variant.product_id
+    where item ->> 'install_type' = 'professional';
+
+    insert into public.bookings (
+      user_id, order_id, customer_name, customer_email, customer_phone,
+      branch_id, booking_date, booking_time, status, notes
+    ) values (
+      auth.uid(), v_order_id, trim(p_customer_name),
+      nullif(lower(trim(coalesce(p_customer_email, ''))), ''), trim(p_shipping_phone),
+      v_branch_id, v_booking_date, v_booking_time, 'pending',
+      'INSTALLATION PRODUCTS: ' || coalesce(v_products, '') || E'\nVEHICLE: ' || v_vehicle_info ||
+      E'\n\nUSER NOTES: ' || v_installation_notes
+    ) returning id into v_booking_id;
+
+    v_result := v_result || jsonb_build_object(
+      'booking_id', v_booking_id,
+      'installation', jsonb_build_object(
+        'branch_id', v_branch_id,
+        'booking_date', v_booking_date,
+        'booking_time', v_booking_time,
+        'vehicle_info', v_vehicle_info
+      )
+    );
+  end if;
+
+  return v_result;
+end;
+$$;
+
 create or replace function public.create_guest_booking(
   p_customer_name text,
   p_customer_email text,
@@ -183,17 +314,24 @@ declare
   v_booking_id uuid;
   v_notes text;
 begin
-  if nullif(trim(p_customer_name), '') is null then raise exception 'Customer name is required'; end if;
-  if char_length(regexp_replace(p_customer_phone, '\D', '', 'g')) not between 10 and 15 then
-    raise exception 'A valid phone number is required';
+  if char_length(trim(coalesce(p_customer_name, ''))) not between 2 and 120 then
+    raise exception 'A valid customer name is required';
+  end if;
+  if regexp_replace(trim(coalesce(p_customer_phone, '')), '[[:space:]()-]', '', 'g')
+     !~ '^([+]92|92|0)3[0-9]{9}$' then
+    raise exception 'Use a Pakistani mobile number such as 03000000000 or +923000000000';
   end if;
   if nullif(trim(coalesce(p_customer_email, '')), '') is not null
      and trim(p_customer_email) !~* '^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$' then
     raise exception 'A valid email address is required';
   end if;
-  if p_booking_date < current_date then raise exception 'Booking date cannot be in the past'; end if;
-  if nullif(trim(p_booking_time), '') is null then raise exception 'Booking time is required'; end if;
-  if coalesce(array_length(p_services, 1), 0) = 0 then raise exception 'Select at least one service'; end if;
+  if p_booking_date is null or p_booking_date < current_date then raise exception 'Select a valid booking date'; end if;
+  if coalesce(p_booking_time, '') !~ '^(09|10|11|12|13|14|15|16|17):00$' then raise exception 'Select a valid booking time'; end if;
+  if coalesce(array_length(p_services, 1), 0) not between 1 and 20 then raise exception 'Select valid services'; end if;
+  if exists (select 1 from unnest(p_services) service where char_length(trim(service)) not between 1 and 80) then
+    raise exception 'One or more services are invalid';
+  end if;
+  if char_length(coalesce(p_notes, '')) > 1000 then raise exception 'Notes are too long'; end if;
   if not exists (select 1 from public.branches where id = p_branch_id and is_active = true) then
     raise exception 'The selected branch is unavailable';
   end if;
@@ -222,6 +360,8 @@ $$;
 
 revoke all on function public.create_guest_order(text, text, text, text, text, text, jsonb) from public;
 grant execute on function public.create_guest_order(text, text, text, text, text, text, jsonb) to anon, authenticated;
+revoke all on function public.create_guest_order_with_booking(text, text, text, text, text, text, jsonb, jsonb) from public;
+grant execute on function public.create_guest_order_with_booking(text, text, text, text, text, text, jsonb, jsonb) to anon, authenticated;
 revoke all on function public.create_guest_booking(text, text, text, uuid, date, text, text[], text) from public;
 grant execute on function public.create_guest_booking(text, text, text, uuid, date, text, text[], text) to anon, authenticated;
 

@@ -29,6 +29,12 @@ export interface OrderWhatsAppDetails {
     variantName?: string | null;
   }>;
   total: number;
+  installation?: {
+    branch: string;
+    date: string;
+    time: string;
+    vehicle: string;
+  };
 }
 
 export function buildOrderNotificationMessage(details: OrderWhatsAppDetails): string {
@@ -60,6 +66,15 @@ export function buildOrderNotificationMessage(details: OrderWhatsAppDetails): st
 
   lines.push('');
   lines.push(`*Total: Rs ${details.total.toLocaleString('en-PK')}*`);
+
+  if (details.installation) {
+    lines.push('');
+    lines.push('*Professional Installation*');
+    lines.push(`Branch: ${details.installation.branch}`);
+    lines.push(`Preferred date: ${details.installation.date}`);
+    lines.push(`Preferred time: ${details.installation.time}`);
+    lines.push(`Vehicle: ${details.installation.vehicle}`);
+  }
 
   if (details.notes?.trim()) {
     lines.push('');

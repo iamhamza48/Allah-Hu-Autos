@@ -140,6 +140,7 @@ export interface Booking {
   customer_name: string | null;
   customer_email: string | null;
   customer_phone: string | null;
+  order_id: string | null;
   branch_id: string | null;
   product_id: string | null;
   vehicle_id: string | null;

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { Shield, Wrench, Truck, Star, MapPin, Phone, Clock, Calendar, Users, Award, ChevronRight } from 'lucide-react';
 
 const STATS = [
-  { value: '27+', label: 'Years in Business', icon: Calendar },
+  { value: '29+', label: 'Years in Business', icon: Calendar },
   { value: '500+', label: 'Products Available', icon: Award },
   { value: '2', label: 'Branches Nationwide', icon: MapPin },
   { value: '10K+', label: 'Happy Customers', icon: Users },
@@ -96,6 +96,59 @@ const About = () => {
                 <p className="text-[11px] text-primary-foreground/75 font-medium text-center">{label}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Founder ──────────────────────────────────────────────────── */}
+      <section className="border-b border-border bg-card">
+        <div className="container py-16 sm:py-20">
+          <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-10 lg:gap-16 items-center">
+            <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
+              <div className="absolute -inset-3 rounded-[2rem] bg-primary/10 blur-2xl" />
+              <div className="relative aspect-[4/3] overflow-hidden rounded-[2rem] border border-border bg-slate-900 shadow-2xl">
+                <img
+                  src="/m-alli-malik-founder.jpeg"
+                  alt="M. Alli Malik, founder of Allah-Hu-Autos"
+                  className="h-full w-full object-cover object-top"
+                  loading="eager"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7 text-white">
+                  <p className="text-xl sm:text-2xl font-black tracking-tight">M. Alli Malik</p>
+                  <p className="text-xs sm:text-sm text-white/75 font-medium">Founder, Allah-Hu-Autos</p>
+                </div>
+              </div>
+              <div className="absolute -right-3 -bottom-4 rounded-2xl border border-primary/20 bg-background px-5 py-3 shadow-xl">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Founded</p>
+                <p className="text-2xl font-black text-primary leading-none">1997</p>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs font-bold tracking-[0.2em] uppercase text-primary mb-3">The Founder</p>
+              <h2 className="text-3xl sm:text-4xl font-black text-foreground leading-tight mb-6">
+                A Vision Built on Trust,<br className="hidden sm:block" /> Craftsmanship and Service
+              </h2>
+              <div className="space-y-4 text-sm sm:text-base text-muted-foreground leading-relaxed">
+                <p>
+                  <strong className="text-foreground">M. Ali Malik founded Allah-Hu-Autos in 1997</strong> with a clear purpose:
+                  to give car owners dependable products, honest guidance and workmanship they could trust.
+                </p>
+                <p>
+                  What began as a focused automotive accessories shop grew through personal attention and a genuine understanding
+                  of what customers need from their vehicles. His insistence on quality over shortcuts became the standard behind
+                  every product, installation and customer relationship.
+                </p>
+                <p>
+                  Nearly three decades later, that founding spirit still guides Allah-Hu-Autos—combining experience with modern
+                  automotive style while treating every customer and every vehicle with care.
+                </p>
+              </div>
+              <blockquote className="mt-7 border-l-4 border-primary pl-5 text-base font-semibold italic text-foreground/85">
+                “A customer’s trust is earned through honest work, consistent quality and service that lasts beyond the sale.”
+              </blockquote>
+            </div>
           </div>
         </div>
       </section>

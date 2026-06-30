@@ -25,7 +25,7 @@ const AdminOrders = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('orders')
-      .select('*, items:order_items(*, product:products(name, images:product_images(*)), variant:product_variants(name, price))')
+      .select('*, items:order_items(*, product:products(name, images:product_images(*)), variant:product_variants(name, price)), bookings:bookings(id, booking_date, booking_time, status, notes, branch:branches(name, city))')
       .order('created_at', { ascending: false });
 
     if (error) { toast.error('Failed to load orders: ' + error.message); setLoading(false); return; }
@@ -43,6 +43,7 @@ const AdminOrders = () => {
       profile: profileMap[o.user_id] || null,
       display_name: o.customer_name || profileMap[o.user_id]?.full_name || 'Guest Customer',
       contact_phone: o.shipping_phone || profileMap[o.user_id]?.phone || '',
+      linked_booking: Array.isArray(o.bookings) ? o.bookings[0] : o.bookings,
     })));
     setLoading(false);
   };
@@ -239,6 +240,23 @@ const AdminOrders = () => {
                   ))}
                 </div>
               </div>
+
+              {viewOrder.linked_booking && (() => {
+                const booking = viewOrder.linked_booking;
+                const vehicle = booking.notes?.match(/VEHICLE:\s*([^\n\r]*)/i)?.[1] || 'Not provided';
+                return (
+                  <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
+                    <p className="text-[10px] text-primary font-semibold uppercase tracking-wider mb-2">Professional Installation</p>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <p><span className="text-zinc-400">Branch:</span> {booking.branch?.name || '—'}</p>
+                      <p><span className="text-zinc-400">Status:</span> <span className="capitalize">{booking.status}</span></p>
+                      <p><span className="text-zinc-400">Date:</span> {booking.booking_date}</p>
+                      <p><span className="text-zinc-400">Time:</span> {booking.booking_time}</p>
+                      <p className="col-span-2"><span className="text-zinc-400">Vehicle:</span> {vehicle}</p>
+                    </div>
+                  </div>
+                );
+              })()}
 
               <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
                 <span className="font-semibold text-zinc-700">Total</span>

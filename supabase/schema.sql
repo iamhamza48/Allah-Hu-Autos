@@ -159,6 +159,7 @@ create table public.bookings (
   customer_name text,
   customer_email text,
   customer_phone text,
+  order_id uuid references public.orders(id) on delete cascade,
   branch_id uuid references public.branches(id) on delete set null,
   product_id uuid references public.products(id) on delete set null,
   vehicle_id uuid references public.vehicles(id) on delete set null,
