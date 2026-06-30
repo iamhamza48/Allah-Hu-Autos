@@ -171,8 +171,8 @@ const ProductDetail = () => {
     : null;
 
   return (
-    <div className="container py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="container py-5 sm:py-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
         {/* Images */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <div className="relative aspect-square overflow-hidden rounded-lg bg-secondary mb-3">
@@ -262,10 +262,11 @@ const ProductDetail = () => {
           {product.installable && (
             <div>
               <label className="text-sm font-medium mb-2 block">Installation</label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <Button
                   variant={installType === 'self' ? 'default' : 'outline'}
                   size="sm"
+                  className="w-full px-2 text-xs sm:text-sm"
                   onClick={() => setInstallType('self')}
                 >
                   Self Install
@@ -273,6 +274,7 @@ const ProductDetail = () => {
                 <Button
                   variant={installType === 'professional' ? 'default' : 'outline'}
                   size="sm"
+                  className="w-full px-2 text-xs sm:text-sm"
                   onClick={() => setInstallType('professional')}
                 >
                   Professional Install
@@ -282,22 +284,27 @@ const ProductDetail = () => {
           )}
 
           {/* Quantity + purchase actions */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            <div className="flex items-center border rounded-md">
-              <Button variant="ghost" size="icon" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
-                <Minus className="h-4 w-4" />
+          <div className="space-y-3 sm:flex sm:items-center sm:gap-3 sm:space-y-0">
+            <div className="flex items-center justify-between sm:justify-start">
+              <span className="text-sm font-medium text-muted-foreground sm:hidden">Quantity</span>
+              <div className="flex h-11 w-[132px] items-center justify-between rounded-lg border">
+                <Button variant="ghost" size="icon" onClick={() => setQuantity(Math.max(1, quantity - 1))}>
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="w-10 text-center font-medium">{quantity}</span>
+                <Button variant="ghost" size="icon" onClick={() => setQuantity(Math.min(99, quantity + 1))}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-1 sm:gap-3">
+              <Button onClick={handleAddToCart} variant="outline" className="w-full min-w-0 gap-1.5 px-2 text-xs sm:flex-1 sm:px-4 sm:text-sm" size="lg">
+                <ShoppingCart className="h-4 w-4 shrink-0" /> <span className="truncate">Add to Cart</span>
               </Button>
-              <span className="w-10 text-center font-medium">{quantity}</span>
-              <Button variant="ghost" size="icon" onClick={() => setQuantity(Math.min(99, quantity + 1))}>
-                <Plus className="h-4 w-4" />
+              <Button onClick={handleBuyNow} className="w-full min-w-0 gap-1.5 px-2 text-xs sm:flex-1 sm:px-4 sm:text-sm" size="lg">
+                <Zap className="h-4 w-4 shrink-0" /> <span className="truncate">Buy Now</span>
               </Button>
             </div>
-            <Button onClick={handleAddToCart} variant="outline" className="flex-1 gap-2" size="lg">
-              <ShoppingCart className="h-4 w-4" /> Add to Cart
-            </Button>
-            <Button onClick={handleBuyNow} className="flex-1 gap-2" size="lg">
-              <Zap className="h-4 w-4" /> Buy Now
-            </Button>
           </div>
 
           {/* Vehicle compatibility */}

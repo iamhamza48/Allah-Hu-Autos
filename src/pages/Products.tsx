@@ -69,10 +69,10 @@ const Products = () => {
   }, []);
 
   return (
-    <div className="container py-8">
-      <h1 className="text-3xl font-bold mb-6">All Products</h1>
+    <div className="container py-5 sm:py-8">
+      <h1 className="text-2xl sm:text-3xl font-bold mb-5 sm:mb-6">All Products</h1>
 
-      <div className="flex flex-col sm:flex-row gap-3 mb-8">
+      <div className="flex flex-col sm:flex-row gap-3 mb-5 sm:mb-8">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -106,7 +106,7 @@ const Products = () => {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
           {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="h-72 rounded-lg bg-secondary animate-pulse" />
           ))}
@@ -114,7 +114,7 @@ const Products = () => {
       ) : products.length === 0 ? (
         <p className="text-center text-muted-foreground py-20">No products found.</p>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6">
           {products.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}

@@ -55,7 +55,7 @@ const About = () => {
     <div className="bg-background">
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <section className="relative bg-[#0B4DAE] overflow-hidden">
+      <section className="relative bg-gradient-to-br from-[#062F70] via-[#0B4DAE] to-[#073B89] overflow-hidden">
         {/* dot grid */}
         <div className="absolute inset-0 opacity-[0.06]"
           style={{ backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
@@ -63,7 +63,7 @@ const About = () => {
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-16 right-0 w-72 h-72 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="container relative z-10 py-16 sm:py-20">
+        <div className="container relative z-10 py-12 sm:py-20">
           {/* breadcrumb */}
           <div className="flex items-center gap-1.5 text-[11px] text-white/40 mb-6 font-medium tracking-wide uppercase">
             <Link to="/" className="hover:text-white/70 transition-colors">Home</Link>
@@ -72,13 +72,13 @@ const About = () => {
           </div>
 
           <div className="max-w-2xl">
-            <p className="text-xs font-bold tracking-[0.2em] uppercase text-primary mb-3">Est. 1997 · Lahore & Quetta</p>
-            <h1 className="text-4xl sm:text-5xl font-black text-white leading-[1.08] tracking-tight mb-5">
+            <p className="text-xs font-bold tracking-[0.2em] uppercase text-blue-200 mb-3">Est. 1997 · Lahore & Quetta</p>
+            <h1 className="text-3xl sm:text-5xl font-black text-white leading-[1.08] tracking-tight mb-5">
               We Take Pride<br />
-              in <span className="text-primary">Your Ride</span>
+              in <span className="text-cyan-200">Your Ride</span>
             </h1>
-            <p className="text-base text-white/55 leading-relaxed max-w-xl">
-              Allah-Hu-Autos has been Pakistan's go-to destination for premium automotive accessories for over 27 years.
+            <p className="text-sm sm:text-base text-white/80 leading-relaxed max-w-xl">
+              Allah-Hu-Autos has been Pakistan's go-to destination for premium automotive accessories for over 29 years.
               From a single shop in Lahore to two branches serving customers nationwide — our passion for cars has never wavered.
             </p>
           </div>
@@ -86,14 +86,14 @@ const About = () => {
       </section>
 
       {/* ── Stats bar ─────────────────────────────────────────────────── */}
-      <section className="bg-primary text-primary-foreground">
+      <section className="bg-[#0A3F91] text-white">
         <div className="container">
-          <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-primary-foreground/25">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/20">
             {STATS.map(({ value, label, icon: Icon }) => (
-              <div key={label} className="flex flex-col items-center justify-center gap-1 py-5 px-4">
-                <Icon className="h-4 w-4 text-primary-foreground/80 mb-0.5" />
-                <p className="text-2xl font-black text-primary-foreground leading-none">{value}</p>
-                <p className="text-[11px] text-primary-foreground/75 font-medium text-center">{label}</p>
+              <div key={label} className="flex flex-col items-center justify-center gap-1 bg-[#0A3F91] py-5 px-2 sm:px-4">
+                <Icon className="h-4 w-4 text-blue-200 mb-0.5" />
+                <p className="text-xl sm:text-2xl font-black text-white leading-none">{value}</p>
+                <p className="text-[10px] sm:text-[11px] text-blue-100 font-medium text-center">{label}</p>
               </div>
             ))}
           </div>

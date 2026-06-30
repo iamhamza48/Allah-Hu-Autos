@@ -142,13 +142,13 @@ const SearchDropdown = ({ onClose }: { onClose: () => void }) => {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 placeholder="Search accessories, parts, brands..."
-                className="w-full h-12 pl-12 pr-28 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-sm transition-all"
+                className="w-full h-12 pl-12 pr-14 sm:pr-28 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-sm transition-all"
               />
               <div className="absolute right-2 flex items-center gap-2">
                 {query && (
                   <button
                     type="submit"
-                    className="h-8 px-3 rounded-lg bg-blue-600 text-white hover:bg-blue-500 text-xs font-semibold transition-colors flex items-center gap-1"
+                    className="hidden sm:flex h-8 px-3 rounded-lg bg-blue-600 text-white hover:bg-blue-500 text-xs font-semibold transition-colors items-center gap-1"
                   >
                     Search <ArrowRight className="h-3 w-3" />
                   </button>
@@ -343,7 +343,7 @@ const Header = () => {
 
       {/* ── Main header ─────────────────────────────────────────────── */}
       <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm relative">
-        <div className="container flex h-[68px] items-center gap-4">
+        <div className="container flex h-[62px] sm:h-[68px] items-center gap-2 sm:gap-4">
 
 {/* Logo */}
 <Link to="/" className="flex items-center gap-3 shrink-0">
@@ -399,7 +399,7 @@ const Header = () => {
               {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
             </button>
 
-            <ThemeToggle />
+            <div className="hidden sm:block"><ThemeToggle /></div>
 
             {/* About Us — desktop */}
             <Link to="/about" className="hidden md:flex">
@@ -412,7 +412,7 @@ const Header = () => {
             </Link>
 
             {/* Wishlist */}
-            <Link to="/wishlist">
+            <Link to="/wishlist" className="hidden sm:block">
               <button type="button" className="relative flex items-center justify-center h-10 w-10 rounded-xl text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all group" aria-label="Wishlist">
                 <Heart className="h-5 w-5 group-hover:scale-110 transition-transform" />
                 {wishlistCount > 0 && (
@@ -435,7 +435,7 @@ const Header = () => {
               </button>
             </Link>
 
-            <div className="w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
+            <div className="hidden sm:block w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
 
             {isAdmin && (
               <Link to="/admin" aria-label="Open admin panel">

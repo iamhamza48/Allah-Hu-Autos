@@ -234,7 +234,7 @@ const VehicleProducts = () => {
       <div className="container py-8">
 
         {loading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
             {Array.from({ length: 10 }).map((_, i) => (
               <div
                 key={i}
@@ -275,7 +275,7 @@ const VehicleProducts = () => {
             <p className="text-xs text-zinc-400 font-medium mb-4">
               Showing <span className="text-zinc-700 dark:text-zinc-200 font-bold">{filtered.length}</span> of {products.length} accessories
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
               {filtered.map(p => (
                 <ProductCard key={p.id} product={p} />
               ))}

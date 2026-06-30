@@ -53,7 +53,7 @@ const Wishlist = () => {
       )}
 
       {items.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
           {items.map((product) => {
             const discount = getDiscountPercent(product.base_price, product.compare_price);
             const image = product.images?.[0]?.url || getPlaceholderImage(product.name, 0);
@@ -63,7 +63,7 @@ const Wishlist = () => {
                 <button
                   type="button"
                   onClick={() => removeItem(product.id)}
-                  className="absolute top-2 right-2 z-20 flex items-center justify-center w-7 h-7 rounded-full bg-card/95 shadow-sm border border-border text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100"
+                  className="absolute top-2 right-2 z-20 flex items-center justify-center w-8 h-8 rounded-full bg-card/95 shadow-sm border border-border text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/10 transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
                   aria-label="Remove from wishlist"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -88,10 +88,10 @@ const Wishlist = () => {
                   </div>
                 </Link>
 
-                <div className="p-3">
+                <div className="p-2.5 sm:p-3">
                   <p className="text-[10px] text-muted-foreground mb-1 truncate">{(product as { category?: { name?: string } }).category?.name}</p>
                   <Link to={`/product/${product.slug}`}>
-                    <h3 className="text-sm font-semibold text-foreground line-clamp-2 mb-2 hover:text-primary transition-colors leading-snug">
+                    <h3 className="text-xs sm:text-sm font-semibold text-foreground line-clamp-2 mb-2 hover:text-primary transition-colors leading-snug min-h-[2.5rem] sm:min-h-0">
                       {product.name}
                     </h3>
                   </Link>
