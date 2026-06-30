@@ -109,13 +109,13 @@ const About = () => {
               <div className="relative aspect-[4/3] overflow-hidden rounded-[2rem] border border-border bg-slate-900 shadow-2xl">
                 <img
                   src="/m-alli-malik-founder.jpeg"
-                  alt="M. Alli Malik, founder of Allah-Hu-Autos"
+                  alt="M. Asad Malik, founder of Allah-Hu-Autos"
                   className="h-full w-full object-cover object-top"
                   loading="eager"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7 text-white">
-                  <p className="text-xl sm:text-2xl font-black tracking-tight">M. Alli Malik</p>
+                  <p className="text-xl sm:text-2xl font-black tracking-tight">M. Asad Malik</p>
                   <p className="text-xs sm:text-sm text-white/75 font-medium">Founder, Allah-Hu-Autos</p>
                 </div>
               </div>
@@ -132,7 +132,7 @@ const About = () => {
               </h2>
               <div className="space-y-4 text-sm sm:text-base text-muted-foreground leading-relaxed">
                 <p>
-                  <strong className="text-foreground">M. Ali Malik founded Allah-Hu-Autos in 1997</strong> with a clear purpose:
+                  <strong className="text-foreground">M. Asad Malik founded Allah-Hu-Autos in 1997</strong> with a clear purpose:
                   to give car owners dependable products, honest guidance and workmanship they could trust.
                 </p>
                 <p>
