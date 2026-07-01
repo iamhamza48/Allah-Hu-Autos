@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -14,6 +13,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
   const { signIn, signOut, user, isAdmin, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -23,7 +23,6 @@ const Login = () => {
 
   useEffect(() => {
     if (!loading && user && !isAdmin) {
-      toast.error('This account is not authorised for administration.');
       void signOut();
       setSubmitting(false);
     }
@@ -31,24 +30,32 @@ const Login = () => {
 
   const handleLogin = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (submitting) return;
+    setMessage(null);
     setSubmitting(true);
     const { error } = await signIn(email.trim(), password);
     if (error) {
-      toast.error('Email or password is incorrect.');
+      setMessage({
+        type: 'error',
+        text: error.message === 'not_authorised'
+          ? 'This account does not have administrator access.'
+          : 'The email or password is incorrect.',
+      });
       setSubmitting(false);
     }
   };
 
   const handleRecovery = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (submitting) return;
+    setMessage(null);
     setSubmitting(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: `${window.location.origin}/admin/reset-password`,
     });
     setSubmitting(false);
-    if (error) return toast.error('Unable to send the recovery email. Please try again.');
-    toast.success('If that administrator account exists, a recovery link has been sent.');
-    setForgotMode(false);
+    if (error) return setMessage({ type: 'error', text: 'Unable to send the recovery email. Please try again.' });
+    setMessage({ type: 'success', text: 'If that administrator account exists, a recovery link has been sent.' });
   };
 
   return (
@@ -86,7 +93,7 @@ const Login = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="admin-password" className="text-xs font-bold uppercase tracking-wider text-slate-300">Password</Label>
-                  <button type="button" onClick={() => setForgotMode(true)} className="text-xs font-semibold text-blue-400 hover:text-blue-300">Forgot password?</button>
+                  <button type="button" onClick={() => { setForgotMode(true); setMessage(null); }} className="text-xs font-semibold text-blue-400 hover:text-blue-300">Forgot password?</button>
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
@@ -98,13 +105,19 @@ const Login = () => {
               </div>
             )}
 
+            {message && (
+              <div role="status" aria-live="polite" className={`rounded-xl border px-3.5 py-3 text-sm leading-5 ${message.type === 'error' ? 'border-red-400/20 bg-red-500/10 text-red-200' : 'border-emerald-400/20 bg-emerald-500/10 text-emerald-200'}`}>
+                {message.text}
+              </div>
+            )}
+
             <Button type="submit" className="h-12 w-full rounded-xl bg-blue-600 font-bold hover:bg-blue-500" disabled={submitting || loading}>
               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {forgotMode ? 'Send recovery link' : 'Sign in securely'}
             </Button>
 
             {forgotMode && (
-              <button type="button" onClick={() => setForgotMode(false)} className="w-full text-center text-sm font-medium text-slate-400 hover:text-white">Return to sign in</button>
+              <button type="button" onClick={() => { setForgotMode(false); setMessage(null); }} className="w-full text-center text-sm font-medium text-slate-400 hover:text-white">Return to sign in</button>
             )}
           </form>
         </section>

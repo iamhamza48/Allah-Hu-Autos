@@ -5,8 +5,8 @@ import { supabase } from '@/lib/supabase';
 import { getBranchFields } from '@/lib/branch-utils';
 
 const FALLBACK_BRANCHES = [
-  { id: 'lahore', name: 'Lahore Branch', address: '{"address":"Bahria Town, Lahore, Punjab, Pakistan — 54000","map_iframe_url":"https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3405.8465052956794!2d74.1802951762744!3d31.39081575388062!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3918ff0046555555%3A0xe5f9226500000000!2sAllah%20Hu%20Autos!5e0!3m2!1sen!2spk!4v1710000000000!5m2!1sen!2spk","map_link":"https://www.google.com/maps/place/Allah+Hu+Autos/@31.3917756,74.1885451,17z/data=!4m6!3m5!1s0x3918ff001005566b:0xe0ba911de79f9394!8m2!3d31.3917756!4d74.1885451!16s%2Fg%2F11mm0mclfm?entry=ttu&g_ep=EgoyMDI2MDMyNC4wIKXMDSoASAFQAw%3D%3D","hours":"Mon–Sat: 10AM – 9PM"}', phone: '0333 7778606', city: 'Lahore', dot: 'bg-blue-300' },
-  { id: 'quetta', name: 'Quetta Branch', address: '{"address":"Near BA Mall, Quetta Cantonment, Balochistan, Pakistan","map_iframe_url":"https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3405.8465052956794!2d74.1802951762744!3d31.39081575388062!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3918ff0046555555%3A0xe5f9226500000000!2sAllah%20Hu%20Autos!5e0!3m2!1sen!2spk!4v1710000000000!5m2!1sen!2spk","map_link":"https://www.google.com/maps/place/Allah+Hu+Autos/@30.1815671,66.9986468,17z/data=!4m15!1m8!3m7!1s0x3ed2e127522321e5:0x65cbabe21b94e1f0!2sAllah+Hu+Autos!8m2!3d30.1813812!4d66.9986345!10e5!16s%2Fg%2F11hzlywvsn!3m5!1s0x3ed2e127522321e5:0x65cbabe21b94e1f0!8m2!3d30.1813812!4d66.9986345!16s%2Fg%2F11hzlywvsn?entry=ttu&g_ep=EgoyMDI2MDMyNC4wIKXMDSoASAFQAw%3D%3D","hours":"Mon–Sat: 10AM – 9PM"}', phone: '0333 7778606', city: 'Quetta', dot: 'bg-blue-200/60' },
+  { id: 'lahore', name: 'Lahore Branch', address: '{"address":"Allah Hu Autos, near Jalyana Gate 1, Bahria Town, Lahore","map_iframe_url":"","map_link":"https://maps.app.goo.gl/5GZKe1i7sgRWhN7j6?g_st=iw","hours":"Mon–Sat: 10AM – 9PM"}', phone: '0333 7778606', city: 'Lahore', dot: 'bg-blue-300' },
+  { id: 'quetta', name: 'Quetta Branch', address: '{"address":"Allah Hu Autos, Japan Market, Zarghoon Road, Quetta","map_iframe_url":"","map_link":"https://maps.app.goo.gl/jHYyyWoQPdav4hoP6?g_st=iw","hours":"Mon–Sat: 10AM – 9PM"}', phone: '0333 7778606', city: 'Quetta', dot: 'bg-blue-200/60' },
 ];
 
 const LINK_SECTIONS = [
@@ -73,6 +73,16 @@ const BranchCard = ({ b }: { b: any }) => {
               <Clock className="h-3.5 w-3.5 text-blue-300 shrink-0" />
               <span>{fields.hours}</span>
             </div>
+            {fields.map_link && !hasMap && (
+              <a
+                href={fields.map_link}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-white hover:text-blue-200 transition-colors"
+              >
+                <ExternalLink className="h-3.5 w-3.5" /> View on Google Maps
+              </a>
+            )}
           </div>
         </div>
       )}
@@ -165,7 +175,7 @@ const Footer = () => {
       <div className="border-t border-blue-700/30 bg-[#083A8A]/40">
         <div className="container px-4 md:px-6 mx-auto flex flex-col sm:flex-row py-4 justify-between gap-2 text-xs text-blue-300">
           <p>© {new Date().getFullYear()} Allah-Hu-Autos. All rights reserved.</p>
-          <p className="flex items-center gap-1">Made with <span className="text-blue-300 mx-1">♥</span> in Pakistan</p>
+          <p>Serving Pakistan with pride since 1997.</p>
         </div>
       </div>
     </footer>

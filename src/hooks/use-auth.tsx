@@ -10,7 +10,7 @@ interface AuthContextValue {
   role: AppRole;
   loading: boolean;
   isAdmin: boolean;
-  signIn: (email: string, password: string) => Promise<any>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
@@ -67,7 +67,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [fetchProfile, fetchRole]);
 
   const signIn = async (email: string, password: string) => {
-    return supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.user) return { error: new Error('invalid_credentials') };
+
+    // Complete authorisation as part of login instead of allowing the route
+    // guard to discover a non-admin session later.
+    const { data: adminRole, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', data.user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+
+    if (roleError || !adminRole) {
+      await supabase.auth.signOut();
+      return { error: new Error('not_authorised') };
+    }
+
+    setRole('admin');
+    return { error: null };
   };
 
   const signOut = async () => {

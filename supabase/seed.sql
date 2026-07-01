@@ -114,10 +114,8 @@ LIMIT 50;
 -- Branches
 -- ==================
 INSERT INTO branches (name, address, city, phone) VALUES
-('Allah-Hu-Autos Main', 'Shop #12, Main Boulevard, Gulberg III', 'Lahore', '+92 300 1234567'),
-('Allah-Hu-Autos DHA', 'Plot 45-C, DHA Phase 5', 'Lahore', '+92 301 2345678'),
-('Allah-Hu-Autos Islamabad', 'F-7 Markaz, Jinnah Super', 'Islamabad', '+92 302 3456789'),
-('Allah-Hu-Autos Karachi', 'Shop 8, Tariq Road', 'Karachi', '+92 303 4567890');
+('Lahore Branch', '{"address":"Allah Hu Autos, near Jalyana Gate 1, Bahria Town, Lahore","map_iframe_url":"","map_link":"https://maps.app.goo.gl/5GZKe1i7sgRWhN7j6?g_st=iw","hours":"Mon-Sat: 10AM - 9PM"}', 'Lahore', '0333 7778606'),
+('Quetta Branch', '{"address":"Allah Hu Autos, Japan Market, Zarghoon Road, Quetta","map_iframe_url":"","map_link":"https://maps.app.goo.gl/jHYyyWoQPdav4hoP6?g_st=iw","hours":"Mon-Sat: 10AM - 9PM"}', 'Quetta', '0333 7778606');
 
 -- ==================
 -- Products (150+)

@@ -34,19 +34,19 @@ const VALUES = [
 const BRANCHES = [
   {
     city: 'Lahore',
-    address: 'Bahria Town, Lahore, Punjab — 54000',
+    address: 'Allah Hu Autos, near Jalyana Gate 1, Bahria Town, Lahore',
     phone: '0333 7778606',
     hours: 'Mon–Sat: 10AM – 9PM',
     dot: 'bg-primary',
-    mapsLink: 'https://maps.google.com/?q=Bahria+Town+Lahore',
+    mapsLink: 'https://maps.app.goo.gl/5GZKe1i7sgRWhN7j6?g_st=iw',
   },
   {
     city: 'Quetta',
-    address: 'Near BA Mall, Quetta Cantonment, Balochistan',
+    address: 'Allah Hu Autos, Japan Market, Zarghoon Road, Quetta',
     phone: '0333 7778606',
     hours: 'Mon–Sat: 10AM – 9PM',
     dot: 'bg-zinc-400',
-    mapsLink: 'https://maps.google.com/?q=Quetta+Cantonment+Balochistan',
+    mapsLink: 'https://maps.app.goo.gl/jHYyyWoQPdav4hoP6?g_st=iw',
   },
 ];
 
