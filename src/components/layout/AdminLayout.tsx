@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 import {
   LayoutDashboard, Package, FolderTree, ShoppingBag, Calendar,
-  Warehouse, Star, Car, Settings, ImagePlus, LogOut, Shield, Menu, Bell,
+  Warehouse, Star, Car, Settings, ImagePlus, LogOut, Shield, Menu, Bell, Wrench,
 } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import { useEffect, useState, type ComponentType } from 'react';
@@ -17,6 +17,7 @@ const links = [
   { to: '/admin/products', label: 'Products', icon: Package },
   { to: '/admin/categories', label: 'Categories', icon: FolderTree },
   { to: '/admin/images', label: 'Images', icon: ImagePlus },
+  { to: '/admin/services', label: 'Services', icon: Wrench },
   { divider: true },
   { to: '/admin/orders', label: 'Orders', icon: ShoppingBag },
   { to: '/admin/bookings', label: 'Bookings', icon: Calendar },

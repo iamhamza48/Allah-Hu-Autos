@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useCartStore } from '@/stores/cart';
 import { formatPKR, getPlaceholderImage } from '@/lib/format';
 import { Minus, Plus, Trash2, ShoppingBag } from 'lucide-react';
+import SEO from '@/components/SEO';
 
 const Cart = () => {
   const { items, updateQuantity, removeItem, getTotal } = useCartStore();
@@ -11,6 +12,7 @@ const Cart = () => {
   if (items.length === 0) {
     return (
       <div className="container py-20 text-center">
+        <SEO title="Shopping Cart" description="Review your Allah-Hu-Autos shopping cart." canonicalPath="/cart" noindex />
         <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
         <h1 className="text-2xl font-bold mb-2">Your cart is empty</h1>
         <p className="text-muted-foreground mb-6">Add some accessories to get started!</p>
@@ -23,6 +25,7 @@ const Cart = () => {
 
   return (
     <div className="container py-8">
+      <SEO title="Shopping Cart" description="Review your Allah-Hu-Autos shopping cart." canonicalPath="/cart" noindex />
       <h1 className="text-3xl font-bold mb-8">Shopping Cart</h1>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">

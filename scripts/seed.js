@@ -782,7 +782,7 @@ async function seed() {
     console.log('\n🔒 Security...');
 
     const securitySystems = [
-        { name: 'Jordon Security System', slug: 'security-jordon', price: 6000 },
+        { name: 'GIORDoN Security System', slug: 'security-giordon', price: 6000 },
         { name: 'Steelmate Security System', slug: 'security-steelmate', price: 8000 },
     ];
     for (const s of securitySystems) {

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import {
@@ -16,12 +16,10 @@ import {
   PAKISTANI_PHONE_EXAMPLE,
   validateGuestDetails,
 } from '@/lib/customer-validation';
+import { INSTALLATION_SERVICE_NAMES } from '@/lib/installation-services';
+import SEO from '@/components/SEO';
 
-const SPECIALIST_SERVICES = [
-  "4x4 Face lifts", "PPF", "DETAILING", "WRAPPING", "Anti UV tints", 
-  "Sports kits", "Sports Exhaust", "Seat Covers", "Mats", "Polishes", 
-  "Sun visors", "Air Press", "Fog Lamps", "Anti-heat Tints"
-];
+const SPECIALIST_SERVICES = INSTALLATION_SERVICE_NAMES;
 
 const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
 
@@ -33,12 +31,17 @@ const fmt12 = (t: string) => {
 
 const Booking = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const requestedService = searchParams.get('service');
+  const requestedBranch = searchParams.get('branch');
   
   const [branches, setBranches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [branchId, setBranchId] = useState('');
+  const [selectedServices, setSelectedServices] = useState<string[]>(
+    requestedService && SPECIALIST_SERVICES.includes(requestedService) ? [requestedService] : []
+  );
+  const [branchId, setBranchId] = useState(requestedBranch || '');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [customerName, setCustomerName] = useState('');
@@ -52,11 +55,24 @@ const Booking = () => {
   useEffect(() => {
     const fetchData = async () => {
       const { data } = await supabase.from('branches').select('*').eq('is_active', true);
-      setBranches(data || []);
+      const activeBranches = data || [];
+      setBranches(activeBranches);
+      if (requestedService && SPECIALIST_SERVICES.includes(requestedService) && requestedBranch && activeBranches.some(branch => branch.id === requestedBranch)) {
+        setBranchId(requestedBranch);
+        setStep(2);
+      } else if (requestedBranch) {
+        setBranchId('');
+      }
       setLoading(false);
     };
     fetchData();
-  }, []);
+  }, [requestedBranch, requestedService]);
+
+  useEffect(() => {
+    if (requestedService && SPECIALIST_SERVICES.includes(requestedService)) {
+      setSelectedServices(current => current.includes(requestedService) ? current : [requestedService, ...current]);
+    }
+  }, [requestedService]);
 
   const toggleService = (service: string) => {
     setSelectedServices(prev => 
@@ -128,6 +144,11 @@ const Booking = () => {
 
   return (
     <div className="min-h-screen bg-background pt-10 pb-24 px-4">
+      <SEO
+        title="Book Car Installation Service"
+        description="Book professional car accessory installation at Allah-Hu-Autos branches in Quetta or Lahore. Choose services, branch, date and time online."
+        canonicalPath="/booking"
+      />
       <div className="max-w-2xl mx-auto">
         
         <div className="flex items-center justify-between mb-12">

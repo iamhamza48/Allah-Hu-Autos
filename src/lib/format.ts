@@ -1,5 +1,21 @@
+import type { Product, ProductVariant } from '@/types/database';
+
 export function formatPKR(amount: number): string {
   return `Rs ${amount.toLocaleString('en-PK')}`;
+}
+
+export function getVariantMaximumPrice(variant?: ProductVariant | null): number | null {
+  const value = variant?.attributes?.price_max;
+  const maximum = typeof value === 'number' ? value : Number(value);
+  return variant && Number.isFinite(maximum) && maximum > variant.price ? maximum : null;
+}
+
+export function formatProductPrice(product: Product): string {
+  const maximum = product.variants?.reduce<number | null>((current, variant) => {
+    const candidate = getVariantMaximumPrice(variant);
+    return candidate && (!current || candidate > current) ? candidate : current;
+  }, null);
+  return maximum ? `${formatPKR(product.base_price)} – ${formatPKR(maximum)}` : formatPKR(product.base_price);
 }
 
 export function getPlaceholderImage(name: string, index = 0): string {

@@ -10,7 +10,7 @@ const FALLBACK_BRANCHES = [
 ];
 
 const LINK_SECTIONS = [
-  { title: 'Quick Links', links: [['/categories', 'Categories'], ['/products', 'Products'], ['/booking', 'Book Installation'], ['/search', 'Search']] },
+  { title: 'Quick Links', links: [['/categories', 'Categories'], ['/products', 'Products'], ['/car-modification', 'Modification & Styling'], ['/search', 'Search']] },
   { title: 'Customer Care', links: [['/cart', 'Cart'], ['/wishlist', 'Wishlist'], ['/booking', 'Book Installation'], ['/about', 'About Us']] }
 ];
 

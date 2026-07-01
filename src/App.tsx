@@ -28,6 +28,8 @@ const Wishlist = lazy(() => import("./pages/Wishlist"));
 const About = lazy(() => import("./pages/About"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const AdminResetPassword = lazy(() => import("./pages/AdminResetPassword"));
+const ModificationServices = lazy(() => import("./pages/ModificationServices"));
+const ServiceDetail = lazy(() => import("./pages/ServiceDetail"));
 
 // Lazy-loaded Admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
@@ -40,6 +42,7 @@ const AdminReviews = lazy(() => import("./pages/admin/Reviews"));
 const AdminVehicles = lazy(() => import("./pages/admin/Vehicles"));
 const AdminSettings = lazy(() => import("./pages/admin/Settings"));
 const AdminImageUploader = lazy(() => import("./pages/admin/Imageuploader"));
+const AdminServices = lazy(() => import("./pages/admin/Services"));
 
 const queryClient = new QueryClient();
 
@@ -65,6 +68,8 @@ const App = () => (
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/booking" element={<Booking />} />
+                  <Route path="/car-modification" element={<ModificationServices />} />
+                  <Route path="/car-modification/:serviceId" element={<ServiceDetail />} />
                   <Route path="/wishlist" element={<Wishlist />} />
                   <Route path="/vehicles/:vehicleId/products" element={<VehicleProducts />} />
                   <Route path="*" element={<NotFound />} />
@@ -84,6 +89,7 @@ const App = () => (
                   <Route path="vehicles" element={<AdminVehicles />} />
                   <Route path="settings" element={<AdminSettings />} />
                   <Route path="images" element={<AdminImageUploader />} />
+                  <Route path="services" element={<AdminServices />} />
                 </Route>
               </Routes>
             </Suspense>

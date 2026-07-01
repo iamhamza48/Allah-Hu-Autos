@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Product } from '@/types/database';
 import { Car, ChevronRight, SlidersHorizontal, PackageSearch, LayoutGrid } from 'lucide-react';
+import { isPublicStoreProduct } from '@/lib/catalog-visibility';
 
 interface VehicleInfo {
   id: string;
@@ -36,13 +37,14 @@ const VehicleProducts = () => {
         .single(),
       supabase
         .from('product_compatibility')
-        .select('product:products(*, category:categories(*), images:product_images(*))')
+        .select('product:products(*, category:categories(*), images:product_images(*), variants:product_variants(*))')
         .eq('vehicle_id', vehicleId),
     ]).then(([vehicleRes, compatRes]) => {
       setVehicle(vehicleRes.data as any);
       const prods = (compatRes.data || [])
         .map((c: any) => c.product)
-        .filter(Boolean) as Product[];
+        .filter(Boolean)
+        .filter(isPublicStoreProduct) as Product[];
       setProducts(prods);
       setLoading(false);
     });

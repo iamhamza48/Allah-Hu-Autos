@@ -5,6 +5,8 @@ import ProductCard from '@/components/ProductCard';
 import { Input } from '@/components/ui/input';
 import type { Product } from '@/types/database';
 import { Search as SearchIcon } from 'lucide-react';
+import { isPublicStoreProduct } from '@/lib/catalog-visibility';
+import SEO from '@/components/SEO';
 
 const SearchPage = () => {
   const [searchParams] = useSearchParams();
@@ -18,11 +20,11 @@ const SearchPage = () => {
     setLoading(true);
     supabase
       .from('products')
-      .select('*, category:categories(*), images:product_images(*)')
+      .select('*, category:categories(*), images:product_images(*), variants:product_variants(*)')
       .ilike('name', `%${query}%`)
-      .limit(30)
+      .limit(100)
       .then(({ data }) => {
-        setResults(data || []);
+        setResults((data || []).filter(isPublicStoreProduct).slice(0, 30));
         setLoading(false);
       });
   }, [query]);
@@ -33,6 +35,12 @@ const SearchPage = () => {
 
   return (
     <div className="container py-8">
+      <SEO
+        title="Search Products"
+        description="Search car accessories, lighting, mats, audio products and styling upgrades at Allah-Hu-Autos."
+        canonicalPath="/search"
+        noindex
+      />
       <h1 className="text-3xl font-bold mb-6">Search Products</h1>
       <div className="relative max-w-lg mb-8">
         <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

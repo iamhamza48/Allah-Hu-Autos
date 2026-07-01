@@ -1,22 +1,31 @@
 import { Link } from 'react-router-dom';
 import { Heart, ShoppingCart, Trash2, ArrowLeft } from 'lucide-react';
 import { useWishlistStore } from '@/stores/wishlist';
-import { formatPKR, getPlaceholderImage, getDiscountPercent } from '@/lib/format';
+import { formatPKR, formatProductPrice, getPlaceholderImage, getDiscountPercent } from '@/lib/format';
+import { isPublicStoreProduct } from '@/lib/catalog-visibility';
+import SEO from '@/components/SEO';
 
 const Wishlist = () => {
   const { items, removeItem, clear } = useWishlistStore();
+  const visibleItems = items.filter(isPublicStoreProduct);
 
   return (
     <div className="container py-12 min-h-[60vh]">
+      <SEO
+        title="My Wishlist"
+        description="Your saved Allah-Hu-Autos products and accessories."
+        canonicalPath="/wishlist"
+        noindex
+      />
       <div className="flex items-center justify-between mb-8 pb-6 border-b border-border">
         <div className="flex items-center gap-3">
           <div>
             <h1 className="text-3xl font-black text-foreground mb-1">My Wishlist</h1>
-            <p className="text-sm text-muted-foreground">{items.length} {items.length === 1 ? 'item' : 'items'} saved</p>
+            <p className="text-sm text-muted-foreground">{visibleItems.length} {visibleItems.length === 1 ? 'item' : 'items'} saved</p>
           </div>
         </div>
         <div className="flex items-center gap-4">
-          {items.length > 0 && (
+          {visibleItems.length > 0 && (
             <button
               type="button"
               onClick={clear}
@@ -36,7 +45,7 @@ const Wishlist = () => {
         </div>
       </div>
 
-      {items.length === 0 && (
+      {visibleItems.length === 0 && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Heart className="h-16 w-16 text-muted-foreground mb-6" strokeWidth={1.5} />
           <h2 className="text-2xl font-bold text-foreground mb-2">Your wishlist is empty</h2>
@@ -52,9 +61,9 @@ const Wishlist = () => {
         </div>
       )}
 
-      {items.length > 0 && (
+      {visibleItems.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-          {items.map((product) => {
+          {visibleItems.map((product) => {
             const discount = getDiscountPercent(product.base_price, product.compare_price);
             const image = product.images?.[0]?.url || getPlaceholderImage(product.name, 0);
 
@@ -96,7 +105,7 @@ const Wishlist = () => {
                     </h3>
                   </Link>
                   <div className="flex items-center gap-1.5 mb-3">
-                    <span className="font-bold text-primary text-sm">{formatPKR(product.base_price)}</span>
+                    <span className="font-bold text-primary text-sm">{formatProductPrice(product)}</span>
                     {product.compare_price && (
                       <span className="text-xs text-muted-foreground line-through">{formatPKR(product.compare_price)}</span>
                     )}

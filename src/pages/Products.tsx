@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { Product, Category } from '@/types/database';
 import { Search } from 'lucide-react';
+import { isPublicStoreCategory, isPublicStoreProduct } from '@/lib/catalog-visibility';
+import SEO from '@/components/SEO';
 
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -19,7 +21,7 @@ const Products = () => {
 
   useEffect(() => {
     supabase.from('categories').select('*').order('name').then(({ data }) => {
-      setCategories(data || []);
+      setCategories((data || []).filter(isPublicStoreCategory));
     });
   }, []);
 
@@ -42,8 +44,8 @@ const Products = () => {
         { ascending: sortBy !== 'price_desc' }
       );
 
-      const { data } = await query.limit(50);
-      setProducts(data || []);
+      const { data } = await query.limit(200);
+      setProducts((data || []).filter(isPublicStoreProduct));
       setLoading(false);
     };
     fetch();
@@ -70,6 +72,11 @@ const Products = () => {
 
   return (
     <div className="container py-5 sm:py-8">
+      <SEO
+        title="Shop Car Accessories Online in Pakistan"
+        description="Browse car accessories, LED lights, mats, audio products, perfumes, polish and styling upgrades from Allah-Hu-Autos with nationwide delivery in Pakistan."
+        canonicalPath="/products"
+      />
       <h1 className="text-2xl sm:text-3xl font-bold mb-5 sm:mb-6">All Products</h1>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-5 sm:mb-8">

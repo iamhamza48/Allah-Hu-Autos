@@ -8,6 +8,8 @@ import CategoryCard from '@/components/CategoryCard';
 import VehicleSelector from '@/components/VehicleSelector';
 import type { Product, Category } from '@/types/database';
 import { ArrowRight, Shield, Truck, Wrench, Phone, Star, ChevronRight } from 'lucide-react';
+import { isPublicStoreCategory, isPublicStoreProduct } from '@/lib/catalog-visibility';
+import SEO, { SITE_URL } from '@/components/SEO';
 
 const BRANDS = ['Toyota', 'Honda', 'Suzuki', 'KIA', 'Hyundai', 'MG', 'Changan', 'Haval', 'Daihatsu', 'Audi', 'BMW', 'Mercedes'];
 
@@ -22,9 +24,9 @@ const Index = () => {
     const fetchData = async () => {
       try {
         const [productsRes, categoriesRes, newRes] = await Promise.all([
-          supabase.from('products').select('*, category:categories(*), images:product_images(*), variants:product_variants(*)').eq('featured', true).limit(10),
+          supabase.from('products').select('*, category:categories(*), images:product_images(*), variants:product_variants(*)').eq('featured', true).limit(30),
           supabase.from('categories').select('*').eq('featured', true).is('parent_id', null).limit(6),
-          supabase.from('products').select('*, category:categories(*), images:product_images(*), variants:product_variants(*)').eq('show_in_new_arrivals', true).order('created_at', { ascending: false }).limit(10),
+          supabase.from('products').select('*, category:categories(*), images:product_images(*), variants:product_variants(*)').eq('show_in_new_arrivals', true).order('created_at', { ascending: false }).limit(30),
         ]);
 
         if (productsRes.error) throw productsRes.error;
@@ -33,13 +35,13 @@ const Index = () => {
         if (categoriesRes.error) {
           const fallback = await supabase.from('categories').select('*').eq('featured', true).limit(6);
           if (fallback.error) throw fallback.error;
-          setFeaturedCategories(fallback.data || []);
+          setFeaturedCategories((fallback.data || []).filter(isPublicStoreCategory).slice(0, 6));
         } else {
-          setFeaturedCategories(categoriesRes.data || []);
+          setFeaturedCategories((categoriesRes.data || []).filter(isPublicStoreCategory).slice(0, 6));
         }
 
-        setFeaturedProducts(productsRes.data || []);
-        setNewArrivals(newRes.data || []);
+        setFeaturedProducts((productsRes.data || []).filter(isPublicStoreProduct).slice(0, 10));
+        setNewArrivals((newRes.data || []).filter(isPublicStoreProduct).slice(0, 10));
       } catch (error) {
         console.error('Failed to load homepage data', error);
       } finally {
@@ -63,6 +65,50 @@ const Index = () => {
 
   return (
     <div>
+      <SEO
+        title="Premium Car Accessories in Pakistan"
+        description="Shop premium automotive accessories, LED lights, mats, audio, perfumes, polishes and professional installation services from Allah-Hu-Autos in Quetta and Lahore."
+        canonicalPath="/"
+        jsonLd={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'AutoPartsStore',
+            name: 'Allah-Hu-Autos',
+            url: SITE_URL,
+            logo: `${SITE_URL}/logo.webp`,
+            image: `${SITE_URL}/logo.webp`,
+            telephone: '+923337778606',
+            priceRange: 'PKR',
+            founder: { '@type': 'Person', name: 'Mr. Asad Malik' },
+            foundingDate: '1997',
+            address: [
+              {
+                '@type': 'PostalAddress',
+                streetAddress: 'Allah Hu Autos, Japan Market, Zarghoon Road',
+                addressLocality: 'Quetta',
+                addressCountry: 'PK',
+              },
+              {
+                '@type': 'PostalAddress',
+                streetAddress: 'Allah Hu Autos, near Jalyana Gate 1, Bahria Town',
+                addressLocality: 'Lahore',
+                addressCountry: 'PK',
+              },
+            ],
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'Allah-Hu-Autos',
+            url: SITE_URL,
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: `${SITE_URL}/products?q={search_term_string}`,
+              'query-input': 'required name=search_term_string',
+            },
+          },
+        ]}
+      />
 {/* ── Hero ──────────────────────────────────────────────────────── */}
 <section className="relative min-h-[560px] lg:min-h-[680px] bg-gray-950 overflow-hidden flex items-center">
 

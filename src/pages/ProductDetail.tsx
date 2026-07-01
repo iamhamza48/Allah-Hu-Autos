@@ -6,12 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useCartStore } from '@/stores/cart';
-import { formatPKR, getPlaceholderImage, getDiscountPercent } from '@/lib/format';
+import { formatPKR, getVariantMaximumPrice, getPlaceholderImage, getDiscountPercent } from '@/lib/format';
 import VehicleSelector from '@/components/VehicleSelector';
 import type { Product, ProductVariant, Review, Vehicle } from '@/types/database';
 import { ShoppingCart, Check, X, Star, Minus, Plus, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
+import { HIDDEN_STORE_CATEGORY_SLUGS } from '@/lib/catalog-visibility';
+import SEO, { SITE_URL } from '@/components/SEO';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -40,6 +42,11 @@ const ProductDetail = () => {
       if (productError) {
         setProduct(null);
         setLoading(false);
+        return;
+      }
+
+      if (data?.category?.slug && HIDDEN_STORE_CATEGORY_SLUGS.has(data.category.slug)) {
+        navigate('/car-modification', { replace: true });
         return;
       }
 
@@ -92,7 +99,7 @@ const ProductDetail = () => {
       setLoading(false);
     };
     fetch();
-  }, [slug]);
+  }, [slug, navigate]);
 
   useEffect(() => {
     if (!selectedVehicle || !product) { setCompatible(null); return; }
@@ -169,9 +176,45 @@ const ProductDetail = () => {
   const avgRating = reviews.length
     ? (reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length).toFixed(1)
     : null;
+  const seoDescription = product.description?.trim()
+    ? product.description.slice(0, 155)
+    : `Buy ${product.name} from Allah-Hu-Autos with nationwide delivery in Pakistan and expert support from Quetta and Lahore.`;
+  const seoPrice = selectedVariant?.price ?? product.base_price;
 
   return (
     <div className="container py-5 sm:py-8">
+      <SEO
+        title={`${product.name} Price in Pakistan`}
+        description={seoDescription}
+        canonicalPath={`/product/${product.slug}`}
+        image={images[0]}
+        type="product"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: product.name,
+          description: seoDescription,
+          image: images.map(image => image.startsWith('http') ? image : `${SITE_URL}${image}`),
+          category: product.category?.name,
+          brand: {
+            '@type': 'Brand',
+            name: 'Allah-Hu-Autos',
+          },
+          offers: {
+            '@type': 'Offer',
+            url: `${SITE_URL}/product/${product.slug}`,
+            priceCurrency: 'PKR',
+            price: seoPrice,
+            availability: 'https://schema.org/InStock',
+            itemCondition: 'https://schema.org/NewCondition',
+          },
+          aggregateRating: avgRating ? {
+            '@type': 'AggregateRating',
+            ratingValue: avgRating,
+            reviewCount: reviews.length,
+          } : undefined,
+        }}
+      />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
         {/* Images */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -217,7 +260,9 @@ const ProductDetail = () => {
 
           <div className="flex items-baseline gap-3">
             <span className="text-3xl font-bold text-primary">
-              {formatPKR(selectedVariant?.price ?? product.base_price)}
+              {selectedVariant && getVariantMaximumPrice(selectedVariant)
+                ? `${formatPKR(selectedVariant.price)} – ${formatPKR(getVariantMaximumPrice(selectedVariant)!)}`
+                : formatPKR(selectedVariant?.price ?? product.base_price)}
             </span>
             {(selectedVariant?.compare_price ?? product.compare_price) && (
               <span className="text-lg text-muted-foreground line-through">
@@ -306,6 +351,12 @@ const ProductDetail = () => {
               </Button>
             </div>
           </div>
+
+          {selectedVariant && getVariantMaximumPrice(selectedVariant) && (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+              Final price depends on vehicle fitment and will be confirmed after your order is placed.
+            </p>
+          )}
 
           {/* Vehicle compatibility */}
           <Card>

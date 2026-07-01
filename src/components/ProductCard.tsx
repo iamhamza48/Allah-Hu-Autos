@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { formatPKR, getPlaceholderImage, getDiscountPercent } from '@/lib/format';
+import { formatPKR, formatProductPrice, getPlaceholderImage, getDiscountPercent } from '@/lib/format';
 import { useWishlistStore } from '@/stores/wishlist';
 import { useCartStore } from '@/stores/cart';
 import type { Product } from '@/types/database';
@@ -100,7 +100,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </h3>
           <div className="flex items-center justify-between gap-1.5">
             <div className="flex min-w-0 flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2">
-              <span className="font-bold text-xs sm:text-base text-primary truncate">{formatPKR(product.base_price)}</span>
+              <span className="font-bold text-xs sm:text-base text-primary truncate">{formatProductPrice(product)}</span>
               {product.compare_price && (
                 <span className="text-xs text-muted-foreground line-through">
                   {formatPKR(product.compare_price)}

@@ -5,6 +5,8 @@ import CategoryCard from '@/components/CategoryCard';
 import { Input } from '@/components/ui/input';
 import type { Category } from '@/types/database';
 import { Search, ChevronRight, LayoutGrid } from 'lucide-react';
+import { HIDDEN_STORE_CATEGORY_SLUGS, SERVICES_CATEGORY_SLUG } from '@/lib/catalog-visibility';
+import SEO from '@/components/SEO';
 
 interface CategoryRow extends Category {
   parent_id: string | null;
@@ -20,7 +22,9 @@ const Categories = () => {
 
   useEffect(() => {
     supabase.from('categories').select('*').order('sort_order', { ascending: true }).order('name').then(({ data }) => {
-      const all = (data || []) as CategoryRow[];
+      const all = ((data || []) as CategoryRow[]).filter(category =>
+        !HIDDEN_STORE_CATEGORY_SLUGS.has(category.slug) && category.slug !== SERVICES_CATEGORY_SLUG
+      );
       setParents(all.filter(c => !c.parent_id));
       setChildren(all.filter(c => !!c.parent_id));
       setLoading(false);
@@ -59,6 +63,11 @@ const Categories = () => {
 
   return (
     <div>
+      <SEO
+        title="Car Accessories Categories"
+        description="Explore Allah-Hu-Autos car accessory categories including lighting, interior accessories, audio, perfumes, polish and styling products for vehicles in Pakistan."
+        canonicalPath="/categories"
+      />
 
       {/* ── Hero header ───────────────────────────────────────────────── */}
       <section className="relative bg-zinc-900 overflow-hidden">

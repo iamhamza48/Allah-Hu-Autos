@@ -9,8 +9,10 @@ import { useCartStore } from '@/stores/cart';
 import { useWishlistStore } from '@/stores/wishlist';
 import { supabase } from '@/lib/supabase';
 import type { Product } from '@/types/database';
-import { formatPKR } from '@/lib/format';
+import { formatProductPrice } from '@/lib/format';
 import ThemeToggle from '@/components/ThemeToggle';
+import { HIDDEN_STORE_CATEGORY_SLUGS, SERVICES_CATEGORY_SLUG } from '@/lib/catalog-visibility';
+import { isPublicStoreProduct } from '@/lib/catalog-visibility';
 
 interface SubCategory { id: string; name: string; slug: string; }
 interface NavCategory { id: string; name: string; slug: string; icon?: string; subcategories: SubCategory[]; }
@@ -108,10 +110,10 @@ const SearchDropdown = ({ onClose }: { onClose: () => void }) => {
       setSearching(true);
       const { data } = await supabase
         .from('products')
-        .select('*, images:product_images(*)')
+        .select('*, category:categories(*), images:product_images(*), variants:product_variants(*)')
         .ilike('name', `%${query}%`)
         .limit(6);
-      setResults(data || []);
+      setResults((data || []).filter(isPublicStoreProduct).slice(0, 6));
       setSearching(false);
     }, 250);
     return () => clearTimeout(timer);
@@ -195,7 +197,7 @@ const SearchDropdown = ({ onClose }: { onClose: () => void }) => {
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-sm text-gray-900 dark:text-white font-medium line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{p.name}</p>
-                            <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold mt-0.5">{formatPKR(p.base_price)}</p>
+                            <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold mt-0.5">{formatProductPrice(p)}</p>
                           </div>
                           <ChevronRight className="h-3.5 w-3.5 text-gray-400 group-hover:text-blue-500 shrink-0 transition-colors" />
                         </Link>
@@ -258,12 +260,13 @@ const Header = () => {
       const { data: allCats, error } = await supabase
         .from('categories').select('id, name, slug, parent_id').order('name');
       if (error || !allCats) return;
-      const hasParentId = allCats.some((c: any) => c.parent_id !== undefined && c.parent_id !== null);
+      const visibleCats = allCats.filter((c: any) => !HIDDEN_STORE_CATEGORY_SLUGS.has(c.slug) && c.slug !== SERVICES_CATEGORY_SLUG);
+      const hasParentId = visibleCats.some((c: any) => c.parent_id !== undefined && c.parent_id !== null);
       if (hasParentId) {
-        const parents = allCats.filter((c: any) => !c.parent_id);
+        const parents = visibleCats.filter((c: any) => !c.parent_id);
         setNavCategories(parents.map((p: any) => ({
           ...p,
-          subcategories: allCats.filter((c: any) => c.parent_id === p.id),
+          subcategories: visibleCats.filter((c: any) => c.parent_id === p.id),
         })));
       } else {
         const bySlug: Record<string, any> = {};
@@ -460,6 +463,7 @@ const Header = () => {
               { to: '/', label: 'Home' },
               { to: '/products', label: 'Shop' },
               { to: '/categories', label: 'Categories' },
+              { to: '/car-modification', label: 'Modification & Styling' },
               { to: '/booking', label: 'Book Install' },
             ].map((item) => (
               <Link
@@ -550,6 +554,7 @@ const Header = () => {
               { to: '/categories', label: 'Categories' },
               { to: '/about', label: 'About' },
               { to: '/wishlist', label: 'Wishlist' },
+              { to: '/car-modification', label: 'Modification & Styling' },
               { to: '/booking', label: 'Book Installation' },
             ].map(({ to, label }) => (
               <Link

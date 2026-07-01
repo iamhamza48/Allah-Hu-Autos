@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Shield, Wrench, Truck, Star, MapPin, Phone, Clock, Calendar, Users, Award, ChevronRight } from 'lucide-react';
+import SEO, { SITE_URL } from '@/components/SEO';
 
 const STATS = [
   { value: '29+', label: 'Years in Business', icon: Calendar },
@@ -53,6 +54,23 @@ const BRANCHES = [
 const About = () => {
   return (
     <div className="bg-background">
+      <SEO
+        title="About Allah-Hu-Autos"
+        description="Learn about Allah-Hu-Autos, founded by Mr. Asad Malik in Quetta in 1997 and later expanded to Lahore in 2018, serving car owners across Pakistan."
+        canonicalPath="/about"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'AboutPage',
+          name: 'About Allah-Hu-Autos',
+          url: `${SITE_URL}/about`,
+          about: {
+            '@type': 'AutoPartsStore',
+            name: 'Allah-Hu-Autos',
+            founder: { '@type': 'Person', name: 'Mr. Asad Malik' },
+            foundingDate: '1997',
+          },
+        }}
+      />
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
       <section className="relative bg-gradient-to-br from-[#062F70] via-[#0B4DAE] to-[#073B89] overflow-hidden">
@@ -72,14 +90,14 @@ const About = () => {
           </div>
 
           <div className="max-w-2xl">
-            <p className="text-xs font-bold tracking-[0.2em] uppercase text-blue-200 mb-3">Est. 1997 · Lahore & Quetta</p>
+            <p className="text-xs font-bold tracking-[0.2em] uppercase text-blue-200 mb-3">Est. 1997 · Quetta & Lahore</p>
             <h1 className="text-3xl sm:text-5xl font-black text-white leading-[1.08] tracking-tight mb-5">
               We Take Pride<br />
               in <span className="text-cyan-200">Your Ride</span>
             </h1>
             <p className="text-sm sm:text-base text-white/80 leading-relaxed max-w-xl">
               Allah-Hu-Autos has been Pakistan's go-to destination for premium automotive accessories for over 29 years.
-              From a single shop in Lahore to two branches serving customers nationwide — our passion for cars has never wavered.
+              From our first branch in Quetta to our Lahore expansion, our passion for cars has never wavered.
             </p>
           </div>
         </div>
@@ -109,13 +127,13 @@ const About = () => {
               <div className="relative aspect-[4/3] overflow-hidden rounded-[2rem] border border-border bg-slate-900 shadow-2xl">
                 <img
                   src="/m-alli-malik-founder.jpeg"
-                  alt="M. Asad Malik, founder of Allah-Hu-Autos"
+                  alt="Mr. Asad Malik, founder of Allah-Hu-Autos"
                   className="h-full w-full object-cover object-top"
                   loading="eager"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7 text-white">
-                  <p className="text-xl sm:text-2xl font-black tracking-tight">M. Asad Malik</p>
+                  <p className="text-xl sm:text-2xl font-black tracking-tight">Mr. Asad Malik</p>
                   <p className="text-xs sm:text-sm text-white/75 font-medium">Founder, Allah-Hu-Autos</p>
                 </div>
               </div>
@@ -132,7 +150,7 @@ const About = () => {
               </h2>
               <div className="space-y-4 text-sm sm:text-base text-muted-foreground leading-relaxed">
                 <p>
-                  <strong className="text-foreground">M. Asad Malik founded Allah-Hu-Autos in 1997</strong> with a clear purpose:
+                  <strong className="text-foreground">Mr. Asad Malik founded Allah-Hu-Autos in Quetta in 1997</strong> with a clear purpose:
                   to give car owners dependable products, honest guidance and workmanship they could trust.
                 </p>
                 <p>
@@ -165,12 +183,12 @@ const About = () => {
             </h2>
             <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
               <p>
-                It started in 1997 with a small shop and a simple belief: Pakistani car owners deserve access to quality accessories at honest prices.
-                What began as a local business in Lahore quickly earned a reputation for genuine products and skilled installation.
+                It started in Quetta in 1997 with a small shop and a simple belief: Pakistani car owners deserve access to quality accessories at honest prices.
+                What began as a local business quickly earned a reputation for genuine products, skilled installation and dependable after-sales care.
               </p>
               <p>
-                Word spread. Customers drove from across Punjab — and eventually from Balochistan — just to get the Allah-Hu-Autos experience.
-                That demand led us to open our second branch in Quetta, serving the south with the same commitment that built our name in Lahore.
+                Word spread beyond Balochistan, and customers from other cities began trusting the Allah-Hu-Autos experience.
+                Later on, in 2018, we opened the Lahore branch to serve Punjab with the same commitment that built our name in Quetta.
               </p>
               <p>
                 Today we carry 500+ products across lighting, exterior, interior, tech, and maintenance — all backed by our expert installation team
@@ -194,9 +212,9 @@ const About = () => {
           <div className="relative pl-6">
             <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-primary via-primary/40 to-transparent" />
             {[
-              { year: '1997', title: 'Founded in Lahore', desc: 'Opened our first shop in Lahore with a focus on quality and honest service.' },
+              { year: '1997', title: 'Founded in Quetta', desc: 'Opened our first branch in Quetta with a focus on quality and honest service.' },
               { year: '2005', title: 'Expanded product range', desc: 'Grew from basic accessories to a full catalogue covering lighting, audio, and body styling.' },
-              { year: '2015', title: 'Quetta Branch opens', desc: 'Responded to growing demand from Balochistan by opening our second location.' },
+              { year: '2018', title: 'Lahore Branch opens', desc: 'Expanded to Lahore to serve Punjab with the same trusted products and installation care.' },
               { year: '2024', title: 'Online store launches', desc: 'Brought the Allah-Hu-Autos experience online — shop from anywhere, delivered nationwide.' },
             ].map(({ year, title, desc }) => (
               <div key={year} className="relative pl-8 pb-10 last:pb-0">

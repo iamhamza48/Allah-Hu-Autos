@@ -15,6 +15,7 @@ import type { Product, Category, ProductImage, ProductVariant } from '@/types/da
 import { toast } from 'sonner';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { Plus, Pencil, Trash2, Upload, X, ImagePlus, Loader2, Search, ArrowUpDown, Car, Package } from 'lucide-react';
+import { SERVICES_CATEGORY_SLUG } from '@/lib/catalog-visibility';
 
 const BUCKET = 'product-images';
 type SortKey = 'name' | 'price' | 'created_at';
@@ -363,7 +364,7 @@ const AdminProducts = () => {
         .select('*, category:categories(*), images:product_images(*)')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      setProducts(data || []);
+      setProducts((data || []).filter(product => product.category?.slug !== SERVICES_CATEGORY_SLUG));
     } catch (e: any) {
       toast.error('Failed to load products: ' + e.message);
     } finally {
@@ -373,7 +374,7 @@ const AdminProducts = () => {
 
   useEffect(() => {
     fetchProducts();
-    supabase.from('categories').select('*').order('name').then(({ data }) => setCategories(data || []));
+    supabase.from('categories').select('*').order('name').then(({ data }) => setCategories((data || []).filter(category => category.slug !== SERVICES_CATEGORY_SLUG)));
     supabase.from('vehicle_makes').select('*, models:vehicle_models(*, vehicles(*))').order('name').then(({ data }) => {
       const flat: any[] = [];
       (data || []).forEach((make: any) => {

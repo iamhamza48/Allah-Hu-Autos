@@ -17,6 +17,7 @@ import {
   validateGuestDetails,
   type GuestDetailErrors,
 } from '@/lib/customer-validation';
+import SEO from '@/components/SEO';
 
 interface CreatedOrderItem {
   name: string;
@@ -177,6 +178,7 @@ const Checkout = () => {
   if (completedOrderId) {
     return (
       <div className="container py-16">
+        <SEO title="Order Received" description="Your Allah-Hu-Autos order confirmation." canonicalPath="/checkout" noindex />
         <Card className="mx-auto max-w-xl text-center">
           <CardContent className="p-10 space-y-4">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl">✓</div>
@@ -202,6 +204,7 @@ const Checkout = () => {
 
   return (
     <div className="container py-8">
+      <SEO title="Checkout" description="Complete your Allah-Hu-Autos order securely." canonicalPath="/checkout" noindex />
       <h1 className="text-3xl font-bold mb-8">Checkout</h1>
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

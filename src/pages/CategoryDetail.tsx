@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import ProductCard from '@/components/ProductCard';
 import CategoryCard from '@/components/CategoryCard';
@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Search, ChevronRight, LayoutGrid, SlidersHorizontal } from 'lucide-react';
 import type { Product, Category } from '@/types/database';
+import { HIDDEN_STORE_CATEGORY_SLUGS, SERVICES_CATEGORY_SLUG } from '@/lib/catalog-visibility';
+import SEO from '@/components/SEO';
 
 interface CategoryRow extends Category {
   parent_id: string | null;
@@ -94,9 +96,19 @@ const CategoryDetail = () => {
 
   const isParent = subcategories.length > 0;
 
+  if (slug === SERVICES_CATEGORY_SLUG || (slug && HIDDEN_STORE_CATEGORY_SLUGS.has(slug))) {
+    return <Navigate to="/car-modification" replace />;
+  }
+
   // ── Loading skeleton ────────────────────────────────────────────────
   if (loading) return (
     <div>
+      <SEO
+        title={`${category.name} Car Accessories`}
+        description={`Shop ${category.name.toLowerCase()} car accessories at Allah-Hu-Autos with nationwide delivery and expert support from Quetta and Lahore branches.`}
+        canonicalPath={`/category/${category.slug}`}
+        image={category.image_url}
+      />
       <div className="bg-zinc-900 h-40 animate-pulse" />
       <div className="container py-12">
         <div className="flex flex-wrap justify-center gap-5">
