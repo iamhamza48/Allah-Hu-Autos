@@ -65,7 +65,7 @@ const Categories = () => {
     <div>
       <SEO
         title="Car Accessories Categories"
-        description="Explore Allah-Hu-Autos car accessory categories including lighting, interior accessories, audio, perfumes, polish and styling products for vehicles in Pakistan."
+        description="Explore Allah-Hu-Autos categories including LEDs, car speakers, Android panels, security systems, accessories, perfumes and polishes in Pakistan."
         canonicalPath="/categories"
       />
 

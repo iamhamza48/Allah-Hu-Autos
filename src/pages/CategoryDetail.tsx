@@ -104,10 +104,9 @@ const CategoryDetail = () => {
   if (loading) return (
     <div>
       <SEO
-        title={`${category.name} Car Accessories`}
-        description={`Shop ${category.name.toLowerCase()} car accessories at Allah-Hu-Autos with nationwide delivery and expert support from Quetta and Lahore branches.`}
-        canonicalPath={`/category/${category.slug}`}
-        image={category.image_url}
+        title="Car Accessories"
+        description="Shop car accessories at Allah-Hu-Autos with nationwide delivery and expert support from our Quetta and Lahore branches."
+        canonicalPath={`/category/${slug || ''}`}
       />
       <div className="bg-zinc-900 h-40 animate-pulse" />
       <div className="container py-12">
@@ -126,6 +125,12 @@ const CategoryDetail = () => {
 
   return (
     <div>
+      <SEO
+        title={`${category.name} Car Accessories`}
+        description={`Shop ${category.name.toLowerCase()} car accessories at Allah-Hu-Autos with nationwide delivery and expert support from our Quetta and Lahore branches.`}
+        canonicalPath={`/category/${category.slug}`}
+        image={category.image_url}
+      />
 
       {/* ── Hero ───────────────────────────────────────────────────────── */}
       <section className="relative bg-zinc-900 overflow-hidden">

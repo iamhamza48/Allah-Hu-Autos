@@ -17,5 +17,3 @@ Disallow: /cart
 Disallow: /checkout
 Disallow: /wishlist
 Disallow: /search
-
-Sitemap: https://allahhuautos.online/sitemap.xml

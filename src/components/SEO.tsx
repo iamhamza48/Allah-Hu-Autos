@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
 const SITE_NAME = 'Allah-Hu-Autos';
-export const SITE_URL = 'https://allahhuautos.online';
+export const SITE_URL = typeof window !== 'undefined' ? window.location.origin : '';
 const DEFAULT_IMAGE = `${SITE_URL}/logo.webp`;
 
 type JsonLd = Record<string, unknown> | Record<string, unknown>[];

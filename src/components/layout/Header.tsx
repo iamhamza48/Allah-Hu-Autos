@@ -17,14 +17,6 @@ import { isPublicStoreProduct } from '@/lib/catalog-visibility';
 interface SubCategory { id: string; name: string; slug: string; }
 interface NavCategory { id: string; name: string; slug: string; icon?: string; subcategories: SubCategory[]; }
 
-const CATEGORY_GROUPS: Record<string, { label: string; icon?: string; slugs: string[] }> = {
-  lighting: { label: 'Lighting', slugs: ['ambient-lights', 'led-lights', 'fog-lamps'] },
-  exterior: { label: 'Exterior', slugs: ['body-kits', 'exhaust-tips', 'antennas', 'batman-mirror-covers', 'number-plate-frames', 'side-mirror-accessories', 'window-tints', 'window-shades'] },
-  interior: { label: 'Interior', slugs: ['car-mats', 'steering-covers', 'dashboard-accessories', 'door-accessories', 'interior-accessories', 'tissue-box-holders', 'key-covers', 'car-perfumes'] },
-  tech: { label: 'Tech & Gadgets', slugs: ['cameras', 'car-audio', 'car-chargers', 'phone-holders', 'security-systems'] },
-  maintenance: { label: 'Maintenance', slugs: ['brake-accessories', 'tow-accessories', 'tyre-battery-tools', 'horns', 'car-care-products'] },
-};
-
 // ── Viewport-aware MegaMenu ───────────────────────────────────────────────────
 const MegaMenu = ({
   category,
@@ -93,7 +85,7 @@ const MegaMenu = ({
 };
 
 // ── Search Dropdown ─────────────────────────────────────────────────────────
-const SearchDropdown = ({ onClose }: { onClose: () => void }) => {
+const SearchDropdown = ({ onClose, popularSearches }: { onClose: () => void; popularSearches: string[] }) => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Product[]>([]);
   const [searching, setSearching] = useState(false);
@@ -221,7 +213,7 @@ const SearchDropdown = ({ onClose }: { onClose: () => void }) => {
           {!query.trim() && (
             <div className="mt-4 flex flex-wrap gap-2">
               <p className="text-[11px] text-gray-400 uppercase tracking-widest font-semibold w-full mb-1">Popular searches</p>
-              {['LED Lights', 'Car Mats', 'Body Kits', 'Ambient Lights', 'Phone Holder', 'Dash Cam'].map(term => (
+              {popularSearches.map(term => (
                 <button
                   key={term}
                   type="button"
@@ -258,7 +250,10 @@ const Header = () => {
   useEffect(() => {
     const fetchCategories = async () => {
       const { data: allCats, error } = await supabase
-        .from('categories').select('id, name, slug, parent_id').order('name');
+        .from('categories')
+        .select('id, name, slug, parent_id, sort_order')
+        .order('sort_order', { ascending: true })
+        .order('name');
       if (error || !allCats) return;
       const visibleCats = allCats.filter((c: any) => !HIDDEN_STORE_CATEGORY_SLUGS.has(c.slug) && c.slug !== SERVICES_CATEGORY_SLUG);
       const hasParentId = visibleCats.some((c: any) => c.parent_id !== undefined && c.parent_id !== null);
@@ -269,16 +264,10 @@ const Header = () => {
           subcategories: visibleCats.filter((c: any) => c.parent_id === p.id),
         })));
       } else {
-        const bySlug: Record<string, any> = {};
-        for (const cat of allCats) bySlug[(cat as any).slug] = cat;
-        setNavCategories(
-          Object.entries(CATEGORY_GROUPS)
-            .map(([slug, g]) => ({
-              id: slug, name: g.label, slug, icon: g.icon,
-              subcategories: g.slugs.map((s) => bySlug[s]).filter(Boolean),
-            }))
-            .filter((g) => g.subcategories.length > 0)
-        );
+        setNavCategories(visibleCats.map((category: any) => ({
+          ...category,
+          subcategories: [],
+        })));
       }
     };
     fetchCategories();
@@ -450,7 +439,12 @@ const Header = () => {
         </div>
 
         {/* Search dropdown */}
-        {searchOpen && <SearchDropdown onClose={() => setSearchOpen(false)} />}
+        {searchOpen && (
+          <SearchDropdown
+            onClose={() => setSearchOpen(false)}
+            popularSearches={navCategories.slice(0, 6).map(category => category.name)}
+          />
+        )}
       </div>
 
       {/* ── Nav strip ───────────────────────────────────────────────── */}

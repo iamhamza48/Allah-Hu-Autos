@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 
 dotenv.config({ path: '.env.local' });
 
-const SITE_URL = 'https://allahhuautos.online';
+const SITE_URL = process.env.SEO_SITE_URL?.replace(/\/$/, '');
 const HIDDEN_CATEGORY_SLUGS = new Set(['protection', 'body-parts', 'car-modification-styling']);
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
@@ -13,6 +13,10 @@ const supabaseKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY || process.env.VI
 
 if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase URL/key in .env.local');
+}
+
+if (!SITE_URL) {
+  throw new Error('Set SEO_SITE_URL only after the domain is connected to this website');
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);

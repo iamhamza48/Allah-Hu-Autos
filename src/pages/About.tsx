@@ -191,7 +191,7 @@ const About = () => {
                 Later on, in 2018, we opened the Lahore branch to serve Punjab with the same commitment that built our name in Quetta.
               </p>
               <p>
-                Today we carry 500+ products across lighting, exterior, interior, tech, and maintenance — all backed by our expert installation team
+                Today we offer a broad range of LEDs, audio products, vehicle accessories, perfumes and polishes — all backed by our expert installation team
                 and our promise to stand behind every item we sell.
               </p>
             </div>

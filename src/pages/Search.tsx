@@ -37,7 +37,7 @@ const SearchPage = () => {
     <div className="container py-8">
       <SEO
         title="Search Products"
-        description="Search car accessories, lighting, mats, audio products and styling upgrades at Allah-Hu-Autos."
+        description="Search LEDs, audio products, security systems, accessories, perfumes and polishes at Allah-Hu-Autos."
         canonicalPath="/search"
         noindex
       />

@@ -11,8 +11,6 @@ import { ArrowRight, Shield, Truck, Wrench, Phone, Star, ChevronRight } from 'lu
 import { isPublicStoreCategory, isPublicStoreProduct } from '@/lib/catalog-visibility';
 import SEO, { SITE_URL } from '@/components/SEO';
 
-const BRANDS = ['Toyota', 'Honda', 'Suzuki', 'KIA', 'Hyundai', 'MG', 'Changan', 'Haval', 'Daihatsu', 'Audi', 'BMW', 'Mercedes'];
-
 const Index = () => {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [featuredCategories, setFeaturedCategories] = useState<Category[]>([]);
@@ -147,7 +145,7 @@ const Index = () => {
       </h1>
 
       <p className="text-base sm:text-lg text-white/70 mb-8 max-w-md leading-relaxed">
-        Premium automotive accessories for every car on Pakistani roads — LED lights, body kits, mats, audio &amp; more. Delivered to your door.
+        Premium automotive accessories for cars on Pakistani roads — LEDs, audio, security systems, perfumes, polishes and more. Delivered to your door.
       </p>
 
       <div className="flex flex-wrap items-center gap-3 mb-10">

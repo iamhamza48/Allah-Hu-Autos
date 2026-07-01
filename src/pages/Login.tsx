@@ -85,7 +85,7 @@ const Login = () => {
               <Label htmlFor="admin-email" className="text-xs font-bold uppercase tracking-wider text-slate-300">Email address</Label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-                <Input id="admin-email" type="email" autoComplete="username" className="h-12 border-slate-700 bg-slate-950/70 pl-10 text-white placeholder:text-slate-600 focus-visible:ring-blue-500" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@example.com" required autoFocus />
+                <Input id="admin-email" type="email" autoComplete="username" className="h-12 border-slate-700 bg-slate-950/70 pl-10 text-white placeholder:text-slate-600 focus-visible:ring-blue-500" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@allahhuautos.pk" required autoFocus />
               </div>
             </div>
 

@@ -120,7 +120,7 @@ const AdminCategories = () => {
         <DialogContent>
           <DialogHeader><DialogTitle>{editing ? 'Edit' : 'Add'} Category</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <div><Label>Name *</Label><Input value={form.name} onChange={e => setForm({...form,name:e.target.value})} className="mt-1" placeholder="e.g. LED Lighting" /></div>
+            <div><Label>Name *</Label><Input value={form.name} onChange={e => setForm({...form,name:e.target.value})} className="mt-1" placeholder="e.g. LEDs" /></div>
             <div><Label>Slug</Label><Input value={form.slug} onChange={e => setForm({...form,slug:e.target.value})} placeholder="auto-generated" className="mt-1" /></div>
             <div><Label>Icon (emoji)</Label><Input value={form.icon} onChange={e => setForm({...form,icon:e.target.value})} className="mt-1" placeholder="💡" /></div>
             <div><Label>Sort Order</Label><Input type="number" value={form.sort_order} onChange={e => setForm({...form,sort_order:parseInt(e.target.value)||0})} className="mt-1" /></div>

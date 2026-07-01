@@ -253,7 +253,7 @@ const Booking = () => {
                 <input
                   type="email"
                   autoComplete="email"
-                  placeholder="YOU@EXAMPLE.COM"
+                  placeholder="EMAIL ADDRESS"
                   className="w-full h-16 px-6 rounded-2xl bg-white border-2 border-zinc-300 font-black text-sm outline-none focus:border-primary shadow-sm text-zinc-900"
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(e.target.value)}
