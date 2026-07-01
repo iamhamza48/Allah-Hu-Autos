@@ -1,13 +1,12 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   ShoppingCart, Search, Menu, X,
-  LayoutDashboard, Phone, MapPin,
+  Phone, MapPin,
   ChevronDown, Heart, ChevronRight, ArrowRight,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { useCartStore } from '@/stores/cart';
 import { useWishlistStore } from '@/stores/wishlist';
-import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase';
 import type { Product } from '@/types/database';
 import { formatPKR } from '@/lib/format';
@@ -253,7 +252,6 @@ const Header = () => {
   const location = useLocation();
   const itemCount = useCartStore((s) => s.getItemCount());
   const wishlistCount = useWishlistStore((s) => s.getCount());
-  const { isAdmin } = useAuth();
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -436,15 +434,6 @@ const Header = () => {
             </Link>
 
             <div className="hidden sm:block w-px h-5 bg-gray-200 dark:bg-gray-700 mx-1" />
-
-            {isAdmin && (
-              <Link to="/admin" aria-label="Open admin panel">
-                <button type="button" className="flex items-center gap-2 h-9 px-3 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-sm font-semibold transition-colors">
-                  <LayoutDashboard className="h-4 w-4" />
-                  <span className="hidden sm:inline">Admin</span>
-                </button>
-              </Link>
-            )}
 
             {/* Mobile toggle */}
             <button

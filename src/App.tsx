@@ -27,6 +27,7 @@ const VehicleProducts = lazy(() => import("./pages/VehicleProducts"));
 const Wishlist = lazy(() => import("./pages/Wishlist"));
 const About = lazy(() => import("./pages/About"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const AdminResetPassword = lazy(() => import("./pages/AdminResetPassword"));
 
 // Lazy-loaded Admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
@@ -66,23 +67,23 @@ const App = () => (
                   <Route path="/booking" element={<Booking />} />
                   <Route path="/wishlist" element={<Wishlist />} />
                   <Route path="/vehicles/:vehicleId/products" element={<VehicleProducts />} />
-                  <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
-
-                  {/* Admin */}
-                  <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-                    <Route index element={<AdminDashboard />} />
-                    <Route path="products" element={<AdminProducts />} />
-                    <Route path="categories" element={<AdminCategories />} />
-                    <Route path="orders" element={<AdminOrders />} />
-                    <Route path="bookings" element={<AdminBookings />} />
-                    <Route path="inventory" element={<AdminInventory />} />
-                    <Route path="reviews" element={<AdminReviews />} />
-                    <Route path="vehicles" element={<AdminVehicles />} />
-                    <Route path="settings" element={<AdminSettings />} />
-                    <Route path="images" element={<AdminImageUploader />} />
-                  </Route>
-
                   <Route path="*" element={<NotFound />} />
+                </Route>
+
+                {/* Standalone admin application — intentionally outside the public layout. */}
+                <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
+                <Route path="/admin/reset-password" element={<AdminResetPassword />} />
+                <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="products" element={<AdminProducts />} />
+                  <Route path="categories" element={<AdminCategories />} />
+                  <Route path="orders" element={<AdminOrders />} />
+                  <Route path="bookings" element={<AdminBookings />} />
+                  <Route path="inventory" element={<AdminInventory />} />
+                  <Route path="reviews" element={<AdminReviews />} />
+                  <Route path="vehicles" element={<AdminVehicles />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                  <Route path="images" element={<AdminImageUploader />} />
                 </Route>
               </Routes>
             </Suspense>

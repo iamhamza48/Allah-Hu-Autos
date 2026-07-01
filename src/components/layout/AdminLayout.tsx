@@ -34,6 +34,11 @@ const AdminLayout = () => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [newOrderCount, setNewOrderCount] = useState(0);
 
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/admin', { replace: true });
+  };
+
   useEffect(() => {
     const channel = supabase
       .channel('admin-new-orders')
@@ -113,7 +118,7 @@ const AdminLayout = () => {
         </div>
         <button
           type="button"
-          onClick={signOut}
+          onClick={() => void handleSignOut()}
           className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[12px] text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
         >
           <LogOut className="h-3.5 w-3.5" />

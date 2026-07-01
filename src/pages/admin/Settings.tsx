@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { Branch } from '@/types/database';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, MapPin } from 'lucide-react';
+import { Plus, Pencil, Trash2, MapPin, KeyRound, Loader2 } from 'lucide-react';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 import { getBranchFields, serializeBranchFields } from '@/lib/branch-utils';
 
@@ -31,6 +31,10 @@ const AdminSettings = () => {
   const [editing, setEditing] = useState<Branch | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
 
   const fetchBranches = async () => {
     setLoading(true);
@@ -98,17 +102,81 @@ const AdminSettings = () => {
     fetchBranches();
   };
 
+  const handlePasswordChange = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (newPassword.length < 12) return toast.error('The new password must contain at least 12 characters.');
+    if (newPassword !== confirmPassword) return toast.error('The new passwords do not match.');
+    if (currentPassword === newPassword) return toast.error('Choose a password different from the current one.');
+
+    setChangingPassword(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.email) {
+      setChangingPassword(false);
+      return toast.error('Your administrator session has expired. Please sign in again.');
+    }
+
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPassword,
+    });
+    if (verifyError) {
+      setChangingPassword(false);
+      return toast.error('The current password is incorrect.');
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setChangingPassword(false);
+    if (error) return toast.error('The password could not be changed. Please try again.');
+
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    toast.success('Administrator password changed successfully.');
+  };
+
   return (
     <div>
       <AdminPageHeader
-        title="Branch Management"
-        subtitle="Manage your service locations"
+        title="Settings"
+        subtitle="Manage administrator security and service locations"
         action={
           <Button size="sm" className="h-8 text-xs" onClick={openAdd}>
             <Plus className="h-3.5 w-3.5 mr-1.5" /> Add Branch
           </Button>
         }
       />
+
+      <Card className="mb-6 overflow-hidden border-blue-100 shadow-none dark:border-slate-800">
+        <div className="border-b bg-blue-50/60 px-5 py-4 dark:bg-slate-900/60">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white"><KeyRound className="h-5 w-5" /></div>
+            <div>
+              <h2 className="font-bold">Administrator password</h2>
+              <p className="text-xs text-muted-foreground">Use a unique password with at least 12 characters.</p>
+            </div>
+          </div>
+        </div>
+        <form onSubmit={handlePasswordChange} className="grid gap-4 p-5 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="current-admin-password" className="text-xs font-semibold">Current password</Label>
+            <Input id="current-admin-password" type="password" autoComplete="current-password" value={currentPassword} onChange={event => setCurrentPassword(event.target.value)} required />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="new-admin-password" className="text-xs font-semibold">New password</Label>
+            <Input id="new-admin-password" type="password" autoComplete="new-password" value={newPassword} onChange={event => setNewPassword(event.target.value)} minLength={12} required />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="confirm-admin-password" className="text-xs font-semibold">Confirm new password</Label>
+            <Input id="confirm-admin-password" type="password" autoComplete="new-password" value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} minLength={12} required />
+          </div>
+          <div className="sm:col-span-3 flex justify-end">
+            <Button type="submit" disabled={changingPassword}>
+              {changingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Change password
+            </Button>
+          </div>
+        </form>
+      </Card>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
