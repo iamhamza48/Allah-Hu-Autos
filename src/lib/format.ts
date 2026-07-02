@@ -1,5 +1,7 @@
 import type { Product, ProductVariant } from '@/types/database';
 
+export const DELIVERY_CHARGE = 0;
+
 export function formatPKR(amount: number): string {
   return `Rs ${amount.toLocaleString('en-PK')}`;
 }

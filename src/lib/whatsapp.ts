@@ -25,10 +25,12 @@ export interface OrderWhatsAppDetails {
     name: string;
     quantity: number;
     price: number;
+    maximumPrice?: number | null;
     installType?: string | null;
     variantName?: string | null;
   }>;
   total: number;
+  maximumTotal?: number | null;
   installation?: {
     branch: string;
     date: string;
@@ -61,11 +63,21 @@ export function buildOrderNotificationMessage(details: OrderWhatsAppDetails): st
     const variant = item.variantName ? ` (${item.variantName})` : '';
     const install = item.installType ? ` [${item.installType} install]` : '';
     lines.push(`${i + 1}. ${item.name}${variant} × ${item.quantity}${install}`);
-    lines.push(`   Rs ${(item.price * item.quantity).toLocaleString('en-PK')}`);
+    const minimum = item.price * item.quantity;
+    const maximum = (item.maximumPrice ?? item.price) * item.quantity;
+    lines.push(maximum > minimum
+      ? `   Rs ${minimum.toLocaleString('en-PK')} – Rs ${maximum.toLocaleString('en-PK')} (estimate)`
+      : `   Rs ${minimum.toLocaleString('en-PK')}`);
   });
 
   lines.push('');
-  lines.push(`*Total: Rs ${details.total.toLocaleString('en-PK')}*`);
+  lines.push('Delivery charges: Rs 0');
+  if (details.maximumTotal && details.maximumTotal > details.total) {
+    lines.push(`*Estimated total: Rs ${details.total.toLocaleString('en-PK')} – Rs ${details.maximumTotal.toLocaleString('en-PK')}*`);
+    lines.push('Final price will be confirmed after the order is placed.');
+  } else {
+    lines.push(`*Total: Rs ${details.total.toLocaleString('en-PK')}*`);
+  }
 
   if (details.installation) {
     lines.push('');
@@ -102,4 +114,45 @@ export function notifyOrderViaWhatsApp(
   targetWindow?: Window | null
 ): void {
   openWhatsAppMessage(buildOrderNotificationMessage(details), targetWindow);
+}
+
+export interface BookingWhatsAppDetails {
+  bookingId?: string | null;
+  customerName: string;
+  customerEmail?: string | null;
+  customerPhone: string;
+  services: string[];
+  branch: string;
+  date: string;
+  time: string;
+  notes?: string | null;
+}
+
+export function buildBookingNotificationMessage(details: BookingWhatsAppDetails): string {
+  const lines = [
+    '🔧 *New Service Booking - Allah-Hu-Autos*',
+    '',
+    ...(details.bookingId ? [`Booking ID: ${details.bookingId}`] : []),
+    `Customer: ${details.customerName}`,
+    `Phone: ${details.customerPhone}`,
+    ...(details.customerEmail ? [`Email: ${details.customerEmail}`] : []),
+    '',
+    `Services: ${details.services.join(', ')}`,
+    `Branch: ${details.branch}`,
+    `Preferred date: ${details.date}`,
+    `Preferred time: ${details.time}`,
+  ];
+
+  if (details.notes?.trim()) {
+    lines.push('', `Notes: ${details.notes.trim()}`);
+  }
+
+  return lines.join('\n');
+}
+
+export function notifyBookingViaWhatsApp(
+  details: BookingWhatsAppDetails,
+  targetWindow?: Window | null
+): void {
+  openWhatsAppMessage(buildBookingNotificationMessage(details), targetWindow);
 }

@@ -28,6 +28,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (product.installable) {
+      navigate(`/product/${product.slug}`);
+      return;
+    }
     // No variants loaded means we can't add to cart from here — send user to product page
     if (!product.variants || product.variants.length === 0) {
       navigate(`/product/${product.slug}`);
@@ -116,6 +120,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
               <Heart className="h-4 w-4" fill={wishlisted ? 'currentColor' : 'none'} />
             </button>
           </div>
+          <p className="mt-1.5 text-[10px] font-semibold text-emerald-600 sm:text-xs">Free delivery</p>
         </div>
       </div>
     </Link>

@@ -48,7 +48,7 @@ const VehicleSelector = ({ onSelect }: VehicleSelectorProps) => {
       .eq('make_id', selectedMakeId)
       .order('name')
       .then(({ data }) => setModels(data || []));
-  }, [selectedMakeId]);
+  }, [selectedMakeId, onSelect]);
 
   // 3. Fetch vehicles (years) for the selected model
   useEffect(() => {
@@ -64,7 +64,7 @@ const VehicleSelector = ({ onSelect }: VehicleSelectorProps) => {
       .eq('model_id', selectedModelId)
       .order('year', { ascending: false })
       .then(({ data }) => setYears(data || []));
-  }, [selectedModelId]);
+  }, [selectedModelId, onSelect]);
 
   const handleYearChange = (vid: string) => {
     setSelectedVehicleId(vid);

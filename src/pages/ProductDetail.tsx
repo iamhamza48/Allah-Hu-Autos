@@ -103,14 +103,7 @@ const ProductDetail = () => {
 
   useEffect(() => {
     if (!selectedVehicle || !product) { setCompatible(null); return; }
-    supabase
-      .from('product_compatibility')
-      .select('id')
-      .eq('product_id', product.id)
-      .eq('vehicle_id', selectedVehicle.id)
-      .then(({ data }) => {
-        setCompatible(data && data.length > 0);
-      });
+    setCompatible(true);
   }, [selectedVehicle, product]);
 
   const getSelectedItem = () => {
@@ -270,6 +263,8 @@ const ProductDetail = () => {
               </span>
             )}
           </div>
+
+          <p className="text-sm font-semibold text-emerald-600">Free delivery across Pakistan</p>
 
           <p className="text-muted-foreground">{product.description}</p>
 

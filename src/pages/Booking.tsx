@@ -17,6 +17,12 @@ import {
   validateGuestDetails,
 } from '@/lib/customer-validation';
 import { INSTALLATION_SERVICE_NAMES } from '@/lib/installation-services';
+import {
+  buildBookingNotificationMessage,
+  getWhatsAppUrl,
+  notifyBookingViaWhatsApp,
+  type BookingWhatsAppDetails,
+} from '@/lib/whatsapp';
 import SEO from '@/components/SEO';
 
 const SPECIALIST_SERVICES = INSTALLATION_SERVICE_NAMES;
@@ -51,6 +57,7 @@ const Booking = () => {
 
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+  const [whatsappUrl, setWhatsAppUrl] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -100,8 +107,9 @@ const Booking = () => {
     const normalizedPhone = normalizePakistaniMobile(phone);
     setPhone(normalizedPhone);
     setSubmitting(true);
+    const whatsappWindow = window.open('about:blank', '_blank');
     try {
-      const { error } = await supabase.rpc('create_guest_booking', {
+      const { data, error } = await supabase.rpc('create_guest_booking', {
         p_customer_name: customerName,
         p_customer_email: customerEmail,
         p_customer_phone: normalizedPhone,
@@ -112,8 +120,23 @@ const Booking = () => {
         p_notes: notes,
       });
       if (error) throw error;
+      const whatsappDetails: BookingWhatsAppDetails = {
+        bookingId: typeof data === 'string' ? data : null,
+        customerName,
+        customerEmail,
+        customerPhone: normalizedPhone,
+        services: selectedServices,
+        branch: branches.find(branch => branch.id === branchId)?.name || 'Selected branch',
+        date,
+        time: fmt12(time),
+        notes,
+      };
+      setWhatsAppUrl(getWhatsAppUrl(buildBookingNotificationMessage(whatsappDetails)));
+      notifyBookingViaWhatsApp(whatsappDetails, whatsappWindow);
       setStep(3);
+      toast.success('Booking received! Tap Send in WhatsApp to notify us.');
     } catch (err: any) {
+      whatsappWindow?.close();
       toast.error(err.message);
     } finally {
       setSubmitting(false);
@@ -137,7 +160,14 @@ const Booking = () => {
           We will call you at <span className="text-primary font-black">{phone}</span> <br/> 
           to confirm your slot and details.
         </p>
-        <Button className="w-full h-16 rounded-2xl font-black text-lg uppercase tracking-widest" onClick={() => navigate('/')}>Return to Shop</Button>
+        {whatsappUrl && (
+          <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="block mb-3">
+            <Button className="w-full h-16 rounded-2xl bg-emerald-600 hover:bg-emerald-700 font-black text-base uppercase tracking-wider">
+              <Phone className="mr-2 h-5 w-5" /> Notify via WhatsApp
+            </Button>
+          </a>
+        )}
+        <Button variant="outline" className="w-full h-14 rounded-2xl font-black uppercase tracking-widest" onClick={() => navigate('/')}>Return to Shop</Button>
       </Card>
     </div>
   );

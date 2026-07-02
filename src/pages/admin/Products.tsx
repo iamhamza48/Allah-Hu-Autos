@@ -616,12 +616,19 @@ const AdminProducts = () => {
 
     if (savedProductId) {
       try {
-        await supabase.from('product_compatibility').delete().eq('product_id', savedProductId);
-        if (compatibleVehicles.length > 0) {
-          const compatData = compatibleVehicles.map(vid => ({ product_id: savedProductId, vehicle_id: vid }));
-          const { error: compatError } = await supabase.from('product_compatibility').insert(compatData);
+        const { data: allVehicles, error: vehicleError } = await supabase.from('vehicles').select('id');
+        if (vehicleError) throw vehicleError;
+        const compatData = (allVehicles || []).map(vehicle => ({
+          product_id: savedProductId,
+          vehicle_id: vehicle.id,
+        }));
+        if (compatData.length > 0) {
+          const { error: compatError } = await supabase
+            .from('product_compatibility')
+            .upsert(compatData, { onConflict: 'product_id,vehicle_id', ignoreDuplicates: true });
           if (compatError) throw compatError;
         }
+        setCompatibleVehicles((allVehicles || []).map(vehicle => vehicle.id));
       } catch (e: any) {
         toast.error('Failed to save compatibility: ' + e.message);
         return;
@@ -856,12 +863,17 @@ const AdminProducts = () => {
             </TabsContent>
 
             <TabsContent value="compatibility" className="space-y-4 pt-2">
-              <CompatibilityTab
-                vehicles={vehicles}
-                compatibleVehicles={compatibleVehicles}
-                setCompatibleVehicles={setCompatibleVehicles}
-                onSave={handleSave}
-              />
+              <Card className="p-5">
+                <div className="flex items-start gap-3">
+                  <Car className="mt-0.5 h-5 w-5 text-primary" />
+                  <div>
+                    <h3 className="font-semibold">Compatible with all vehicles</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Every product is automatically linked to all {vehicles.length} vehicle-year records when saved.
+                    </p>
+                  </div>
+                </div>
+              </Card>
             </TabsContent>
 
             <TabsContent value="images" className="space-y-4 pt-2">

@@ -36,15 +36,12 @@ const VehicleProducts = () => {
         .eq('id', vehicleId)
         .single(),
       supabase
-        .from('product_compatibility')
-        .select('product:products(*, category:categories(*), images:product_images(*), variants:product_variants(*))')
-        .eq('vehicle_id', vehicleId),
-    ]).then(([vehicleRes, compatRes]) => {
+        .from('products')
+        .select('*, category:categories(*), images:product_images(*), variants:product_variants(*)')
+        .order('name'),
+    ]).then(([vehicleRes, productsRes]) => {
       setVehicle(vehicleRes.data as any);
-      const prods = (compatRes.data || [])
-        .map((c: any) => c.product)
-        .filter(Boolean)
-        .filter(isPublicStoreProduct) as Product[];
+      const prods = (productsRes.data || []).filter(isPublicStoreProduct) as Product[];
       setProducts(prods);
       setLoading(false);
     });

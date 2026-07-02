@@ -25,7 +25,7 @@ const AdminOrders = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('orders')
-      .select('*, items:order_items(*, product:products(name, images:product_images(*)), variant:product_variants(name, price)), bookings:bookings(id, booking_date, booking_time, status, notes, branch:branches(name, city))')
+      .select('*, items:order_items(*, product:products(name, images:product_images(*)), variant:product_variants(name, price, attributes)), bookings:bookings(id, booking_date, booking_time, status, notes, branch:branches(name, city))')
       .order('created_at', { ascending: false });
 
     if (error) { toast.error('Failed to load orders: ' + error.message); setLoading(false); return; }
@@ -79,6 +79,17 @@ const AdminOrders = () => {
   });
 
   const revenue = displayed.reduce((sum, o) => sum + (o.total || 0), 0);
+  const getMaximumTotal = (order: any) => (order.items || []).reduce((sum: number, item: any) => {
+    const maximum = Number(item.variant?.attributes?.price_max);
+    const unitPrice = Number.isFinite(maximum) && maximum > Number(item.price) ? maximum : Number(item.price);
+    return sum + unitPrice * Number(item.quantity || 0);
+  }, 0);
+  const formatOrderTotal = (order: any) => {
+    const maximum = getMaximumTotal(order);
+    return maximum > Number(order.total)
+      ? `${formatPKR(order.total)} – ${formatPKR(maximum)}`
+      : formatPKR(order.total);
+  };
 
   const openWhatsApp = (order: any) => {
     let phone = String(order.contact_phone || '').replace(/\D/g, '');
@@ -140,7 +151,7 @@ const AdminOrders = () => {
                 <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Customer</TableHead>
                 <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Phone</TableHead>
                 <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Items</TableHead>
-                <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Total</TableHead>
+                <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Total / Estimate</TableHead>
                 <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">City</TableHead>
                 <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Date</TableHead>
                 <TableHead className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Status</TableHead>
@@ -157,7 +168,7 @@ const AdminOrders = () => {
                   </TableCell>
                   <TableCell className="text-sm text-zinc-600">{o.contact_phone || '—'}</TableCell>
                   <TableCell className="text-sm text-zinc-600">{(o.items || []).length} item{(o.items || []).length !== 1 ? 's' : ''}</TableCell>
-                  <TableCell className="font-semibold text-sm text-zinc-900">{formatPKR(o.total)}</TableCell>
+                  <TableCell className="font-semibold text-sm text-zinc-900">{formatOrderTotal(o)}</TableCell>
                   <TableCell className="text-sm text-zinc-600">{o.shipping_city || '—'}</TableCell>
                   <TableCell className="text-[11px] text-zinc-400">{new Date(o.created_at).toLocaleDateString('en-PK')}</TableCell>
                   <TableCell>
@@ -233,7 +244,11 @@ const AdminOrders = () => {
                         {item.install_type && <p className="text-xs text-blue-500">Install: {item.install_type}</p>}
                       </div>
                       <div className="text-right shrink-0">
-                        <p className="text-sm font-semibold text-zinc-900">{formatPKR(item.price)}</p>
+                        <p className="text-sm font-semibold text-zinc-900">
+                          {Number(item.variant?.attributes?.price_max) > Number(item.price)
+                            ? `${formatPKR(item.price)} – ${formatPKR(Number(item.variant.attributes.price_max))}`
+                            : formatPKR(item.price)}
+                        </p>
                         <p className="text-xs text-zinc-400">×{item.quantity}</p>
                       </div>
                     </div>
@@ -258,9 +273,18 @@ const AdminOrders = () => {
                 );
               })()}
 
-              <div className="flex items-center justify-between pt-3 border-t border-zinc-100">
-                <span className="font-semibold text-zinc-700">Total</span>
-                <span className="font-bold text-primary text-lg">{formatPKR(viewOrder.total)}</span>
+              <div className="space-y-2 pt-3 border-t border-zinc-100">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-zinc-500">Delivery charges</span>
+                  <span className="font-semibold text-emerald-600">{formatPKR(0)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-zinc-700">{getMaximumTotal(viewOrder) > Number(viewOrder.total) ? 'Estimated total' : 'Total'}</span>
+                  <span className="font-bold text-primary text-lg">{formatOrderTotal(viewOrder)}</span>
+                </div>
+                {getMaximumTotal(viewOrder) > Number(viewOrder.total) && (
+                  <p className="text-xs text-zinc-500">Confirm the final price with the customer before processing.</p>
+                )}
               </div>
 
               {viewOrder.notes && (

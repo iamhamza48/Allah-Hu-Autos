@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCartStore } from '@/stores/cart';
-import { formatPKR } from '@/lib/format';
+import { DELIVERY_CHARGE, formatPKR, getVariantMaximumPrice } from '@/lib/format';
 import { notifyOrderViaWhatsApp } from '@/lib/whatsapp';
 import { toast } from 'sonner';
 import type { CartItem } from '@/types/database';
@@ -20,6 +20,7 @@ import {
 import SEO from '@/components/SEO';
 
 interface CreatedOrderItem {
+  variant_id: string;
   name: string;
   variant_name: string;
   quantity: number;
@@ -52,6 +53,14 @@ const Checkout = () => {
   const checkoutTotal = checkoutItems.reduce(
     (total, item) => total + (item.variant?.price ?? 0) * item.quantity,
     0,
+  );
+  const checkoutMaximumTotal = checkoutItems.reduce(
+    (total, item) => total + (getVariantMaximumPrice(item.variant) ?? item.variant?.price ?? 0) * item.quantity,
+    0,
+  );
+  const hasEstimatedPrice = checkoutMaximumTotal > checkoutTotal;
+  const formatRange = (minimum: number, maximum: number) => (
+    maximum > minimum ? `${formatPKR(minimum)} – ${formatPKR(maximum)}` : formatPKR(minimum)
   );
   const requiresProfessionalInstallation = checkoutItems.some(item => item.installType === 'professional');
   const [customerName, setCustomerName] = useState('');
@@ -86,6 +95,10 @@ const Checkout = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (checkoutItems.length === 0) return;
+    if (checkoutItems.some(item => item.product?.installable && !item.installType)) {
+      toast.error('Choose self or professional installation for every installable product');
+      return;
+    }
     const errors = validateGuestDetails({
       name: customerName,
       email: customerEmail,
@@ -155,10 +168,14 @@ const Checkout = () => {
           name: item.name,
           quantity: item.quantity,
           price: item.price,
+          maximumPrice: getVariantMaximumPrice(
+            checkoutItems.find(checkoutItem => checkoutItem.variantId === item.variant_id)?.variant,
+          ),
           installType: item.install_type,
           variantName: item.variant_name,
         })),
         total: order.total,
+        maximumTotal: checkoutMaximumTotal,
         installation: requiresProfessionalInstallation ? {
           branch: branches.find(branch => branch.id === installationBranchId)?.name || 'Selected branch',
           date: installationDate,
@@ -174,6 +191,10 @@ const Checkout = () => {
     toast.success('Order placed! Tap Send in WhatsApp to notify us.');
     setSubmitting(false);
   };
+
+  if (checkoutItems.length === 0 && !completedOrderId) {
+    return <Navigate to="/cart" replace />;
+  }
 
   if (completedOrderId) {
     return (
@@ -307,17 +328,31 @@ const Checkout = () => {
               <h2 className="text-lg font-bold mb-4">Order Summary</h2>
               <div className="space-y-2 mb-4">
                 {checkoutItems.map((item) => (
-                  <div key={item.variantId} className="flex justify-between text-sm">
+                  <div key={`${item.variantId}-${item.installType || 'none'}`} className="flex justify-between text-sm">
                     <span className="text-muted-foreground truncate mr-2">
                       {item.product?.name} × {item.quantity}
                     </span>
-                    <span>{formatPKR((item.variant?.price ?? 0) * item.quantity)}</span>
+                    <span>{formatRange(
+                      (item.variant?.price ?? 0) * item.quantity,
+                      (getVariantMaximumPrice(item.variant) ?? item.variant?.price ?? 0) * item.quantity,
+                    )}</span>
                   </div>
                 ))}
               </div>
-              <div className="border-t pt-4 flex justify-between font-bold text-lg">
-                <span>Total</span>
-                <span className="text-primary">{formatPKR(checkoutTotal)}</span>
+              <div className="space-y-2 border-t pt-4 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">{hasEstimatedPrice ? 'Estimated subtotal' : 'Subtotal'}</span>
+                  <span>{formatRange(checkoutTotal, checkoutMaximumTotal)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Delivery charges</span>
+                  <span className="font-semibold text-emerald-600">{formatPKR(DELIVERY_CHARGE)}</span>
+                </div>
+                <div className="flex justify-between border-t pt-3 text-lg font-bold">
+                  <span>{hasEstimatedPrice ? 'Estimated total' : 'Total'}</span>
+                  <span className="text-primary">{formatRange(checkoutTotal + DELIVERY_CHARGE, checkoutMaximumTotal + DELIVERY_CHARGE)}</span>
+                </div>
+                {hasEstimatedPrice && <p className="text-xs font-normal text-muted-foreground">Final price will be confirmed after your order is placed.</p>}
               </div>
               <Button type="submit" className="w-full mt-4" size="lg" disabled={submitting}>
                 {submitting ? 'Placing Order...' : 'Place Order'}
