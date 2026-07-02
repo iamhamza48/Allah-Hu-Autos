@@ -126,6 +126,22 @@
     transition: background-color 0.2s ease, color 0.2s ease;
   }
 
+  ::selection {
+    @apply bg-primary/20 text-foreground;
+  }
+
+  :focus-visible {
+    scroll-margin: 1rem;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   h1,
   h2,
   h3,
@@ -181,6 +197,16 @@
   .animate-dropdown-in {
     animation: dropdownIn 0.18s ease-out both;
   }
+
+  .whatsapp-float::before {
+    content: '';
+    position: absolute;
+    inset: -0.4rem;
+    z-index: -1;
+    border-radius: 9999px;
+    border: 1px solid rgb(37 211 102 / 35%);
+    animation: whatsappPulse 2.8s ease-out infinite;
+  }
 }
 
 @keyframes dropdownIn {
@@ -192,5 +218,36 @@
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes whatsappPulse {
+  0%, 45% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+
+  65% {
+    opacity: 0.7;
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

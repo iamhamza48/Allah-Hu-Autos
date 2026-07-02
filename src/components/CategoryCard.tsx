@@ -12,12 +12,12 @@ const CategoryCard = ({ category }: CategoryCardProps) => {
 
   return (
     <Link to={`/category/${category.slug}`}>
-      <div className="group relative overflow-hidden rounded-xl cursor-pointer ring-0 hover:ring-2 hover:ring-primary/60 hover:ring-offset-2 transition-all duration-250">
+      <div className="group relative cursor-pointer overflow-hidden rounded-xl ring-0 transition-all duration-300 ease-out hover:-translate-y-1 hover:ring-2 hover:ring-primary/60 hover:ring-offset-2 hover:shadow-xl active:translate-y-0 active:scale-[0.98]">
         <div className="aspect-[4/3] overflow-hidden bg-secondary">
           <img
             src={img}
             alt={category.name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
             loading="lazy"
             onError={(e) => {
               (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1493238792000-8113da705763?w=400&q=80&fit=crop';

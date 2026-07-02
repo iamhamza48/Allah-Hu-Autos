@@ -50,13 +50,13 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   return (
     <Link to={`/product/${product.slug}`}>
-      <div className="group h-full overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-primary/40 hover:shadow-lg sm:hover:-translate-y-0.5 transition-all duration-200">
+      <div className="group h-full overflow-hidden rounded-xl border border-gray-200 bg-white transition-all duration-300 ease-out hover:border-primary/40 hover:shadow-xl active:scale-[0.99] dark:border-gray-700 dark:bg-gray-800 sm:hover:-translate-y-1">
         {/* Image */}
         <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
           <img
             src={image}
             alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
             loading="lazy"
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).src = getPlaceholderImage(product.name, 0);
