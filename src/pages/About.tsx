@@ -90,6 +90,20 @@ const About = () => {
           </div>
 
           <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 mb-6">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10">
+                <img
+                  src="/logo.webp"
+                  alt="Allah-Hu-Autos logo"
+                  className="h-8 w-8 object-contain"
+                  loading="eager"
+                />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.28em] text-blue-100 font-semibold">Allah-Hu-Autos</p>
+                <p className="text-[11px] text-blue-200">We Take Pride in Your Ride</p>
+              </div>
+            </div>
             <p className="text-xs font-bold tracking-[0.2em] uppercase text-blue-200 mb-3">Est. 1997 · Quetta & Lahore</p>
             <h1 className="text-3xl sm:text-5xl font-black text-white leading-[1.08] tracking-tight mb-5">
               We Take Pride<br />
