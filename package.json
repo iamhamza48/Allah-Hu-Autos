@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seo:sitemap": "node scripts/generate-sitemap.mjs"
+    "seo:sitemap": "node scripts/generate-sitemap.mjs",
+    "favicons": "node scripts/generate-favicons.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -86,6 +87,7 @@
     "jsdom": "^20.0.3",
     "lovable-tagger": "^1.1.13",
     "postcss": "^8.5.14",
+    "sharp": "^0.35.3",
     "tailwindcss": "^3.4.19",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.8.3",

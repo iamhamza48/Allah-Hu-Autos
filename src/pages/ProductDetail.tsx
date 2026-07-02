@@ -103,7 +103,25 @@ const ProductDetail = () => {
 
   useEffect(() => {
     if (!selectedVehicle || !product) { setCompatible(null); return; }
-    setCompatible(true);
+
+    let cancelled = false;
+    supabase
+      .from('product_compatibility')
+      .select('id')
+      .eq('product_id', product.id)
+      .eq('vehicle_id', selectedVehicle.id)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) {
+          console.error('Compatibility check failed:', error.message);
+          setCompatible(null);
+          return;
+        }
+        setCompatible(!!data);
+      });
+
+    return () => { cancelled = true; };
   }, [selectedVehicle, product]);
 
   const getSelectedItem = () => {

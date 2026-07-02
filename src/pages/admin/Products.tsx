@@ -253,10 +253,13 @@ const CompatibilityTab = ({ vehicles, compatibleVehicles, setCompatibleVehicles,
         <h3 className="font-semibold">Compatible Vehicles</h3>
         {compatibleVehicles.length > 0 && (
           <span className="ml-auto text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-            {compatibleVehicles.length} selected
+            {compatibleVehicles.length} of {vehicles.length}
           </span>
         )}
       </div>
+      <p className="text-xs text-muted-foreground">
+        Products are compatible with all vehicles by default. Turn off any vehicle this product does not fit.
+      </p>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label className="text-xs mb-1 block">Filter by Make</Label>
@@ -579,6 +582,38 @@ const AdminProducts = () => {
     fetchProducts();
   };
 
+  const saveCompatibility = async () => {
+    if (!editing?.id) {
+      toast.error('Save product first, then manage compatibility');
+      return;
+    }
+    try {
+      const { error: deleteError } = await supabase
+        .from('product_compatibility')
+        .delete()
+        .eq('product_id', editing.id);
+      if (deleteError) throw deleteError;
+
+      if (compatibleVehicles.length > 0) {
+        const compatData = compatibleVehicles.map(vehicleId => ({
+          product_id: editing.id,
+          vehicle_id: vehicleId,
+        }));
+        const { error: insertError } = await supabase
+          .from('product_compatibility')
+          .insert(compatData);
+        if (insertError) throw insertError;
+      }
+      toast.success('Compatibility saved');
+    } catch (e: any) {
+      toast.error('Failed to save compatibility: ' + e.message);
+    }
+  };
+
+  const resetCompatibilityToAll = () => {
+    setCompatibleVehicles(vehicles.map(v => v.id));
+  };
+
   const handleSave = async () => {
     const slug = form.slug || form.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
     const data = {
@@ -587,7 +622,6 @@ const AdminProducts = () => {
       category_id: form.category_id || null,
       compare_price: form.compare_price || null,
     };
-    let savedProductId = editing?.id;
 
     if (editing) {
       const { error } = await supabase.from('products').update(data).eq('id', editing.id);
@@ -596,7 +630,6 @@ const AdminProducts = () => {
     } else {
       const { data: newProd, error } = await supabase.from('products').insert(data).select().single();
       if (error) { toast.error('Failed to create: ' + error.message); return; }
-      savedProductId = newProd.id;
       
       // Auto-create a default variant so the product can be added to the cart
       const { error: variantError } = await supabase.from('product_variants').insert({
@@ -612,27 +645,6 @@ const AdminProducts = () => {
       }
       
       toast.success('Product created');
-    }
-
-    if (savedProductId) {
-      try {
-        const { data: allVehicles, error: vehicleError } = await supabase.from('vehicles').select('id');
-        if (vehicleError) throw vehicleError;
-        const compatData = (allVehicles || []).map(vehicle => ({
-          product_id: savedProductId,
-          vehicle_id: vehicle.id,
-        }));
-        if (compatData.length > 0) {
-          const { error: compatError } = await supabase
-            .from('product_compatibility')
-            .upsert(compatData, { onConflict: 'product_id,vehicle_id', ignoreDuplicates: true });
-          if (compatError) throw compatError;
-        }
-        setCompatibleVehicles((allVehicles || []).map(vehicle => vehicle.id));
-      } catch (e: any) {
-        toast.error('Failed to save compatibility: ' + e.message);
-        return;
-      }
     }
 
     setDialogOpen(false);
@@ -732,7 +744,9 @@ const AdminProducts = () => {
             <TabsList className="w-full">
               <TabsTrigger value="details" className="flex-1">Details</TabsTrigger>
               <TabsTrigger value="variants" className="flex-1" disabled={!editing}>Variants {variants.length > 0 && `(${variants.length})`}</TabsTrigger>
-              <TabsTrigger value="compatibility" className="flex-1">Compatibility {compatibleVehicles.length > 0 && `(${compatibleVehicles.length})`}</TabsTrigger>
+              <TabsTrigger value="compatibility" className="flex-1" disabled={!editing}>
+                Compatibility {editing && compatibleVehicles.length > 0 && `(${compatibleVehicles.length})`}
+              </TabsTrigger>
               <TabsTrigger value="images" className="flex-1" disabled={!editing}>Images {images.length > 0 && `(${images.length})`}</TabsTrigger>
             </TabsList>
 
@@ -863,17 +877,21 @@ const AdminProducts = () => {
             </TabsContent>
 
             <TabsContent value="compatibility" className="space-y-4 pt-2">
-              <Card className="p-5">
-                <div className="flex items-start gap-3">
-                  <Car className="mt-0.5 h-5 w-5 text-primary" />
-                  <div>
-                    <h3 className="font-semibold">Compatible with all vehicles</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Every product is automatically linked to all {vehicles.length} vehicle-year records when saved.
-                    </p>
-                  </div>
-                </div>
-              </Card>
+              {!editing ? (
+                <p className="text-sm text-muted-foreground">Save the product first to manage vehicle compatibility.</p>
+              ) : (
+                <CompatibilityTab
+                  vehicles={vehicles}
+                  compatibleVehicles={compatibleVehicles}
+                  setCompatibleVehicles={setCompatibleVehicles}
+                  onSave={saveCompatibility}
+                />
+              )}
+              {editing && vehicles.length > 0 && compatibleVehicles.length < vehicles.length && (
+                <Button variant="outline" size="sm" className="w-full" onClick={resetCompatibilityToAll}>
+                  Reset to all vehicles ({vehicles.length})
+                </Button>
+              )}
             </TabsContent>
 
             <TabsContent value="images" className="space-y-4 pt-2">

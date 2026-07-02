@@ -37,7 +37,8 @@ const VehicleProducts = () => {
         .single(),
       supabase
         .from('products')
-        .select('*, category:categories(*), images:product_images(*), variants:product_variants(*)')
+        .select('*, category:categories(*), images:product_images(*), variants:product_variants(*), product_compatibility!inner(vehicle_id)')
+        .eq('product_compatibility.vehicle_id', vehicleId)
         .order('name'),
     ]).then(([vehicleRes, productsRes]) => {
       setVehicle(vehicleRes.data as any);
